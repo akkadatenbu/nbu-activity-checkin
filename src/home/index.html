@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBU Activity — ระบบเช็คชื่อเข้าร่วมกิจกรรม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:       #003B7A;
+  --blue-mid:   #0055b3;
+  --blue-light: #0077ff;
+  --cyan:       #00c6ff;
+  --green:      #22c55e;
+  --text:       #f1f5f9;
+  --muted:      #94a3b8;
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Prompt', 'Segoe UI', sans-serif;
+  background: #060d1a;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ─── Animated background ─── */
+.bg-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 20% 30%, #001a40 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 70%, #001a3a 0%, transparent 60%),
+              #060d1a;
+}
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.18;
+  animation: float linear infinite;
+}
+.orb1 { width: 500px; height: 500px; background: #0055b3; top: -100px; left: -100px; animation-duration: 20s; }
+.orb2 { width: 400px; height: 400px; background: #00c6ff; bottom: -80px; right: -80px; animation-duration: 25s; animation-direction: reverse; }
+.orb3 { width: 300px; height: 300px; background: #003B7A; top: 40%; left: 50%; animation-duration: 18s; }
+@keyframes float {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -20px) scale(1.05); }
+  66%  { transform: translate(-20px, 30px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ─── Grid overlay ─── */
+.grid-overlay {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,119,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,119,255,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ─── Main ─── */
+main {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 60px 20px 80px;
+}
+
+/* ─── Hero ─── */
+.hero {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: fadeUp 0.8s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.logo-ring {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-mid), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 36px; color: #fff;
+  box-shadow: 0 0 0 12px rgba(0,119,255,0.1), 0 0 60px rgba(0,198,255,0.25);
+  animation: ringPulse 3s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { box-shadow: 0 0 0 12px rgba(0,119,255,0.1), 0 0 60px rgba(0,198,255,0.2); }
+  50%     { box-shadow: 0 0 0 20px rgba(0,119,255,0.06), 0 0 80px rgba(0,198,255,0.35); }
+}
+
+.hero-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--cyan);
+  margin-bottom: 10px;
+}
+.hero-title {
+  font-size: clamp(28px, 6vw, 52px);
+  font-weight: 900; line-height: 1.15;
+  background: linear-gradient(135deg, #fff 40%, var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.hero-sub {
+  font-size: clamp(13px, 2.5vw, 17px);
+  color: var(--muted); font-weight: 400;
+  max-width: 480px; margin: 0 auto 28px;
+  line-height: 1.6;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+  color: var(--green); padding: 6px 18px; border-radius: 99px;
+  font-size: 13px; font-weight: 600;
+}
+.hero-badge .dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+/* ─── Cards grid ─── */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  width: 100%; max-width: 1000px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 28px 26px 24px;
+  cursor: pointer;
+  text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; gap: 14px;
+  position: relative; overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--card-color, #0055b3) 0%, transparent 60%);
+  opacity: 0; border-radius: inherit;
+  transition: opacity 0.3s;
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--card-color, #0055b3);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px var(--card-color, #0055b3);
+  background: rgba(255,255,255,0.06);
+}
+.card:hover::before { opacity: 0.06; }
+.card:active { transform: translateY(-2px); }
+
+.card-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: var(--card-color, var(--blue-light));
+  transition: background 0.25s, box-shadow 0.25s;
+  position: relative; z-index: 1;
+}
+.card:hover .card-icon {
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 24px var(--card-color, var(--blue-light));
+}
+
+.card-body { position: relative; z-index: 1; }
+.card-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 6px;
+}
+.card-desc {
+  font-size: 13px; color: var(--muted); line-height: 1.6;
+}
+
+.card-footer {
+  margin-top: auto; position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.card-url { font-size: 12px; color: rgba(255,255,255,0.3); font-family: monospace; }
+.card-arrow {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--muted);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.card:hover .card-arrow {
+  background: var(--card-color, var(--blue-light));
+  color: #fff; transform: translateX(3px);
+}
+
+/* Card color variants */
+.card-admin   { --card-color: #0077ff; }
+.card-scanner { --card-color: #22c55e; }
+.card-mobile  { --card-color: #f59e0b; }
+.card-stats   { --card-color: #a855f7; }
+
+/* ─── Footer ─── */
+footer {
+  position: relative; z-index: 1;
+  margin-top: 60px; text-align: center;
+  color: rgba(255,255,255,0.2); font-size: 12px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+footer strong { color: rgba(255,255,255,0.35); }
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  main { padding: 40px 16px 60px; }
+  .hero { margin-bottom: 40px; }
+  .cards { gap: 14px; }
+  .card { padding: 22px 20px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<div class="grid-overlay"></div>
+
+<main>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="logo-ring"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="hero-label">North Bangkok University</div>
+    <h1 class="hero-title">NBU Activity<br>Check-in</h1>
+    <p class="hero-sub">ระบบบันทึกการเข้าร่วมกิจกรรมนักศึกษา<br>มหาวิทยาลัยนอร์ทกรุงเทพ</p>
+    <div class="hero-badge">
+      <span class="dot"></span>
+      ระบบพร้อมใช้งาน
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards">
+
+    <a class="card card-admin" href="/admin">
+      <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="card-body">
+        <div class="card-title">Admin Panel</div>
+        <div class="card-desc">จัดการกิจกรรม ผู้ใช้งาน นำเข้าข้อมูล และออกรายงาน Excel / CSV</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-url">/admin</span>
+        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+    </a>
+
+    <a class="card card-scanner" href="/scanner">
+      <div class="card-icon"><i class="fa-solid fa-qrcode"></i></div>
+      <div class="card-body">
+        <div class="card-title">Scanner (iPad)</div>
+        <div class="card-desc">หน้าจอสแกน QR สำหรับเครื่องสแกนบาร์โค้ด พร้อม portrait display mode</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-url">/scanner</span>
+        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+    </a>
+
+    <a class="card card-mobile" href="/mobile">
+      <div class="card-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+      <div class="card-body">
+        <div class="card-title">Mobile Scanner</div>
+        <div class="card-desc">สแกน QR ด้วยกล้องสมาร์ทโฟน สำหรับอาจารย์ใช้งานในภาคสนาม</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-url">/mobile</span>
+        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+    </a>
+
+    <a class="card card-stats" href="/stats">
+      <div class="card-icon"><i class="fa-solid fa-chart-bar"></i></div>
+      <div class="card-body">
+        <div class="card-title">Statistics</div>
+        <div class="card-desc">Dashboard สถิติการเข้าร่วมกิจกรรม สำหรับผู้บริหารและคณบดี</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-url">/stats</span>
+        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <strong>NBU Activity Check-in System</strong> &nbsp;·&nbsp; มหาวิทยาลัยนอร์ทกรุงเทพ
+</footer>
+
+</body>
+</html>

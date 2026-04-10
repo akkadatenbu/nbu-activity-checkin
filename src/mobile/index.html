@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NBU Scanner (Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --blue: #003B7A;
+  --blue-light: #0066cc;
+  --gray: #6b7280;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+}
+html, body {
+  height: 100%;
+  font-family: 'Prompt', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+body { display: flex; flex-direction: column; }
+
+/* ─── Header ─── */
+header {
+  background: var(--blue);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.logo-text h1 { font-size: 15px; font-weight: 700; }
+.logo-text p  { font-size: 11px; color: #93c5fd; }
+.badge-status { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-open   { background: var(--green); color: #fff; }
+.badge-closed { background: var(--red);   color: #fff; }
+
+/* ─── Screens ─── */
+.screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ─── Login Screen ─── */
+#login-screen { align-items: center; justify-content: center; padding: 24px 20px; }
+.login-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 400px;
+}
+.login-box h2 { font-size: 20px; margin-bottom: 4px; }
+.login-box .sub { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+.form-group input:focus { outline: none; border-color: var(--blue-light); }
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-primary:disabled { background: var(--gray); }
+.error-msg { color: var(--red); font-size: 13px; margin-top: 10px; text-align: center; }
+
+/* ─── Main Screen ─── */
+#main-screen { padding: 0; }
+
+/* Activity bar */
+.activity-bar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.activity-bar select {
+  flex: 1;
+  padding: 9px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+}
+.btn-sm {
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn-open    { background: var(--green); color: #fff; }
+.btn-close   { background: var(--red);   color: #fff; }
+.btn-logout  { background: var(--border); color: var(--text); padding: 9px 10px; }
+
+/* ─── Tabs ─── */
+.tabs {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tab-btn.active { color: var(--blue-light); border-bottom-color: var(--blue-light); }
+
+/* ─── Tab content ─── */
+.tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.tab-content.active { display: flex; }
+
+/* ─── Camera tab ─── */
+#camera-tab { position: relative; }
+#qr-reader {
+  width: 100%;
+  flex: 1;
+  background: #000;
+  overflow: hidden;
+}
+/* Override html5-qrcode default styles */
+#qr-reader > div { border: none !important; }
+#qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+#qr-reader img { display: none !important; }
+#qr-reader__dashboard_section_csr button {
+  background: var(--blue) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+#qr-reader__status_span { display: none !important; }
+#qr-reader__header_message { display: none !important; }
+#qr-reader__filescan_input { display: none !important; }
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+.scan-frame {
+  width: 220px;
+  height: 220px;
+  position: relative;
+}
+.scan-frame::before, .scan-frame::after,
+.scan-frame > span::before, .scan-frame > span::after {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: #fff;
+  border-style: solid;
+  opacity: 0.9;
+}
+.scan-frame::before  { top: 0;    left: 0;  border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.scan-frame::after   { top: 0;    right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.scan-frame > span::before { bottom: 0; left: 0;  border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.scan-frame > span::after  { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+.camera-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  padding: 32px 16px 14px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  pointer-events: none;
+  z-index: 10;
+}
+.btn-flip-camera {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+}
+.btn-flip-camera:active { background: rgba(0,0,0,0.75); }
+
+/* ─── Manual tab ─── */
+#manual-tab { overflow-y: auto; padding: 16px; gap: 12px; }
+.manual-search { display: flex; gap: 8px; }
+.manual-search input {
+  flex: 1;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+.manual-search input:focus { outline: none; border-color: var(--blue-light); }
+.manual-search button {
+  padding: 12px 18px;
+  background: var(--blue-light);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.search-result-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.search-result-item:active { background: var(--border); }
+.search-result-item .sri-name { font-size: 15px; font-weight: 600; }
+.search-result-item .sri-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.search-result-item .sri-icon {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── List tab ─── */
+#list-tab { overflow-y: auto; padding: 12px; gap: 8px; }
+.list-summary {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 0 4px;
+}
+.att-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.att-num  { font-size: 12px; color: var(--text-muted); min-width: 22px; text-align: center; }
+.att-info { flex: 1; min-width: 0; }
+.att-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.att-sub  { font-size: 11px; color: var(--text-muted); }
+.method-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.method-qr     { background: rgba(34,197,94,0.15);  color: var(--green); }
+.method-manual { background: rgba(245,158,11,0.15); color: var(--yellow); }
+.att-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 48px 20px; font-size: 14px; }
+.empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
+
+/* ─── Result overlay ─── */
+#result-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  animation: popIn 0.25s ease;
+}
+#result-overlay.active { display: flex; }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+#result-overlay.ro-success  { background: #052e16; }
+#result-overlay.ro-duplicate { background: #1c0a0a; }
+#result-overlay.ro-error    { background: #1c0f00; }
+
+.ro-icon { font-size: 72px; margin-bottom: 8px; }
+.ro-status {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+.ro-success  .ro-status { color: var(--green); }
+.ro-duplicate .ro-status { color: var(--red); }
+.ro-error    .ro-status { color: var(--yellow); }
+
+.ro-photo {
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card);
+  border: 4px solid rgba(255,255,255,0.15);
+  margin-bottom: 16px;
+}
+.ro-success  .ro-photo { border-color: var(--green); }
+.ro-duplicate .ro-photo { border-color: var(--red); }
+.ro-photo-placeholder {
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: var(--card);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.ro-name    { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.ro-faculty { font-size: 15px; color: var(--text-muted); margin-bottom: 14px; }
+.ro-id-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 99px;
+  padding: 6px 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 32px;
+}
+.ro-dismiss {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 8px;
+}
+
+/* ─── Toast ─── */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.3s;
+  z-index: 1000;
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.t-green { color: var(--green); border-color: var(--green); }
+#toast.t-red   { color: var(--red);   border-color: var(--red); }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- Result overlay (full-screen) -->
+<div id="result-overlay" onclick="hideResult()">
+  <div class="ro-icon" id="ro-icon"></div>
+  <div class="ro-status" id="ro-status"></div>
+  <div id="ro-photo-wrap">
+    <div class="ro-photo-placeholder"><i class="fa-solid fa-user"></i></div>
+  </div>
+  <div class="ro-name"    id="ro-name"></div>
+  <div class="ro-faculty" id="ro-faculty"></div>
+  <div class="ro-id-badge" id="ro-id"></div>
+  <div class="ro-dismiss">แตะเพื่อปิด</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo-text">
+    <h1><i class="fa-solid fa-mobile-screen-button"></i> NBU Mobile Scanner</h1>
+    <p>สแกน QR ด้วยกล้องสมาร์ทโฟน</p>
+  </div>
+  <span id="session-badge" class="badge-status badge-closed">ยังไม่เปิด</span>
+</header>
+
+<!-- Login Screen -->
+<div class="screen active" id="login-screen">
+  <div class="login-box">
+    <h2>เข้าสู่ระบบ</h2>
+    <p class="sub">สำหรับอาจารย์ / เจ้าหน้าที่</p>
+    <div class="form-group">
+      <label>ชื่อผู้ใช้</label>
+      <input id="login-username" type="text" placeholder="username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input id="login-password" type="password" placeholder="password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">เข้าสู่ระบบ</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+</div>
+
+<!-- Main Screen -->
+<div class="screen" id="main-screen">
+  <!-- Activity bar -->
+  <div class="activity-bar">
+    <select id="activity-select">
+      <option value="">-- เลือกกิจกรรม --</option>
+    </select>
+    <button class="btn-sm btn-open"  id="btn-open-session">เปิด</button>
+    <button class="btn-sm btn-close" id="btn-close-session" style="display:none">ปิด</button>
+    <button class="btn-sm btn-logout" id="btn-logout" title="ออกจากระบบ">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="camera">
+      <i class="fa-solid fa-camera"></i> สแกน QR
+    </button>
+    <button class="tab-btn" data-tab="manual">
+      <i class="fa-solid fa-keyboard"></i> ค้นหา
+    </button>
+    <button class="tab-btn" data-tab="list">
+      <i class="fa-solid fa-list-check"></i> รายชื่อ
+      <span id="tab-count" style="margin-left:4px;background:var(--blue);border-radius:99px;padding:1px 7px;font-size:11px">0</span>
+    </button>
+  </div>
+
+  <!-- Camera Tab -->
+  <div class="tab-content active" id="camera-tab">
+    <div id="qr-reader"></div>
+    <div class="camera-overlay">
+      <div class="scan-frame"><span></span></div>
+    </div>
+    <button type="button" class="btn-flip-camera" id="btn-flip-camera" title="สลับกล้อง" onclick="flipCamera()">
+      <i class="fa-solid fa-camera-rotate"></i>
+    </button>
+    <div class="camera-hint">จ่อ QR Code ของนักศึกษาให้อยู่ในกรอบ</div>
+  </div>
+
+  <!-- Manual Tab -->
+  <div class="tab-content" id="manual-tab">
+    <div class="manual-search">
+      <input id="manual-input" type="search" placeholder="ชื่อหรือรหัสนักศึกษา..." autocomplete="off">
+      <button onclick="doSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- List Tab -->
+  <div class="tab-content" id="list-tab">
+    <div class="list-summary" id="list-summary">0 คน</div>
+    <div id="list-container">
+      <div class="empty-state">
+        <i class="fa-solid fa-clipboard-list"></i>
+        ยังไม่มีผู้เข้าร่วม
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+let token           = localStorage.getItem('mobile_scanner_token') || '';
+let currentActivity = null;
+let currentSession  = null;
+let attendanceList  = [];
+let scanner         = null;
+let scanCooldown    = false;
+let resultTimer     = null;
+let cameraList      = [];
+let cameraIndex     = 0;
+
+// ─── Audio ────────────────────────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+function beep(freq = 880, dur = 120) {
+  try {
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur / 1000);
+    osc.start(); osc.stop(ctx.currentTime + dur / 1000);
+  } catch {}
+}
+const beepOk  = () => beep(880, 150);
+const beepErr = () => { beep(300, 120); setTimeout(() => beep(250, 120), 140); };
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show t-${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3000);
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers },
+    ...opts,
+  });
+  return res.json();
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('btn-login');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  try {
+    const data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    if (!data.success) { errEl.textContent = data.message; return; }
+    token = data.token;
+    localStorage.setItem('mobile_scanner_token', token);
+    showMainScreen();
+  } catch { errEl.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์'; }
+  finally { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+async function showMainScreen() {
+  document.getElementById('login-screen').classList.remove('active');
+  document.getElementById('main-screen').classList.add('active');
+  await loadActivities();
+  startCamera();
+}
+
+async function loadActivities() {
+  const data = await apiFetch('/activities');
+  if (!data.success) return;
+  const sel = document.getElementById('activity-select');
+  sel.innerHTML = '<option value="">-- เลือกกิจกรรม --</option>';
+  data.data.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.title}`;
+    sel.appendChild(opt);
+  });
+}
+
+// ─── Activity selection ───────────────────────────────────────────────────────
+document.getElementById('activity-select').addEventListener('change', async function() {
+  const id = this.value;
+  if (!id) { currentActivity = null; currentSession = null; updateSessionUI(); return; }
+  const data = await apiFetch(`/activities/${id}`);
+  if (!data.success) return;
+  currentActivity = data.data;
+  currentSession  = data.data.current_session;
+  updateSessionUI();
+  await loadList();
+});
+
+function updateSessionUI() {
+  const badge    = document.getElementById('session-badge');
+  const btnOpen  = document.getElementById('btn-open-session');
+  const btnClose = document.getElementById('btn-close-session');
+
+  if (!currentSession || currentSession.status !== 'open') {
+    badge.textContent = 'ยังไม่เปิด';
+    badge.className   = 'badge-status badge-closed';
+    btnOpen.style.display  = '';
+    btnClose.style.display = 'none';
+  } else {
+    badge.textContent = 'เปิด ✓';
+    badge.className   = 'badge-status badge-open';
+    btnOpen.style.display  = 'none';
+    btnClose.style.display = '';
+  }
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────────
+document.getElementById('btn-open-session').addEventListener('click', async () => {
+  if (!currentActivity) { showToast('เลือกกิจกรรมก่อน', 'red'); return; }
+  const data = await apiFetch(`/activities/${currentActivity.id}/session/open`, { method: 'POST' });
+  if (!data.success) { showToast(data.message, 'red'); return; }
+  currentSession = data.data;
+  updateSessionUI();
+  showToast('เปิด Session สำเร็จ');
+});
+
+document.getElementById('btn-close-session').addEventListener('click', async () => {
+  if (!currentSession) return;
+  const r = await Swal.fire({
+    title: 'ปิด Session?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ปิด',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626',
+    background: '#1e293b',
+    color: '#f1f5f9',
+  });
+  if (!r.isConfirmed) return;
+  const data = await apiFetch(`/activities/${currentActivity.id}/session/close`, {
+    method: 'POST',
+    body: JSON.stringify({ session_id: currentSession.id }),
+  });
+  if (!data.success) { showToast(data.message, 'red'); return; }
+  currentSession = null;
+  updateSessionUI();
+  showToast('ปิด Session แล้ว', 'red');
+});
+
+// ─── Camera / QR ─────────────────────────────────────────────────────────────
+function startCamera() {
+  if (scanner) return;
+  scanner = new Html5Qrcode('qr-reader');
+  Html5Qrcode.getCameras().then(cameras => {
+    if (!cameras.length) { showToast('ไม่พบกล้อง', 'red'); return; }
+    cameraList = cameras;
+    // เลือกกล้องหลัง (environment) เป็นค่าเริ่มต้น
+    const backIdx = cameras.findIndex(c => /back|rear|environment/i.test(c.label));
+    cameraIndex = backIdx >= 0 ? backIdx : cameras.length - 1;
+
+    // แสดงปุ่มสลับเฉพาะเมื่อมีกล้องมากกว่า 1 ตัว
+    if (cameras.length > 1) {
+      const btn = document.getElementById('btn-flip-camera');
+      btn.style.display = 'flex';
+    }
+
+    launchCamera();
+  }).catch(() => showToast('ไม่สามารถเข้าถึงกล้องได้', 'red'));
+}
+
+function launchCamera() {
+  scanner.start(
+    cameraList[cameraIndex].id,
+    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+    onScanSuccess,
+    () => {}
+  ).catch(err => {
+    console.warn('Camera error:', err);
+    showToast('ไม่สามารถเปิดกล้องได้', 'red');
+  });
+}
+
+async function flipCamera() {
+  if (!scanner || cameraList.length < 2) return;
+  const btn = document.getElementById('btn-flip-camera');
+  btn.disabled = true;
+  try {
+    await scanner.stop();
+    cameraIndex = (cameraIndex + 1) % cameraList.length;
+    launchCamera();
+  } catch (err) {
+    console.warn('Flip camera error:', err);
+    showToast('สลับกล้องไม่สำเร็จ', 'red');
+  } finally {
+    setTimeout(() => { btn.disabled = false; }, 800);
+  }
+}
+
+async function onScanSuccess(raw) {
+  if (scanCooldown) return;
+  if (!currentActivity || !currentSession || currentSession.status !== 'open') {
+    showToast('เลือกกิจกรรมและเปิด Session ก่อน', 'red'); return;
+  }
+  scanCooldown = true;
+  setTimeout(() => { scanCooldown = false; }, 2500);
+
+  const data = await apiFetch('/attendance/scan', {
+    method: 'POST',
+    body: JSON.stringify({ qr_raw: raw, activity_id: currentActivity.id, session_id: currentSession.id }),
+  });
+
+  if (data.success) {
+    beepOk();
+    showResult('success', data.student);
+    appendList(data.student, 'qr_scan');
+  } else if (data.already_checked) {
+    beepErr();
+    showResult('duplicate', data.student);
+  } else {
+    beepErr();
+    showResult('error', null, data.message);
+  }
+}
+
+// ─── Result overlay ───────────────────────────────────────────────────────────
+function showResult(type, student, errorMsg = '') {
+  const overlay = document.getElementById('result-overlay');
+  const icons   = { success: '✅', duplicate: '⚠️', error: '❌' };
+  const texts   = { success: 'เช็คชื่อสำเร็จ', duplicate: 'เช็คชื่อซ้ำ', error: errorMsg || 'ไม่สำเร็จ' };
+
+  document.getElementById('ro-icon').textContent   = icons[type];
+  document.getElementById('ro-status').textContent = texts[type];
+  document.getElementById('ro-name').textContent    = student ? (student.full_name || '-') : '-';
+  document.getElementById('ro-faculty').textContent = student
+    ? `${student.faculty || ''} ${student.major ? '· ' + student.major : ''}`.trim()
+    : '';
+  document.getElementById('ro-id').textContent = student ? (student.student_id || '') : '';
+
+  const photoWrap = document.getElementById('ro-photo-wrap');
+  if (student && student.photo_url) {
+    photoWrap.innerHTML = `<img class="ro-photo" src="${student.photo_url}" onerror="this.outerHTML='<div class=ro-photo-placeholder><i class=\\'fa-solid fa-user\\'></i></div>'">`;
+  } else {
+    photoWrap.innerHTML = `<div class="ro-photo-placeholder"><i class="fa-solid fa-user"></i></div>`;
+  }
+
+  overlay.className = `active ro-${type}`;
+  clearTimeout(resultTimer);
+  resultTimer = setTimeout(hideResult, 4000);
+}
+
+function hideResult() {
+  clearTimeout(resultTimer);
+  document.getElementById('result-overlay').className = '';
+}
+
+// ─── Manual search ────────────────────────────────────────────────────────────
+document.getElementById('manual-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+  const q = document.getElementById('manual-input').value.trim();
+  if (!q) return;
+  const data = await apiFetch(`/students/search?q=${encodeURIComponent(q)}`);
+  const container = document.getElementById('search-results');
+  if (!data.success || !data.data.length) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px 0">ไม่พบข้อมูล</div>';
+    return;
+  }
+  container.innerHTML = data.data.map(s => `
+    <div class="search-result-item" onclick="checkInManual('${s.student_id}')">
+      <div class="sri-icon"><i class="fa-solid fa-user"></i></div>
+      <div>
+        <div class="sri-name">${s.full_name}</div>
+        <div class="sri-sub">${s.student_id} · ${s.faculty || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function checkInManual(studentId) {
+  if (!currentActivity || !currentSession || currentSession.status !== 'open') {
+    showToast('เปิด Session ก่อนเช็คชื่อ', 'red'); return;
+  }
+  const data = await apiFetch('/attendance/manual', {
+    method: 'POST',
+    body: JSON.stringify({ student_id: studentId, activity_id: currentActivity.id, session_id: currentSession.id }),
+  });
+  document.getElementById('search-results').innerHTML = '';
+  document.getElementById('manual-input').value = '';
+  if (data.success) {
+    beepOk();
+    showResult('success', data.student);
+    appendList(data.student, 'manual');
+  } else {
+    showToast(data.message, 'red');
+  }
+}
+
+// ─── Attendance list ──────────────────────────────────────────────────────────
+async function loadList() {
+  if (!currentActivity) return;
+  const data = await apiFetch(`/attendance/${currentActivity.id}`);
+  if (!data.success) return;
+  attendanceList = data.data;
+  renderList();
+}
+
+function appendList(student, method) {
+  attendanceList.push({
+    student_id: student.student_id, student_name: student.full_name,
+    faculty: student.faculty, photo_url: student.photo_url,
+    method, checked_at: new Date().toISOString(),
+  });
+  renderList();
+}
+
+function renderList() {
+  const count = attendanceList.length;
+  document.getElementById('list-summary').textContent = `${count} คน`;
+  document.getElementById('tab-count').textContent = count;
+
+  const container = document.getElementById('list-container');
+  if (!count) {
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-clipboard-list"></i>ยังไม่มีผู้เข้าร่วม</div>';
+    return;
+  }
+  container.innerHTML = [...attendanceList].reverse().map((r, i) => `
+    <div class="att-item">
+      <span class="att-num">${count - i}</span>
+      <div class="att-info">
+        <div class="att-name">${r.student_name || '-'}</div>
+        <div class="att-sub">${r.student_id} · ${r.faculty || ''}</div>
+      </div>
+      <span class="method-badge ${r.method === 'qr_scan' ? 'method-qr' : 'method-manual'}">${r.method === 'qr_scan' ? 'QR' : 'Manual'}</span>
+      <span class="att-time">${new Date(r.checked_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+    </div>
+  `).join('');
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`${tab}-tab`).classList.add('active');
+  });
+});
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-logout').addEventListener('click', async () => {
+  const r = await Swal.fire({
+    title: 'ออกจากระบบ?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ออก',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#003B7A',
+    background: '#1e293b',
+    color: '#f1f5f9',
+  });
+  if (!r.isConfirmed) return;
+  if (scanner) { try { await scanner.stop(); } catch {} scanner = null; }
+  localStorage.removeItem('mobile_scanner_token');
+  token = ''; currentActivity = null; currentSession = null; attendanceList = [];
+  document.getElementById('main-screen').classList.remove('active');
+  document.getElementById('login-screen').classList.add('active');
+  updateSessionUI();
+});
+
+// ─── Auto-login ───────────────────────────────────────────────────────────────
+(async () => {
+  if (!token) return;
+  try {
+    const data = await apiFetch('/activities');
+    if (data.success) showMainScreen();
+    else localStorage.removeItem('mobile_scanner_token');
+  } catch { localStorage.removeItem('mobile_scanner_token'); }
+})();
+
+// Login listeners
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBU Activity Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue:  #003B7A;
+    --blue2: #0066cc;
+    --green: #22c55e;
+    --red:   #ef4444;
+    --yellow:#f59e0b;
+    --bg:    #f1f5f9;
+    --card:  #ffffff;
+    --border:#e2e8f0;
+    --text:  #1e293b;
+    --muted: #64748b;
+    --sidebar-w: 240px;
+  }
+  body { font-family: 'Prompt', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--blue);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo h1 { font-size: 15px; font-weight: 700; line-height: 1.4; }
+  .sidebar-logo p  { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 8px 16px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: rgba(255,255,255,0.8);
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.12); border-left-color: #fff; color: #fff; font-weight: 600; }
+  .nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+  .sidebar-footer {
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+    opacity: 0.8;
+  }
+  .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .btn-logout-side {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-logout-side:hover { background: rgba(255,255,255,0.2); }
+
+  /* ─── Main ─── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar h2 { font-size: 18px; font-weight: 700; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+
+  .content { padding: 24px; flex: 1; }
+
+  /* ─── Cards ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .stat-icon { font-size: 28px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; }
+  .stat-blue  .stat-icon { background: #dbeafe; color: var(--blue); }
+  .stat-green .stat-icon { background: #dcfce7; color: #15803d; }
+  .stat-yellow .stat-icon { background: #fef9c3; color: #b45309; }
+  .stat-red   .stat-icon { background: #fee2e2; color: #dc2626; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-size: 28px; font-weight: 800; }
+  .stat-blue .stat-value { color: var(--blue); }
+  .stat-green .stat-value { color: var(--green); }
+  .stat-yellow .stat-value { color: var(--yellow); }
+  .stat-red .stat-value { color: var(--red); }
+
+  /* ─── Table ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title { font-size: 15px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+
+  /* ─── Badges ─── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-green  { background: #dcfce7; color: #15803d; }
+  .badge-red    { background: #fee2e2; color: #dc2626; }
+  .badge-yellow { background: #fef9c3; color: #b45309; }
+  .badge-gray   { background: #f1f5f9; color: var(--muted); }
+
+  /* ─── Buttons ─── */
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-blue   { background: var(--blue);  color: #fff; }
+  .btn-green  { background: var(--green); color: #fff; }
+  .btn-red    { background: var(--red);   color: #fff; }
+  .btn-gray   { background: var(--border); color: var(--text); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* ─── Modal ─── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 18px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ─── Form ─── */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text);
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .form-control:focus { outline: none; border-color: var(--blue2); }
+  textarea.form-control { min-height: 80px; resize: vertical; }
+
+  /* ─── Login screen ─── */
+  #login-screen {
+    position: fixed; inset: 0;
+    background: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .login-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-box h2 { font-size: 22px; margin-bottom: 6px; color: var(--blue); }
+  .login-box p  { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+  /* ─── Toast ─── */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(80px);
+    transition: transform 0.3s;
+    z-index: 999;
+  }
+  #toast.show { transform: translateY(0); }
+  #toast.t-green { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  #toast.t-red   { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+
+  /* ─── Page sections ─── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--blue2);
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>NBU Activity Admin</h2>
+    <p>ระบบจัดการกิจกรรม มหาวิทยาลัยนอร์ทกรุงเทพ</p>
+    <div class="form-group">
+      <label>ชื่อผู้ใช้</label>
+      <input id="login-username" class="form-control" type="text" placeholder="username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input id="login-password" class="form-control" type="password" placeholder="password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-blue" style="width:100%;padding:12px;font-size:15px" id="btn-login">เข้าสู่ระบบ</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>NBU Activity</h1>
+    <p>Admin Panel</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">หลัก</div>
+    <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+      <span class="icon"><i class="fa-solid fa-chart-pie"></i></span> Dashboard
+    </a>
+    <a class="nav-item" data-page="activities" onclick="showPage('activities')">
+      <span class="icon"><i class="fa-solid fa-calendar-days"></i></span> กิจกรรม
+    </a>
+    <div class="nav-section" id="nav-section-admin">จัดการ</div>
+    <a class="nav-item" data-page="users" onclick="showPage('users')" id="nav-users">
+      <span class="icon"><i class="fa-solid fa-users"></i></span> ผู้ใช้งาน
+    </a>
+    <a class="nav-item" data-page="reports" onclick="showPage('reports')">
+      <span class="icon"><i class="fa-solid fa-file-lines"></i></span> รายงาน
+    </a>
+    <a class="nav-item" href="/admin/import" id="nav-import">
+      <span class="icon"><i class="fa-solid fa-file-import"></i></span> นำเข้านักศึกษา
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div style="font-weight:600;font-size:13px" id="sidebar-name">-</div>
+        <div style="font-size:11px;opacity:0.6" id="sidebar-role">-</div>
+      </div>
+    </div>
+    <button class="btn-logout-side" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="topbar-right">
+      <span id="topbar-user">-</span>
+      <span id="topbar-time"></span>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ─── Dashboard Page ─── -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card stat-blue"><span class="stat-icon"><i class="fa-solid fa-calendar-days"></i></span><div><div class="stat-label">กิจกรรมทั้งหมด</div><div class="stat-value" id="stat-activities">-</div></div></div>
+        <div class="stat-card stat-green"><span class="stat-icon"><i class="fa-solid fa-circle-check"></i></span><div><div class="stat-label">เช็คชื่อวันนี้</div><div class="stat-value" id="stat-today">-</div></div></div>
+        <div class="stat-card stat-yellow"><span class="stat-icon"><i class="fa-solid fa-user-graduate"></i></span><div><div class="stat-label">นักศึกษาในระบบ</div><div class="stat-value" id="stat-students">-</div></div></div>
+        <div class="stat-card stat-blue"><span class="stat-icon"><i class="fa-solid fa-users"></i></span><div><div class="stat-label">ผู้ใช้งาน</div><div class="stat-value" id="stat-users">-</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">กิจกรรมล่าสุด</span>
+          <button class="btn btn-blue btn-sm" onclick="showPage('activities')">ดูทั้งหมด</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>ชื่อกิจกรรม</th><th>วันที่</th><th>สถานที่</th><th>ผู้เข้าร่วม</th><th>สถานะ</th>
+          </tr></thead>
+          <tbody id="dashboard-activity-list">
+            <tr><td colspan="5" class="empty-state">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Activities Page ─── -->
+    <div class="page" id="page-activities">
+      <div class="search-bar">
+        <input id="act-search" type="text" placeholder="ค้นหากิจกรรม..." oninput="filterActivities()">
+        <button class="btn btn-blue" onclick="openActivityModal()">+ สร้างกิจกรรม</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>ชื่อกิจกรรม</th><th>วันที่</th><th>สถานที่</th><th>เข้าร่วม / max</th><th>สถานะ</th><th>จัดการ</th>
+          </tr></thead>
+          <tbody id="activity-list">
+            <tr><td colspan="6"><div class="empty-state"><div class="icon"><i class="fa-solid fa-spinner fa-spin"></i></div><p>กำลังโหลด...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Users Page ─── -->
+    <div class="page" id="page-users">
+      <div class="search-bar">
+        <input id="user-search" type="text" placeholder="ค้นหาผู้ใช้..." oninput="filterUsers()">
+        <button class="btn btn-blue" onclick="openUserModal()">+ เพิ่มผู้ใช้</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>ชื่อ-นามสกุล</th><th>Username</th><th>Role</th><th>สถานะ</th><th>จัดการ</th>
+          </tr></thead>
+          <tbody id="user-list">
+            <tr><td colspan="5"><div class="empty-state"><div class="icon"><i class="fa-solid fa-spinner fa-spin"></i></div><p>กำลังโหลด...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Reports Page ─── -->
+    <div class="page" id="page-reports">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ออกรายงาน</span>
+        </div>
+        <div style="padding:24px">
+          <div class="form-group">
+            <label>เลือกกิจกรรม</label>
+            <select id="report-activity" class="form-control" onchange="loadReportPreview()">
+              <option value="">-- เลือกกิจกรรม --</option>
+            </select>
+          </div>
+          <div id="report-preview" style="display:none;margin-bottom:20px">
+            <div class="stats-grid">
+              <div class="stat-card stat-blue"><span class="stat-icon"><i class="fa-solid fa-users"></i></span><div><div class="stat-label">จำนวนเข้าร่วม</div><div class="stat-value" id="rp-total">-</div></div></div>
+              <div class="stat-card stat-green"><span class="stat-icon"><i class="fa-solid fa-qrcode"></i></span><div><div class="stat-label">QR Scan</div><div class="stat-value" id="rp-qr">-</div></div></div>
+              <div class="stat-card stat-yellow"><span class="stat-icon"><i class="fa-solid fa-pen-to-square"></i></span><div><div class="stat-label">Manual</div><div class="stat-value" id="rp-manual">-</div></div></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button class="btn btn-green" onclick="downloadReport('excel')" id="btn-excel" disabled>
+              <i class="fa-solid fa-file-excel"></i> Export Excel
+            </button>
+            <button class="btn btn-outline" onclick="downloadReport('csv')" id="btn-csv" disabled>
+              <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Modal -->
+<div class="modal-backdrop" id="activity-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="activity-modal-title">สร้างกิจกรรม</h3>
+      <button class="modal-close" onclick="closeModal('activity-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="act-id">
+      <div class="form-group">
+        <label>ชื่อกิจกรรม *</label>
+        <input class="form-control" id="act-title" placeholder="ชื่อกิจกรรม">
+      </div>
+      <div class="form-group">
+        <label>คำอธิบาย</label>
+        <textarea class="form-control" id="act-desc" placeholder="รายละเอียดกิจกรรม"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>วันที่เริ่ม *</label>
+          <input class="form-control" id="act-start" type="datetime-local">
+        </div>
+        <div class="form-group">
+          <label>วันที่สิ้นสุด *</label>
+          <input class="form-control" id="act-end" type="datetime-local">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>สถานที่</label>
+          <input class="form-control" id="act-location" placeholder="ห้อง / อาคาร">
+        </div>
+        <div class="form-group">
+          <label>ประเภทกิจกรรม</label>
+          <select class="form-control" id="act-type">
+            <option value="general">ทั่วไป</option>
+            <option value="academic">วิชาการ</option>
+            <option value="sport">กีฬา</option>
+            <option value="culture">วัฒนธรรม</option>
+            <option value="volunteer">จิตอาสา</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>จำนวนที่รับ (0 = ไม่จำกัด)</label>
+        <input class="form-control" id="act-max" type="number" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label>มอบหมาย Staff (เลือกได้หลายคน)</label>
+        <select class="form-control" id="act-staff" multiple style="min-height:100px"></select>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px">Ctrl+Click เพื่อเลือกหลายคน</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('activity-modal')">ยกเลิก</button>
+      <button class="btn btn-blue" onclick="saveActivity()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-backdrop" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">เพิ่มผู้ใช้</h3>
+      <button class="modal-close" onclick="closeModal('user-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="usr-id">
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล *</label>
+        <input class="form-control" id="usr-fullname" placeholder="ชื่อ นามสกุล">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Username *</label>
+          <input class="form-control" id="usr-username" placeholder="username">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select class="form-control" id="usr-role" onchange="toggleFacultyScope()">
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+            <option value="dean">Dean (คณบดี)</option>
+            <option value="superadmin">Superadmin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="faculty-scope-group" style="display:none">
+        <label>คณะที่ดูแล <span style="font-size:11px;color:var(--muted)">(เฉพาะ Dean)</span></label>
+        <select class="form-control" id="usr-faculty-scope">
+          <option value="">-- เลือกคณะ --</option>
+          <option value="รัฐศาสตร์">รัฐศาสตร์</option>
+          <option value="บริหารธุรกิจ">บริหารธุรกิจ</option>
+          <option value="เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล">เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล</option>
+          <option value="ศิลปศาสตร์">ศิลปศาสตร์</option>
+          <option value="ศึกษาศาสตร์">ศึกษาศาสตร์</option>
+          <option value="พยาบาลศาสตร์">พยาบาลศาสตร์</option>
+          <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
+          <option value="นิเทศศาสตร์">นิเทศศาสตร์</option>
+          <option value="วิเทศสัมพันธ์">วิเทศสัมพันธ์</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>รหัสผ่าน <span id="pw-hint" style="font-weight:normal;font-size:11px;color:var(--muted)">(เว้นว่างถ้าไม่ต้องการเปลี่ยน)</span></label>
+        <input class="form-control" id="usr-password" type="password" placeholder="รหัสผ่าน">
+      </div>
+      <div class="form-group">
+        <label>สถานะ</label>
+        <select class="form-control" id="usr-active">
+          <option value="true">เปิดใช้งาน</option>
+          <option value="false">ระงับ</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('user-modal')">ยกเลิก</button>
+      <button class="btn btn-blue" onclick="saveUser()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Modal -->
+<div class="modal-backdrop" id="attendance-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 id="att-modal-title">รายชื่อผู้เข้าร่วม</h3>
+      <button class="modal-close" onclick="closeModal('attendance-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <table>
+        <thead><tr>
+          <th>#</th><th>รหัส</th><th>ชื่อ</th><th>คณะ</th><th>เวลา</th><th>วิธี</th><th></th>
+        </tr></thead>
+        <tbody id="att-table-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green btn-sm" id="att-excel-btn" onclick=""><i class="fa-solid fa-file-excel"></i> Excel</button>
+      <button class="btn btn-outline btn-sm" id="att-csv-btn" onclick=""><i class="fa-solid fa-file-csv"></i> CSV</button>
+      <button class="btn btn-gray" onclick="closeModal('attendance-modal')"><i class="fa-solid fa-xmark"></i> ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+let token = localStorage.getItem('admin_token') || '';
+let currentUser = null;
+let allActivities = [], allUsers = [];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers },
+    ...opts,
+  });
+  return res.json();
+}
+
+let toastTimer;
+function toast(msg, type = 'green') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show t-${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3500);
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+}
+function localDT(d) {
+  return new Date(d).toISOString().slice(0, 16);
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  try {
+    const data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    if (!data.success) { errEl.textContent = data.message; return; }
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('admin_token', token);
+    // ถ้ามี redirect param ให้ไปหน้านั้นเลย
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+    if (redirectTo) { window.location.href = redirectTo; return; }
+    initAdmin();
+  } catch { errEl.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์'; }
+}
+
+async function doLogout() {
+  const r = await Swal.fire({
+    title: 'ออกจากระบบ?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ออกจากระบบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#003B7A',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  localStorage.removeItem('admin_token');
+  location.reload();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function initAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('sidebar-name').textContent = currentUser.full_name;
+  document.getElementById('sidebar-role').textContent = currentUser.role;
+  document.getElementById('sidebar-avatar').textContent = currentUser.full_name[0];
+  document.getElementById('topbar-user').textContent = `${currentUser.full_name} (${currentUser.role})`;
+
+  // ซ่อน Users nav ถ้าเป็น staff
+  if (currentUser.role === 'staff') {
+    document.getElementById('nav-users').style.display = 'none';
+    document.getElementById('nav-section-admin').style.display = 'none';
+  }
+
+  setInterval(() => {
+    document.getElementById('topbar-time').textContent = new Date().toLocaleTimeString('th-TH');
+  }, 1000);
+
+  loadDashboard();
+}
+
+// ─── Page navigation ──────────────────────────────────────────────────────────
+const pageTitles = { dashboard: 'Dashboard', activities: 'กิจกรรม', users: 'ผู้ใช้งาน', reports: 'รายงาน' };
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[name];
+
+  if (name === 'activities') loadActivities();
+  if (name === 'users') loadUsers();
+  if (name === 'reports') loadReportActivities();
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [actData, dashData] = await Promise.all([
+    apiFetch('/activities'),
+    apiFetch('/reports/dashboard').catch(() => ({ success: false })),
+  ]);
+
+  if (actData.success) {
+    allActivities = actData.data;
+    document.getElementById('stat-activities').textContent = actData.data.length;
+    const tbody = document.getElementById('dashboard-activity-list');
+    tbody.innerHTML = actData.data.slice(0, 5).map(a => `
+      <tr>
+        <td><strong>${a.title}</strong></td>
+        <td>${formatDate(a.start_datetime)}</td>
+        <td>${a.location || '-'}</td>
+        <td>
+          ${a.total_attended || 0}${a.max_participants ? ' / ' + a.max_participants : ''}
+          ${a.max_participants ? `<div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(a.total_attended||0)/a.max_participants*100)}%"></div></div>` : ''}
+        </td>
+        <td><span class="badge ${a.is_active ? 'badge-green' : 'badge-gray'}">${a.is_active ? 'เปิด' : 'ปิด'}</span></td>
+      </tr>
+    `).join('') || '<tr><td colspan="5"><div class="empty-state"><div class="icon"><i class="fa-solid fa-calendar-xmark"></i></div><p>ยังไม่มีกิจกรรม</p></div></td></tr>';
+  }
+
+  if (dashData.success) {
+    document.getElementById('stat-today').textContent    = dashData.data.today_attendance;
+    document.getElementById('stat-students').textContent = dashData.data.total_students;
+  }
+
+  // Users stat (ถ้า admin)
+  if (currentUser.role !== 'staff') {
+    const usrData = await apiFetch('/users');
+    if (usrData.success) {
+      allUsers = usrData.data;
+      document.getElementById('stat-users').textContent = usrData.data.length;
+    }
+  }
+}
+
+// ─── Activities ───────────────────────────────────────────────────────────────
+async function loadActivities() {
+  const data = await apiFetch('/activities');
+  if (!data.success) { toast(data.message, 'red'); return; }
+  allActivities = data.data;
+  renderActivities(data.data);
+}
+
+function renderActivities(list) {
+  const isAdmin = currentUser.role !== 'staff';
+  const tbody = document.getElementById('activity-list');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon"><i class="fa-solid fa-calendar-xmark"></i></div><p>ยังไม่มีกิจกรรม</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(a => `
+    <tr>
+      <td><strong>${a.title}</strong><br><small style="color:var(--muted)">${a.activity_type}</small></td>
+      <td>${formatDate(a.start_datetime)}</td>
+      <td>${a.location || '-'}</td>
+      <td>
+        ${a.total_attended || 0}${a.max_participants ? ' / ' + a.max_participants : ' คน'}
+        ${a.max_participants ? `<div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(a.total_attended||0)/a.max_participants*100)}%"></div></div>` : ''}
+      </td>
+      <td><span class="badge ${a.is_active ? 'badge-green' : 'badge-gray'}">${a.is_active ? 'เปิด' : 'ปิด'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-gray btn-sm" onclick="viewAttendance('${a.id}','${a.title.replace(/'/g,"\\'")}')">รายชื่อ</button>
+        ${isAdmin ? `
+          <button class="btn btn-blue btn-sm" onclick="openActivityModal('${a.id}')">แก้ไข</button>
+          <button class="btn btn-red btn-sm" onclick="deleteActivity('${a.id}')">ลบ</button>
+        ` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterActivities() {
+  const q = document.getElementById('act-search').value.toLowerCase();
+  renderActivities(allActivities.filter(a => a.title.toLowerCase().includes(q) || (a.location || '').toLowerCase().includes(q)));
+}
+
+async function openActivityModal(id = null) {
+  const isEdit = !!id;
+  document.getElementById('activity-modal-title').textContent = isEdit ? 'แก้ไขกิจกรรม' : 'สร้างกิจกรรม';
+  document.getElementById('act-id').value = '';
+
+  // โหลด staff list
+  await loadStaffList();
+
+  if (isEdit) {
+    const data = await apiFetch(`/activities/${id}`);
+    if (!data.success) { toast('โหลดข้อมูลไม่สำเร็จ', 'red'); return; }
+    const a = data.data;
+    document.getElementById('act-id').value      = a.id;
+    document.getElementById('act-title').value   = a.title;
+    document.getElementById('act-desc').value    = a.description || '';
+    document.getElementById('act-start').value   = localDT(a.start_datetime);
+    document.getElementById('act-end').value     = localDT(a.end_datetime);
+    document.getElementById('act-location').value = a.location || '';
+    document.getElementById('act-type').value    = a.activity_type || 'general';
+    document.getElementById('act-max').value     = a.max_participants || 0;
+
+    // เลือก staff ที่มอบหมายแล้ว
+    const assignedIds = (a.staff || []).map(s => s.user_id);
+    Array.from(document.getElementById('act-staff').options).forEach(opt => {
+      opt.selected = assignedIds.includes(opt.value);
+    });
+  } else {
+    ['act-title','act-desc','act-start','act-end','act-location'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('act-max').value = 0;
+    document.getElementById('act-type').value = 'general';
+    Array.from(document.getElementById('act-staff').options).forEach(o => o.selected = false);
+  }
+
+  openModal('activity-modal');
+}
+
+async function loadStaffList() {
+  const data = await apiFetch('/users');
+  if (!data.success) return;
+  const sel = document.getElementById('act-staff');
+  sel.innerHTML = data.data.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
+}
+
+async function saveActivity() {
+  const id       = document.getElementById('act-id').value;
+  const staffOpts = Array.from(document.getElementById('act-staff').selectedOptions).map(o => o.value);
+  const payload = {
+    title:           document.getElementById('act-title').value.trim(),
+    description:     document.getElementById('act-desc').value,
+    start_datetime:  document.getElementById('act-start').value,
+    end_datetime:    document.getElementById('act-end').value,
+    location:        document.getElementById('act-location').value,
+    activity_type:   document.getElementById('act-type').value,
+    max_participants: parseInt(document.getElementById('act-max').value) || 0,
+    staff_ids:       staffOpts,
+  };
+
+  if (!payload.title || !payload.start_datetime || !payload.end_datetime) {
+    toast('กรุณากรอกข้อมูลที่จำเป็น', 'red'); return;
+  }
+
+  const data = id
+    ? await apiFetch(`/activities/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+    : await apiFetch('/activities', { method: 'POST', body: JSON.stringify(payload) });
+
+  if (!data.success) { toast(data.message, 'red'); return; }
+  toast(id ? 'แก้ไขกิจกรรมสำเร็จ' : 'สร้างกิจกรรมสำเร็จ');
+  closeModal('activity-modal');
+  loadActivities();
+}
+
+async function deleteActivity(id) {
+  const r = await Swal.fire({
+    title: 'ลบกิจกรรมนี้?',
+    text: 'ข้อมูลการเช็คชื่อทั้งหมดจะถูกลบด้วย ไม่สามารถกู้คืนได้',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  const data = await apiFetch(`/activities/${id}`, { method: 'DELETE' });
+  if (!data.success) { toast(data.message, 'red'); return; }
+  toast('ลบกิจกรรมสำเร็จ');
+  loadActivities();
+}
+
+// ─── Attendance View ──────────────────────────────────────────────────────────
+async function viewAttendance(activityId, title) {
+  const data = await apiFetch(`/attendance/${activityId}`);
+  if (!data.success) { toast(data.message, 'red'); return; }
+  document.getElementById('att-modal-title').textContent = `รายชื่อ: ${title} (${data.total} คน)`;
+  const tbody = document.getElementById('att-table-body');
+  tbody.innerHTML = data.data.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${r.student_id}</td>
+      <td>${r.student_name}</td>
+      <td>${r.faculty || '-'}</td>
+      <td>${formatDate(r.checked_at)}</td>
+      <td><span class="badge ${r.method === 'qr_scan' ? 'badge-green' : 'badge-yellow'}">${r.method === 'qr_scan' ? 'QR' : 'Manual'}</span></td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteAttendance('${r.id}','${activityId}','${title.replace(/'/g,"\\'")}')">ลบ</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="7"><div class="empty-state"><p>ยังไม่มีรายชื่อ</p></div></td></tr>';
+
+  document.getElementById('att-excel-btn').onclick = () => downloadReportFor(activityId, 'excel');
+  document.getElementById('att-csv-btn').onclick   = () => downloadReportFor(activityId, 'csv');
+  openModal('attendance-modal');
+}
+
+async function deleteAttendance(id, activityId, title) {
+  const r = await Swal.fire({
+    title: 'ลบรายการเช็คชื่อ?',
+    text: 'ไม่สามารถกู้คืนได้',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  const data = await apiFetch(`/attendance/${id}`, { method: 'DELETE' });
+  if (!data.success) { toast(data.message, 'red'); return; }
+  toast('ลบสำเร็จ');
+  viewAttendance(activityId, title);
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  if (currentUser.role === 'staff') return;
+  const data = await apiFetch('/users');
+  if (!data.success) return;
+  allUsers = data.data;
+  renderUsers(data.data);
+}
+
+function renderUsers(list) {
+  const tbody = document.getElementById('user-list');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon"><i class="fa-solid fa-users-slash"></i></div><p>ยังไม่มีผู้ใช้</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(u => `
+    <tr>
+      <td><strong>${u.full_name}</strong></td>
+      <td>${u.username}</td>
+      <td><span class="badge badge-blue">${u.role}</span></td>
+      <td><span class="badge ${u.is_active ? 'badge-green' : 'badge-red'}">${u.is_active ? 'เปิดใช้งาน' : 'ระงับ'}</span></td>
+      <td>
+        <button class="btn btn-blue btn-sm" onclick="openUserModal('${u.id}')">แก้ไข</button>
+        <button class="btn btn-red btn-sm" onclick="deleteUser('${u.id}')">ลบ</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  renderUsers(allUsers.filter(u => u.full_name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)));
+}
+
+function openUserModal(id = null) {
+  document.getElementById('user-modal-title').textContent = id ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้';
+  document.getElementById('usr-id').value = '';
+  ['usr-fullname','usr-username','usr-password','usr-faculty-scope'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('usr-role').value = 'staff';
+  document.getElementById('usr-active').value = 'true';
+  document.getElementById('pw-hint').style.display = id ? 'inline' : 'none';
+  toggleFacultyScope();
+
+  if (id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('usr-id').value            = u.id;
+    document.getElementById('usr-fullname').value      = u.full_name;
+    document.getElementById('usr-username').value      = u.username;
+    document.getElementById('usr-role').value          = u.role;
+    document.getElementById('usr-active').value        = String(u.is_active);
+    document.getElementById('usr-faculty-scope').value = u.faculty_scope || '';
+    toggleFacultyScope();
+  }
+  openModal('user-modal');
+}
+
+function toggleFacultyScope() {
+  const role = document.getElementById('usr-role').value;
+  document.getElementById('faculty-scope-group').style.display = role === 'dean' ? 'block' : 'none';
+}
+
+async function saveUser() {
+  const id       = document.getElementById('usr-id').value;
+  const password = document.getElementById('usr-password').value;
+  const role = document.getElementById('usr-role').value;
+  const payload  = {
+    full_name:     document.getElementById('usr-fullname').value.trim(),
+    username:      document.getElementById('usr-username').value.trim(),
+    role,
+    is_active:     document.getElementById('usr-active').value === 'true',
+    faculty_scope: role === 'dean' ? document.getElementById('usr-faculty-scope').value.trim() : null,
+  };
+  if (password) payload.password = password;
+
+  if (!payload.full_name || !payload.username) { toast('กรุณากรอกชื่อและ username', 'red'); return; }
+  if (!id && !password) { toast('กรุณากรอกรหัสผ่าน', 'red'); return; }
+
+  const data = id
+    ? await apiFetch(`/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+    : await apiFetch('/users', { method: 'POST', body: JSON.stringify(payload) });
+
+  if (!data.success) { toast(data.message, 'red'); return; }
+  toast(id ? 'แก้ไขผู้ใช้สำเร็จ' : 'เพิ่มผู้ใช้สำเร็จ');
+  closeModal('user-modal');
+  loadUsers();
+}
+
+async function deleteUser(id) {
+  const r = await Swal.fire({
+    title: 'ลบผู้ใช้?',
+    text: 'ไม่สามารถกู้คืนได้',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  const data = await apiFetch(`/users/${id}`, { method: 'DELETE' });
+  if (!data.success) { toast(data.message, 'red'); return; }
+  toast('ลบผู้ใช้สำเร็จ');
+  loadUsers();
+}
+
+// ─── Reports ──────────────────────────────────────────────────────────────────
+async function loadReportActivities() {
+  const data = await apiFetch('/activities');
+  if (!data.success) return;
+  const sel = document.getElementById('report-activity');
+  sel.innerHTML = '<option value="">-- เลือกกิจกรรม --</option>';
+  data.data.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.title} (${formatDate(a.start_datetime)})`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('btn-excel').disabled = true;
+  document.getElementById('btn-csv').disabled = true;
+}
+
+async function loadReportPreview() {
+  const id = document.getElementById('report-activity').value;
+  const preview = document.getElementById('report-preview');
+  if (!id) {
+    preview.style.display = 'none';
+    document.getElementById('btn-excel').disabled = true;
+    document.getElementById('btn-csv').disabled = true;
+    return;
+  }
+
+  const data = await apiFetch(`/attendance/${id}`);
+  if (!data.success) return;
+  preview.style.display = 'block';
+  document.getElementById('rp-total').textContent  = data.total;
+  document.getElementById('rp-qr').textContent     = data.data.filter(r => r.method === 'qr_scan').length;
+  document.getElementById('rp-manual').textContent = data.data.filter(r => r.method === 'manual').length;
+  document.getElementById('btn-excel').disabled = false;
+  document.getElementById('btn-csv').disabled = false;
+}
+
+function downloadReport(format) {
+  downloadReportFor(document.getElementById('report-activity').value, format);
+}
+function downloadReportFor(id, format) {
+  window.open(`${API}/reports/${id}/${format}?token=${token}`, '_blank');
+}
+
+// ─── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ─── Login event ──────────────────────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ─── JWT decode (รองรับ Base64URL + UTF-8 ภาษาไทย) ──────────────────────────
+function decodeJWT(t) {
+  const b64 = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64.padEnd(b64.length + (4 - b64.length % 4) % 4, '=');
+  const bytes = Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+// ─── Auto-login ───────────────────────────────────────────────────────────────
+(async () => {
+  if (!token) return;
+  try {
+    const data = await apiFetch('/activities');
+    if (data.success) {
+      currentUser = decodeJWT(token);
+      initAdmin();
+    } else {
+      localStorage.removeItem('admin_token');
+    }
+  } catch { localStorage.removeItem('admin_token'); }
+})();
+</script>
+</body>
+</html>

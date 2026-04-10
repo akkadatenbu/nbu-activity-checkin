@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ประวัติกิจกรรม — NBU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #003B7A;
+    --primary-light: #1a5fa8;
+    --success: #16a34a;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-400: #94a3b8;
+    --gray-600: #475569;
+    --gray-800: #1e293b;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+  body {
+    font-family: 'Prompt', 'Segoe UI', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* ─── Loading ─── */
+  .loading-screen {
+    position: fixed; inset: 0;
+    background: var(--primary);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; z-index: 100;
+  }
+  .loading-screen .logo { color: #fff; font-size: 1.3rem; font-weight: 700; }
+  .loading-screen .logo i { margin-right: 8px; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Error / Not linked ─── */
+  .center-card {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .msg-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    max-width: 360px; width: 100%;
+  }
+  .msg-card i { font-size: 3rem; margin-bottom: 16px; display: block; }
+  .msg-card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+  .msg-card p  { font-size: .88rem; color: var(--gray-600); line-height: 1.6; }
+
+  /* ─── Header ─── */
+  .header {
+    background: var(--primary);
+    padding: 20px 16px 24px;
+    color: #fff;
+  }
+  .header-top {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,.4);
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.4rem; color: rgba(255,255,255,.7);
+    overflow: hidden;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .student-info h2 { font-size: 1rem; font-weight: 600; }
+  .student-info p  { font-size: .8rem; color: rgba(255,255,255,.75); margin-top: 2px; }
+
+  .stats-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .stat-card i { font-size: 1.3rem; color: rgba(255,255,255,.7); }
+  .stat-card .val { font-size: 1.5rem; font-weight: 700; color: #fff; line-height: 1; }
+  .stat-card .lbl { font-size: .72rem; color: rgba(255,255,255,.7); margin-top: 2px; }
+
+  /* ─── Content ─── */
+  .content { padding: 16px; }
+
+  .section-title {
+    font-size: .8rem; font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 10px;
+  }
+
+  /* ─── Activity card ─── */
+  .activity-list { display: flex; flex-direction: column; gap: 10px; }
+  .activity-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .activity-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--gray-100);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--primary); font-size: 1rem;
+  }
+  .activity-body { flex: 1; min-width: 0; }
+  .activity-body h3 {
+    font-size: .9rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .activity-meta { display: flex; flex-direction: column; gap: 2px; }
+  .activity-meta span {
+    font-size: .75rem; color: var(--gray-600);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .badge-check {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #dcfce7; color: var(--success);
+    font-size: .7rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 99px;
+    flex-shrink: 0; margin-top: 6px;
+  }
+
+  /* ─── Empty ─── */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--gray-400);
+  }
+  .empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
+  .empty-state p  { font-size: .9rem; }
+
+  /* ─── Load more ─── */
+  .load-more {
+    display: block; width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit; font-size: .88rem;
+    color: var(--primary); font-weight: 500;
+    cursor: pointer; text-align: center;
+    transition: .15s;
+  }
+  .load-more:hover { background: var(--gray-100); }
+  .load-more:disabled { opacity: .5; cursor: not-allowed; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen" id="loading">
+  <div class="logo"><i class="fa-solid fa-shield-halved"></i> NBU Activity</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- ไม่ได้ Link -->
+<div class="center-card hidden" id="not-linked">
+  <div class="msg-card">
+    <i class="fa-solid fa-link-slash" style="color:#94a3b8"></i>
+    <h2>ยังไม่ได้เชื่อมบัญชี</h2>
+    <p>ไม่พบข้อมูลนักศึกษาที่เชื่อมกับ LINE นี้<br>กรุณาติดต่อเจ้าหน้าที่เพื่อเชื่อมบัญชี</p>
+  </div>
+</div>
+
+<!-- Error -->
+<div class="center-card hidden" id="error-screen">
+  <div class="msg-card">
+    <i class="fa-solid fa-circle-exclamation" style="color:#ef4444"></i>
+    <h2>เกิดข้อผิดพลาด</h2>
+    <p id="error-msg">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</p>
+  </div>
+</div>
+
+<!-- Main content -->
+<div id="main" class="hidden">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="avatar" id="avatar-wrap">
+        <i class="fa-solid fa-user"></i>
+      </div>
+      <div class="student-info">
+        <h2 id="student-name">-</h2>
+        <p id="student-faculty">-</p>
+        <p id="student-major" style="font-size:.75rem;color:rgba(255,255,255,.6)"></p>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <i class="fa-solid fa-calendar-check"></i>
+        <div>
+          <div class="val" id="stat-total">0</div>
+          <div class="lbl">เข้าร่วมทั้งหมด</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-star"></i>
+        <div>
+          <div class="val" id="stat-month">0</div>
+          <div class="lbl">เดือนนี้</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity list -->
+  <div class="content">
+    <div class="section-title">ประวัติการเข้าร่วมกิจกรรม</div>
+    <div class="activity-list" id="activity-list">
+      <!-- inject here -->
+    </div>
+    <div class="empty-state hidden" id="empty-state">
+      <i class="fa-solid fa-calendar-xmark"></i>
+      <p>ยังไม่มีประวัติการเข้าร่วมกิจกรรม</p>
+    </div>
+    <button class="load-more hidden" id="btn-load-more">
+      <i class="fa-solid fa-chevron-down"></i> โหลดเพิ่มเติม
+    </button>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/liff';
+const LIFF_ID = '2009129078-S3eyzf0X'; // จะ replace ตอน deploy หรือใส่ตรงนี้เลย
+
+let accessToken = null;
+let currentPage = 1;
+let hasMore     = false;
+
+// ─── Format helpers ───────────────────────────────────────────────────────────
+function fmtDate(d) {
+    return new Date(d).toLocaleDateString('th-TH', { dateStyle: 'medium' });
+}
+function fmtDatetime(d) {
+    return new Date(d).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+// ─── Render activity card ─────────────────────────────────────────────────────
+function renderCard(r) {
+    const card = document.createElement('div');
+    card.className = 'activity-card';
+    card.innerHTML = `
+        <div class="activity-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+        <div class="activity-body">
+            <h3 title="${r.title}">${r.title}</h3>
+            <div class="activity-meta">
+                <span><i class="fa-solid fa-calendar fa-fw"></i>${fmtDate(r.start_datetime)}</span>
+                ${r.location ? `<span><i class="fa-solid fa-location-dot fa-fw"></i>${r.location}</span>` : ''}
+            </div>
+            <div class="badge-check">
+                <i class="fa-solid fa-circle-check"></i> เช็คชื่อ ${fmtDatetime(r.checked_at)}
+            </div>
+        </div>
+    `;
+    return card;
+}
+
+// ─── Load attendance ──────────────────────────────────────────────────────────
+async function loadAttendance(page = 1) {
+    const btn = document.getElementById('btn-load-more');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...';
+
+    try {
+        const res  = await fetch(`${API}/attendance?token=${encodeURIComponent(accessToken)}&page=${page}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const list = document.getElementById('activity-list');
+        if (page === 1 && data.data.length === 0) {
+            document.getElementById('empty-state').classList.remove('hidden');
+            btn.classList.add('hidden');
+            return;
+        }
+
+        data.data.forEach(r => list.appendChild(renderCard(r)));
+
+        hasMore = data.data.length === 20;
+        if (hasMore) {
+            btn.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> โหลดเพิ่มเติม';
+        } else {
+            btn.classList.add('hidden');
+        }
+    } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> โหลดเพิ่มเติม';
+    }
+}
+
+document.getElementById('btn-load-more').addEventListener('click', () => {
+    currentPage++;
+    loadAttendance(currentPage);
+});
+
+// ─── Init LIFF ────────────────────────────────────────────────────────────────
+async function init() {
+    try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+        }
+
+        accessToken = liff.getAccessToken();
+
+        // ดึงข้อมูลนักศึกษา
+        const res  = await fetch(`${API}/me?token=${encodeURIComponent(accessToken)}`);
+        const data = await res.json();
+
+        document.getElementById('loading').classList.add('hidden');
+
+        if (!data.success) throw new Error(data.message);
+
+        if (!data.data.linked) {
+            document.getElementById('not-linked').classList.remove('hidden');
+            return;
+        }
+
+        const { student, stats } = data.data;
+
+        // แสดงข้อมูล
+        document.getElementById('student-name').textContent    = student.full_name;
+        document.getElementById('student-faculty').textContent = student.faculty || '';
+        document.getElementById('student-major').textContent   = student.major   || '';
+        document.getElementById('stat-total').textContent      = stats.total;
+        document.getElementById('stat-month').textContent      = stats.this_month;
+
+        // รูปภาพ
+        if (student.photo_url) {
+            const avatarWrap = document.getElementById('avatar-wrap');
+            avatarWrap.innerHTML = `<img src="${student.photo_url}" alt="${student.full_name}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-user\\'></i>'">`;
+        }
+
+        document.getElementById('main').classList.remove('hidden');
+        loadAttendance(1);
+
+    } catch (err) {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error-msg').textContent = err.message || 'ไม่สามารถโหลดข้อมูลได้';
+        document.getElementById('error-screen').classList.remove('hidden');
+        console.error('LIFF init error:', err);
+    }
+}
+
+init();
+</script>
+</body>
+</html>

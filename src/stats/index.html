@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBU Activity Statistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+  --blue: #003B7A; --blue-light: #0066cc; --blue-pale: #1e3a5f;
+  --bg: #0f172a; --card: #1e293b; --card2: #243146;
+  --border: #334155; --text: #f1f5f9; --muted: #94a3b8;
+}
+html, body {
+  font-family: 'Prompt','Segoe UI',sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh;
+}
+.hidden { display: none !important; }
+.list-placeholder { padding: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ─── Header ─── */
+header {
+  background: var(--blue);
+  padding: 0 16px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  position: sticky; top: 0; z-index: 200;
+}
+.header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.header-left h1 { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-left p  { font-size: 10px; color: #93c5fd; display: none; }
+.header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.user-info { text-align: right; }
+.user-info .name  { font-size: 13px; font-weight: 600; }
+.role-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px; margin-top: 2px;
+}
+.role-superadmin { background: #7c3aed; color: #fff; }
+.role-admin      { background: var(--blue-light); color: #fff; }
+.role-dean       { background: var(--yellow); color: #1a1000; }
+.dean-scope {
+  font-size: 10px; background: rgba(245,158,11,0.15);
+  border: 1px solid var(--yellow); color: var(--yellow);
+  padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── Login overlay ─── */
+#login-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.login-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 360px;
+}
+.login-box h2 { font-size: 20px; margin-bottom: 4px; }
+.login-box .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.form-group input {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 15px; font-family: inherit;
+}
+.form-group input:focus { outline: none; border-color: var(--blue-light); }
+.btn-primary {
+  width: 100%; padding: 12px; background: var(--blue); color: #fff;
+  border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+}
+.btn-primary:hover { background: var(--blue-light); }
+.error-msg { color: var(--red); font-size: 13px; margin-top: 8px; text-align: center; }
+
+/* ─── Layout (mobile-first: stacked) ─── */
+.layout { display: flex; flex-direction: column; min-height: calc(100vh - 56px); }
+
+/* ─── Activity panel ─── */
+.activity-panel {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-toggle {
+  width: 100%; padding: 12px 16px;
+  background: none; border: none; border-bottom: 1px solid transparent;
+  color: var(--text); font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  transition: background 0.15s;
+}
+.panel-toggle:hover { background: rgba(255,255,255,0.04); }
+.panel-toggle-left { display: flex; align-items: center; gap: 8px; }
+.panel-arrow { transition: transform 0.25s; color: var(--muted); font-size: 12px; }
+.panel-arrow.open { transform: rotate(180deg); }
+.panel-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.28s ease;
+}
+.panel-body.open { max-height: 300px; }
+.panel-header-desktop { display: none; }
+.activity-list {
+  padding: 8px; display: flex; flex-direction: column; gap: 4px;
+  overflow-y: auto; max-height: 260px;
+}
+.act-item {
+  padding: 10px 12px; border-radius: 10px;
+  cursor: pointer; transition: background 0.15s;
+  border: 1px solid transparent;
+}
+.act-item:hover  { background: var(--card2); }
+.act-item.active { background: var(--blue-pale); border-color: var(--blue-light); }
+.act-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.act-date  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.act-count {
+  display: inline-block; margin-top: 5px;
+  background: var(--blue); padding: 2px 10px;
+  border-radius: 99px; font-size: 12px; font-weight: 700;
+}
+.act-item.active .act-count { background: var(--blue-light); }
+.panel-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.refresh-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; padding: 5px 10px;
+  font-size: 12px; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 6px; transition: all 0.15s;
+}
+.refresh-btn:hover { border-color: var(--blue-light); color: var(--blue-light); }
+#refresh-countdown { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* ─── Main ─── */
+.main {
+  flex: 1; padding: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.empty-main {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  color: var(--muted); padding: 40px 0;
+}
+.empty-main i { font-size: 48px; }
+.empty-main p { font-size: 15px; }
+
+/* Title bar */
+.activity-titlebar {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+.activity-titlebar h2 { font-size: 16px; font-weight: 700; line-height: 1.3; }
+.activity-titlebar .meta { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+.titlebar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.live-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Stat card */
+.stat-card {
+  background: var(--card); border: 1px solid var(--blue-light);
+  border-radius: 12px; padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px;
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(0,102,204,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--blue-light); flex-shrink: 0;
+}
+.stat-body .label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.stat-body .value { font-size: 36px; font-weight: 800; color: var(--blue-light); line-height: 1.1; }
+.stat-body .sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Chart card */
+.chart-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+}
+.chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; gap: 8px; flex-wrap: wrap;
+}
+.chart-header-left { display: flex; align-items: center; gap: 10px; }
+.chart-title-text { font-size: 14px; font-weight: 600; color: var(--text); }
+.chart-hint { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.btn-back {
+  display: none; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 8px;
+  background: rgba(0,102,204,0.15); border: 1px solid var(--blue-light);
+  color: var(--blue-light); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.btn-back:hover { background: rgba(0,102,204,0.3); }
+.chart-wrap { position: relative; }
+
+/* Export button */
+.btn-export {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  background: rgba(34,197,94,0.12); border: 1px solid var(--green);
+  color: var(--green); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-export:hover { background: rgba(34,197,94,0.25); }
+
+/* Recent list */
+.recent-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+}
+.recent-card h3 { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+.recent-list { display: flex; flex-direction: column; gap: 6px; }
+.recent-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; background: var(--card2);
+}
+.recent-item .ri-name   { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-item .ri-faculty{ font-size: 11px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-item .ri-time   { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.method-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-qr     { background: var(--green); }
+.dot-manual { background: var(--yellow); }
+
+/* ─── Desktop layout ─── */
+@media (min-width: 768px) {
+  .header-left p { display: block; }
+  .layout { flex-direction: row; height: calc(100vh - 56px); overflow: hidden; }
+
+  .activity-panel {
+    width: 260px; flex-shrink: 0;
+    border-bottom: none; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-toggle    { display: none; }
+  .panel-body {
+    max-height: none !important; overflow: visible !important;
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .panel-header-desktop {
+    display: block; padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .activity-list { flex: 1; max-height: none; overflow-y: auto; }
+  .panel-footer   { flex-shrink: 0; }
+
+  .main { overflow-y: auto; height: 100%; padding: 20px; gap: 16px; }
+  .activity-titlebar h2 { font-size: 18px; }
+  .stat-body .value { font-size: 44px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2>สถิติกิจกรรม</h2>
+    <p class="sub">สำหรับผู้บริหารและคณบดี</p>
+    <div class="form-group">
+      <label>ชื่อผู้ใช้</label>
+      <input id="l-user" type="text" placeholder="username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input id="l-pass" type="password" placeholder="password" autocomplete="current-password">
+    </div>
+    <button type="button" class="btn-primary" id="btn-login">เข้าสู่ระบบ</button>
+    <p class="error-msg" id="l-err"></p>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <div>
+      <h1><i class="fa-solid fa-chart-bar"></i> NBU Activity Statistics</h1>
+      <p>สถิติการเข้าร่วมกิจกรรม — สำหรับผู้บริหาร</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-info hidden" id="user-info">
+      <div class="name" id="ui-name"></div>
+      <span class="role-badge" id="ui-role-badge"></span>
+    </div>
+    <div class="dean-scope hidden" id="dean-scope"></div>
+    <button type="button" class="btn-logout" id="btn-logout">
+      <i class="fa-solid fa-right-from-bracket"></i> ออก
+    </button>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout hidden" id="layout">
+
+  <!-- Activity panel (sidebar on desktop, collapsible on mobile) -->
+  <div class="activity-panel">
+    <!-- Mobile toggle -->
+    <button type="button" class="panel-toggle" id="panel-toggle" onclick="togglePanel()">
+      <span class="panel-toggle-left">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span id="toggle-label">เลือกกิจกรรม</span>
+      </span>
+      <i class="fa-solid fa-chevron-down panel-arrow" id="panel-arrow"></i>
+    </button>
+    <!-- Body (always visible on desktop via CSS) -->
+    <div class="panel-body" id="panel-body">
+      <div class="panel-header-desktop">
+        <i class="fa-solid fa-calendar-check"></i> กิจกรรมที่เปิดอยู่
+      </div>
+      <div class="activity-list" id="activity-list">
+        <div class="list-placeholder">กำลังโหลด...</div>
+      </div>
+      <div class="panel-footer">
+        <button type="button" class="refresh-btn" onclick="refreshAll()">
+          <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> รีเฟรช
+        </button>
+        <span id="refresh-countdown"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main" id="main-content">
+    <div class="empty-main" id="empty-state">
+      <i class="fa-solid fa-chart-pie"></i>
+      <p>เลือกกิจกรรมเพื่อดูสถิติ</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+let token        = localStorage.getItem('admin_token') || '';
+let currentUser  = null;
+let selectedId   = null;
+let statsData    = null;   // ข้อมูล stats ปัจจุบัน
+let drillFaculty = null;   // null = faculty overview, string = ชื่อคณะ (drill-down)
+let refreshTimer = null;
+let countdown    = 30;
+let panelOpen    = false;
+
+// ─── JWT decode ────────────────────────────────────────────────────────────────
+function decodeJWT(t) {
+  const b64    = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64.padEnd(b64.length + (4 - b64.length % 4) % 4, '=');
+  const bytes  = Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+// ─── API helper ────────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers },
+    ...opts,
+  });
+  return res.json();
+}
+
+// ─── Login ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('l-user').value.trim();
+  const password = document.getElementById('l-pass').value;
+  const errEl    = document.getElementById('l-err');
+  const btn      = document.getElementById('btn-login');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    if (!data.success) { errEl.textContent = data.message; return; }
+    if (!['superadmin', 'admin', 'dean'].includes(data.user.role)) {
+      errEl.textContent = 'ไม่มีสิทธิ์เข้าถึงหน้านี้'; return;
+    }
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('admin_token', token);
+    showDashboard();
+  } catch { errEl.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์'; }
+  finally { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }
+}
+
+function showDashboard() {
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('layout').classList.remove('hidden');
+
+  document.getElementById('user-info').classList.remove('hidden');
+  document.getElementById('ui-name').textContent = currentUser.full_name;
+  const badge = document.getElementById('ui-role-badge');
+  badge.textContent = currentUser.role;
+  badge.className = `role-badge role-${currentUser.role}`;
+
+  if (currentUser.role === 'dean' && currentUser.faculty_scope) {
+    const scopeEl = document.getElementById('dean-scope');
+    scopeEl.textContent = `คณะ: ${currentUser.faculty_scope}`;
+    scopeEl.classList.remove('hidden');
+  }
+  loadActivities();
+  startRefreshTimer();
+}
+
+// ─── Mobile panel toggle ───────────────────────────────────────────────────────
+function togglePanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('panel-body').classList.toggle('open', panelOpen);
+  document.getElementById('panel-arrow').classList.toggle('open', panelOpen);
+}
+
+function collapsePanel() {
+  panelOpen = false;
+  document.getElementById('panel-body').classList.remove('open');
+  document.getElementById('panel-arrow').classList.remove('open');
+}
+
+// ─── Auto-refresh ──────────────────────────────────────────────────────────────
+function startRefreshTimer() {
+  clearInterval(refreshTimer);
+  countdown = 30;
+  document.getElementById('refresh-countdown').textContent = `${countdown}s`;
+  refreshTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('refresh-countdown').textContent = `${countdown}s`;
+    if (countdown <= 0) refreshAll();
+  }, 1000);
+}
+
+async function refreshAll() {
+  await loadActivities();
+  if (selectedId) await loadStats(selectedId);
+  countdown = 30;
+}
+
+// ─── Activity list ─────────────────────────────────────────────────────────────
+async function loadActivities() {
+  const icon = document.getElementById('refresh-icon');
+  icon.className = 'fa-solid fa-rotate-right fa-spin';
+
+  const data = await api('/stats/activities');
+  icon.className = 'fa-solid fa-rotate-right';
+  if (!data.success) return;
+
+  const list = document.getElementById('activity-list');
+  if (!data.data.length) {
+    list.innerHTML = '<div class="list-placeholder">ไม่มีกิจกรรมที่เปิดอยู่</div>';
+    document.getElementById('toggle-label').textContent = 'ไม่มีกิจกรรม';
+    return;
+  }
+
+  document.getElementById('toggle-label').textContent = `กิจกรรม (${data.data.length})`;
+  list.innerHTML = data.data.map(a => `
+    <div class="act-item ${a.id == selectedId ? 'active' : ''}"
+         onclick="selectActivity('${a.id}')">
+      <div class="act-title">${a.title}</div>
+      <div class="act-date">
+        <i class="fa-solid fa-calendar-days" style="font-size:10px"></i>
+        ${new Date(a.start_datetime).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' })}
+      </div>
+      <div class="act-count">${a.attendee_count} คน</div>
+    </div>
+  `).join('');
+}
+
+async function selectActivity(id) {
+  selectedId = id;
+  collapsePanel();
+  document.querySelectorAll('.act-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[onclick="selectActivity('${id}')"]`)?.classList.add('active');
+  await loadStats(id);
+}
+
+// ─── Stats ─────────────────────────────────────────────────────────────────────
+async function loadStats(id) {
+  const data = await api(`/stats/${id}`);
+  if (!data.success) return;
+
+  statsData    = data.data;
+  drillFaculty = null;
+
+  // Dean: เริ่มที่ drill-down คณะตัวเองเลย
+  if (currentUser.role === 'dean' && currentUser.faculty_scope) {
+    drillFaculty = currentUser.faculty_scope;
+  }
+  renderDashboard();
+}
+
+function renderDashboard() {
+  if (!statsData) return;
+  const d = statsData;
+
+  const distinctFaculties = new Set(d.by_faculty_major.map(r => r.faculty).filter(Boolean)).size;
+  const dateStr = new Date(d.activity.start_datetime)
+    .toLocaleString('th-TH', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="activity-titlebar">
+      <div style="min-width:0">
+        <h2>${d.activity.title}</h2>
+        <div class="meta">
+          <i class="fa-solid fa-location-dot"></i> ${d.activity.location || '-'} &nbsp;|&nbsp;
+          <i class="fa-solid fa-calendar"></i> ${dateStr}
+          ${d.scope ? `&nbsp;|&nbsp;<i class="fa-solid fa-filter"></i> คณะ${d.scope}` : ''}
+        </div>
+      </div>
+      <div class="titlebar-right">
+        <button class="btn-export" onclick="exportCSV()">
+          <i class="fa-solid fa-file-csv"></i>
+          <span class="export-label"> Export</span>
+        </button>
+        <div class="live-dot" title="ข้อมูลสด"></div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-body">
+        <div class="label">ผู้เข้าร่วมทั้งหมด</div>
+        <div class="value">${d.total}</div>
+        <div class="sub">คน จาก ${distinctFaculties} คณะ</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <button class="btn-back" id="back-btn" onclick="backToFaculty()">
+            <i class="fa-solid fa-arrow-left"></i> กลับ
+          </button>
+          <span class="chart-title-text" id="chart-title">แยกตามคณะ</span>
+        </div>
+        <span class="chart-hint" id="chart-hint">คลิกคณะเพื่อดูรายสาขา</span>
+      </div>
+      <div class="chart-wrap" id="chart-wrap" style="position:relative;height:200px">
+        <canvas id="chart-main"></canvas>
+      </div>
+    </div>
+
+    <div class="recent-card">
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> เช็คชื่อล่าสุด</h3>
+      <div class="recent-list">
+        ${d.recent.length === 0
+          ? '<div style="color:var(--muted);font-size:13px;padding:12px">ยังไม่มีการเช็คชื่อ</div>'
+          : d.recent.map(r => `
+            <div class="recent-item">
+              <div class="method-dot ${r.method === 'qr_scan' ? 'dot-qr' : 'dot-manual'}"></div>
+              <div style="flex:1;min-width:0">
+                <div class="ri-name">${r.full_name}</div>
+                <div class="ri-faculty">${r.faculty || ''}${r.major ? ' · ' + r.major : ''}</div>
+              </div>
+              <div class="ri-time">
+                ${new Date(r.checked_at).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}
+              </div>
+            </div>
+          `).join('')}
+      </div>
+    </div>
+  `;
+
+  updateChart();
+}
+
+// ─── Dynamic chart ─────────────────────────────────────────────────────────────
+function updateChart() {
+  if (!statsData) return;
+  const isDean = currentUser.role === 'dean';
+
+  let rows, clickable, title, hint;
+  if (drillFaculty) {
+    rows = statsData.by_faculty_major
+      .filter(r => r.faculty === drillFaculty)
+      .map(r => ({ label: r.label || '(ไม่ระบุ)', count: r.count }));
+    title = `สาขาในคณะ${drillFaculty}`;
+    hint  = `${rows.length} สาขา`;
+    clickable = false;
+  } else {
+    rows = statsData.by_faculty;
+    title = 'แยกตามคณะ';
+    hint  = 'คลิกคณะเพื่อดูรายสาขา';
+    clickable = true;
+  }
+
+  const titleEl = document.getElementById('chart-title');
+  const hintEl  = document.getElementById('chart-hint');
+  const backBtn = document.getElementById('back-btn');
+  const wrap    = document.getElementById('chart-wrap');
+
+  if (titleEl) titleEl.textContent = title;
+  if (hintEl)  hintEl.textContent  = hint;
+  if (backBtn) backBtn.style.display = (!isDean && drillFaculty) ? 'flex' : 'none';
+  if (wrap)    wrap.style.height = Math.max(200, rows.length * 40) + 'px';
+
+  drawBarChart('chart-main', rows, clickable);
+}
+
+function drillDown(label) {
+  drillFaculty = label;
+  updateChart();
+}
+
+function backToFaculty() {
+  drillFaculty = null;
+  updateChart();
+}
+
+// ─── Chart.js ──────────────────────────────────────────────────────────────────
+const PALETTE = [
+  '#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6',
+  '#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6',
+  '#a855f7','#eab308','#0ea5e9','#d946ef','#10b981',
+];
+
+function drawBarChart(canvasId, rows, clickable = false) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (canvas._chart) canvas._chart.destroy();
+
+  canvas._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.label || '(ไม่ระบุ)'),
+      datasets: [{
+        data: rows.map(r => parseInt(r.count)),
+        backgroundColor: rows.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor:     rows.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1, borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      onClick: clickable ? (event, elements) => {
+        if (elements.length) drillDown(rows[elements[0].index].label);
+      } : null,
+      onHover: clickable ? (event, elements) => {
+        if (event.native) event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      } : null,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} คน` } },
+      },
+      scales: {
+        x: {
+          grid:  { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#94a3b8', font: { size: 11, family: 'Prompt' } },
+        },
+        y: {
+          grid:  { display: false },
+          ticks: { color: '#f1f5f9', font: { size: 12, family: 'Prompt' } },
+        },
+      },
+    },
+  });
+}
+
+// ─── Export CSV (client-side, summary stats) ───────────────────────────────────
+function exportCSV() {
+  if (!statsData) return;
+  const d = statsData;
+  const dateStr = new Date(d.activity.start_datetime).toLocaleString('th-TH');
+
+  const escape = v => {
+    const s = String(v ?? '');
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const lines = [
+    ['กิจกรรม', escape(d.activity.title)].join(','),
+    ['วันที่', escape(dateStr)].join(','),
+    ['สถานที่', escape(d.activity.location || '-')].join(','),
+    ['ผู้เข้าร่วมทั้งหมด', d.total + ' คน'].join(','),
+    '',
+    ['คณะ', 'สาขา', 'จำนวน (คน)'].join(','),
+    ...d.by_faculty_major.map(r =>
+      [escape(r.faculty || '(ไม่ระบุ)'), escape(r.label || '(ไม่ระบุ)'), r.count].join(',')
+    ),
+    '',
+    ['รวม', '', d.total].join(','),
+  ];
+
+  const BOM  = '\uFEFF';
+  const blob = new Blob([BOM + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  const safeName = d.activity.title.replace(/[^\u0E00-\u0E7Fa-zA-Z0-9]/g, '_').slice(0, 40);
+  a.download = `stats_${safeName}_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── Logout ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-logout').addEventListener('click', () => {
+  clearInterval(refreshTimer);
+  localStorage.removeItem('admin_token');
+  token = ''; currentUser = null; selectedId = null; statsData = null;
+  document.getElementById('layout').classList.add('hidden');
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('l-user').value = '';
+  document.getElementById('l-pass').value = '';
+});
+
+// ─── Login listeners ───────────────────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ─── Auto-login ────────────────────────────────────────────────────────────────
+(async () => {
+  if (!token) return;
+  try {
+    const payload = decodeJWT(token);
+    if (!['superadmin', 'admin', 'dean'].includes(payload.role)) {
+      localStorage.removeItem('admin_token'); return;
+    }
+    const data = await api('/stats/activities');
+    if (data.success) {
+      currentUser = {
+        id: payload.id, username: payload.username,
+        full_name: payload.full_name, role: payload.role,
+        faculty_scope: payload.faculty_scope || null,
+      };
+      showDashboard();
+    } else {
+      localStorage.removeItem('admin_token');
+    }
+  } catch { localStorage.removeItem('admin_token'); }
+})();
+</script>
+</body>
+</html>

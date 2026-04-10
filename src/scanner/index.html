@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NBU Activity Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #003B7A;
+    --blue-light: #0066cc;
+    --gray: #6b7280;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+  }
+  body {
+    font-family: 'Prompt', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--blue);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo img { height: 36px; }
+  .logo-text h1 { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .logo-text p { font-size: 11px; color: #93c5fd; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .badge-status {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-open { background: var(--green); color: #fff; }
+  .badge-closed { background: var(--red); color: #fff; }
+  #session-count { font-size: 13px; color: #93c5fd; }
+
+  /* ─── Login Screen ─── */
+  #login-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .login-box h2 { font-size: 22px; margin-bottom: 6px; }
+  .login-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--blue-light);
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-primary:disabled { background: var(--gray); cursor: not-allowed; }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 10px; }
+
+  /* ─── Main Screen ─── */
+  #main-screen { flex: 1; display: none; flex-direction: column; }
+
+  /* Activity select bar */
+  .activity-bar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .activity-bar label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+  .activity-bar select {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    min-width: 200px;
+  }
+  .btn-sm {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-open { background: var(--green); color: #fff; }
+  .btn-close { background: var(--red); color: #fff; }
+  .btn-logout { background: var(--border); color: var(--text); }
+
+  /* ─── Scanner area ─── */
+  .scanner-layout {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  /* QR Input panel */
+  .qr-panel {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+  }
+  .qr-panel h2 { font-size: 16px; color: var(--text-muted); }
+
+  /* Hidden input for barcode scanner (keyboard wedge) */
+  #qr-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+  .qr-status-box {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .qr-status-box:hover { border-color: var(--blue-light); }
+  .qr-status-box .icon { font-size: 40px; margin-bottom: 10px; color: var(--text-muted); }
+  .qr-status-box p { font-size: 14px; color: var(--text-muted); }
+
+  /* Result card */
+  #result-card {
+    border-radius: 12px;
+    padding: 16px;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  #result-card.success { background: rgba(34,197,94,0.12); border: 2px solid var(--green); }
+  #result-card.duplicate { background: rgba(239,68,68,0.12); border: 2px solid var(--red); }
+  #result-card.error { background: rgba(245,158,11,0.12); border: 2px solid var(--yellow); }
+  .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .result-icon { font-size: 28px; }
+  .result-title { font-size: 16px; font-weight: 700; }
+  .result-sub { font-size: 13px; color: var(--text-muted); }
+  .student-info { display: flex; align-items: center; gap: 12px; }
+  .student-photo {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .student-photo-placeholder {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .student-details h3 { font-size: 16px; font-weight: 700; }
+  .student-details p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .student-id-badge {
+    display: inline-block;
+    background: var(--blue);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* Manual search */
+  .manual-search { display: flex; gap: 8px; }
+  .manual-search input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .manual-search button {
+    padding: 10px 14px;
+    background: var(--blue-light);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .search-results {
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+  }
+  .search-result-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  .search-result-item:hover { background: var(--border); }
+  .search-result-item .name { font-size: 14px; font-weight: 600; }
+  .search-result-item .sub { font-size: 12px; color: var(--text-muted); }
+
+  /* ─── Attendance list panel ─── */
+  .list-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .list-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .list-header h2 { font-size: 15px; font-weight: 600; }
+  #total-count {
+    background: var(--blue);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .attendance-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .att-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .att-item .num { font-size: 13px; color: var(--text-muted); min-width: 28px; text-align: center; }
+  .att-item img {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--border);
+  }
+  .att-item .att-photo-placeholder {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .att-item .att-info { flex: 1; min-width: 0; }
+  .att-item .att-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .att-item .att-sub { font-size: 12px; color: var(--text-muted); }
+  .att-item .att-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .att-item .method-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .method-qr { background: rgba(34,197,94,0.2); color: var(--green); }
+  .method-manual { background: rgba(245,158,11,0.2); color: var(--yellow); }
+
+  /* Flash overlay */
+  #flash-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  #flash-overlay.flash-green { background: rgba(34,197,94,0.25); opacity: 1; }
+  #flash-overlay.flash-red   { background: rgba(239,68,68,0.25); opacity: 1; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.t-green { color: var(--green); border-color: var(--green); }
+  #toast.t-red   { color: var(--red);   border-color: var(--red);   }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 12px;
+  }
+  .empty-state .icon { font-size: 48px; }
+  .empty-state p { font-size: 14px; }
+
+  @media (max-width: 768px) {
+    .qr-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .scanner-layout { flex-direction: column; }
+  }
+
+  /* ─── Portrait Display Mode ─── */
+  #portrait-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    animation: fadeInBig 0.3s ease;
+  }
+  #portrait-overlay.active { display: flex; }
+  @keyframes fadeInBig {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* สถานะ success/duplicate/error */
+  #portrait-overlay.po-success { background: #052e16; }
+  #portrait-overlay.po-duplicate { background: #1c0a0a; }
+  #portrait-overlay.po-error { background: #1c1002; }
+
+  .po-status-bar {
+    width: 100%;
+    padding: 28px 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .po-status-icon { font-size: 52px; line-height: 1; }
+  .po-status-text { font-size: 36px; font-weight: 800; letter-spacing: 1px; }
+  .po-success .po-status-text { color: var(--green); }
+  .po-duplicate .po-status-text { color: var(--red); }
+  .po-error .po-status-text { color: var(--yellow); }
+  .po-success .po-status-icon { color: var(--green); }
+  .po-duplicate .po-status-icon { color: var(--red); }
+  .po-error .po-status-icon { color: var(--yellow); }
+
+  .po-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 48px 40px;
+    flex: 1;
+    justify-content: center;
+  }
+  .po-photo-wrap {
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid rgba(255,255,255,0.15);
+    background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+  }
+  .po-success .po-photo-wrap { border-color: var(--green); }
+  .po-duplicate .po-photo-wrap { border-color: var(--red); }
+  .po-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .po-photo-wrap .po-photo-icon { font-size: 80px; color: var(--text-muted); }
+
+  .po-info { text-align: center; }
+  .po-name {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  .po-faculty {
+    font-size: 22px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .po-id-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 99px;
+    padding: 8px 28px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+
+  .po-footer {
+    width: 100%;
+    padding: 20px 40px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .po-activity-name { font-size: 16px; color: var(--text-muted); }
+  .po-time { font-size: 32px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+
+  /* ─── Portrait mode toggle button ─── */
+  .btn-portrait {
+    background: var(--border);
+    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+  .btn-portrait:hover { background: #475569; }
+  .btn-portrait.active { background: var(--blue-light); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- Flash overlay -->
+<div id="flash-overlay"></div>
+<div id="toast"></div>
+
+<!-- Portrait display overlay -->
+<div id="portrait-overlay">
+  <div class="po-status-bar">
+    <span class="po-status-icon" id="po-icon"></span>
+    <span class="po-status-text" id="po-status-text"></span>
+  </div>
+  <div class="po-card">
+    <div class="po-photo-wrap" id="po-photo-wrap">
+      <i class="fa-solid fa-user po-photo-icon"></i>
+    </div>
+    <div class="po-info">
+      <div class="po-name" id="po-name">-</div>
+      <div class="po-faculty" id="po-faculty"></div>
+      <div class="po-id-badge" id="po-id-badge"></div>
+    </div>
+  </div>
+  <div class="po-footer">
+    <span class="po-activity-name" id="po-activity-name"></span>
+    <span class="po-time" id="po-time"></span>
+  </div>
+</div>
+
+<!-- Hidden QR input (focus target for barcode scanner) -->
+<input id="qr-input" type="text" autocomplete="off" autofocus>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-text">
+      <h1>NBU Activity Scanner</h1>
+      <p>ระบบเช็คชื่อเข้าร่วมกิจกรรม</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="session-badge" class="badge-status badge-closed">ยังไม่เปิด Session</span>
+    <span id="session-count">รอเลือกกิจกรรม...</span>
+  </div>
+</header>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>เข้าสู่ระบบ</h2>
+    <p>สำหรับเจ้าหน้าที่ / อาจารย์</p>
+    <div class="form-group">
+      <label>ชื่อผู้ใช้</label>
+      <input id="login-username" type="text" placeholder="username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input id="login-password" type="password" placeholder="password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">เข้าสู่ระบบ</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+</div>
+
+<!-- Main Screen -->
+<div id="main-screen">
+  <!-- Activity bar -->
+  <div class="activity-bar">
+    <label>กิจกรรม:</label>
+    <select id="activity-select">
+      <option value="">-- เลือกกิจกรรม --</option>
+    </select>
+    <button class="btn-sm btn-open" id="btn-open-session">เปิด Session</button>
+    <button class="btn-sm btn-close" id="btn-close-session" style="display:none">ปิด Session</button>
+    <button class="btn-portrait" id="btn-portrait" title="โหมดแสดงผลจอแนวตั้ง">
+      <i class="fa-solid fa-tv"></i> จอแสดงผล
+    </button>
+    <button class="btn-sm btn-logout" id="btn-logout">ออกจากระบบ</button>
+  </div>
+
+  <div class="scanner-layout">
+    <!-- QR Panel -->
+    <div class="qr-panel">
+      <h2>สแกน QR Code</h2>
+
+      <!-- Click-to-focus area -->
+      <div class="qr-status-box" id="focus-box" onclick="focusQrInput()">
+        <div class="icon"><i class="fa-solid fa-qrcode"></i></div>
+        <p>คลิกที่นี่ แล้วสแกน QR Code<br>ด้วยเครื่องสแกนบาร์โค้ด</p>
+      </div>
+
+      <!-- Result card -->
+      <div id="result-card">
+        <div class="result-header">
+          <span class="result-icon" id="result-icon"></span>
+          <div>
+            <div class="result-title" id="result-title"></div>
+            <div class="result-sub" id="result-sub"></div>
+          </div>
+        </div>
+        <div class="student-info" id="result-student" style="display:none">
+          <div id="result-photo-wrap">
+            <div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>
+          </div>
+          <div class="student-details">
+            <h3 id="result-name"></h3>
+            <p id="result-faculty"></p>
+            <span class="student-id-badge" id="result-student-id"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual search -->
+      <div>
+        <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:8px">ค้นหาด้วยชื่อ / รหัสนักศึกษา</label>
+        <div class="manual-search">
+          <input id="manual-search-input" type="text" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา...">
+          <button onclick="doManualSearch()">ค้นหา</button>
+        </div>
+        <div class="search-results" id="search-results"></div>
+      </div>
+    </div>
+
+    <!-- Attendance List Panel -->
+    <div class="list-panel">
+      <div class="list-header">
+        <h2>รายชื่อผู้เข้าร่วม</h2>
+        <span id="total-count">0 คน</span>
+      </div>
+      <div id="list-container" class="attendance-list">
+        <div class="empty-state">
+          <div class="icon"><i class="fa-solid fa-clipboard-list"></i></div>
+          <p>เลือกกิจกรรมและเปิด Session เพื่อเริ่มเช็คชื่อ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+let token = localStorage.getItem('scanner_token') || '';
+let currentUser = null;
+let currentActivity = null;
+let currentSession = null;
+let attendanceList = [];
+let qrBuffer = '';
+let qrTimer = null;
+let portraitMode = false;
+let portraitDismissTimer = null;
+let portraitClockInterval = null;
+
+// ─── Audio feedback ────────────────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+function beep(freq = 880, dur = 120, type = 'sine') {
+  try {
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur / 1000);
+    osc.start(); osc.stop(ctx.currentTime + dur / 1000);
+  } catch {}
+}
+const beepSuccess = () => beep(880, 150);
+const beepError   = () => { beep(300, 120); setTimeout(() => beep(250, 120), 140); };
+
+// ─── Flash ────────────────────────────────────────────────────────────────────
+function flash(color) {
+  const el = document.getElementById('flash-overlay');
+  el.className = `flash-${color}`;
+  setTimeout(() => { el.className = ''; }, 300);
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show t-${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3000);
+}
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers },
+    ...opts,
+  });
+  return res.json();
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    if (!data.success) { errEl.textContent = data.message; return; }
+
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('scanner_token', token);
+    showMainScreen();
+  } catch {
+    errEl.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์';
+  } finally {
+    btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+  }
+}
+
+// ─── Show main screen ─────────────────────────────────────────────────────────
+async function showMainScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display  = 'flex';
+  await loadActivities();
+  focusQrInput();
+}
+
+async function loadActivities() {
+  const data = await apiFetch('/activities');
+  if (!data.success) return;
+  const sel = document.getElementById('activity-select');
+  sel.innerHTML = '<option value="">-- เลือกกิจกรรม --</option>';
+  data.data.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.title} (${new Date(a.start_datetime).toLocaleDateString('th-TH')})`;
+    sel.appendChild(opt);
+  });
+}
+
+// ─── Activity selection ───────────────────────────────────────────────────────
+document.getElementById('activity-select').addEventListener('change', async function() {
+  const id = this.value;
+  if (!id) { currentActivity = null; currentSession = null; updateSessionUI(); return; }
+
+  const data = await apiFetch(`/activities/${id}`);
+  if (!data.success) return;
+  currentActivity = data.data;
+  currentSession  = data.data.current_session;
+  updateSessionUI();
+  await loadAttendanceList();
+});
+
+function updateSessionUI() {
+  const badge     = document.getElementById('session-badge');
+  const btnOpen   = document.getElementById('btn-open-session');
+  const btnClose  = document.getElementById('btn-close-session');
+  const countEl   = document.getElementById('session-count');
+
+  if (!currentSession || currentSession.status !== 'open') {
+    badge.textContent = 'Session ปิด';
+    badge.className   = 'badge-status badge-closed';
+    btnOpen.style.display  = '';
+    btnClose.style.display = 'none';
+    countEl.textContent    = currentActivity ? currentActivity.title : 'รอเลือกกิจกรรม...';
+  } else {
+    badge.textContent = 'Session เปิด ✓';
+    badge.className   = 'badge-status badge-open';
+    btnOpen.style.display  = 'none';
+    btnClose.style.display = '';
+    countEl.textContent    = `เปิดเมื่อ ${new Date(currentSession.opened_at).toLocaleTimeString('th-TH')}`;
+  }
+}
+
+// ─── Session open/close ───────────────────────────────────────────────────────
+document.getElementById('btn-open-session').addEventListener('click', async () => {
+  if (!currentActivity) { showToast('เลือกกิจกรรมก่อน', 'red'); return; }
+  const data = await apiFetch(`/activities/${currentActivity.id}/session/open`, { method: 'POST' });
+  if (!data.success) { showToast(data.message, 'red'); return; }
+  currentSession = data.data;
+  updateSessionUI();
+  showToast('เปิด Session สำเร็จ');
+  focusQrInput();
+});
+
+document.getElementById('btn-close-session').addEventListener('click', async () => {
+  if (!currentSession) return;
+  const r = await Swal.fire({
+    title: 'ปิด Session เช็คชื่อ?',
+    text: 'หลังปิดแล้วจะไม่สามารถเช็คชื่อได้จนกว่าจะเปิดใหม่',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ปิด Session',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  const data = await apiFetch(`/activities/${currentActivity.id}/session/close`, {
+    method: 'POST',
+    body: JSON.stringify({ session_id: currentSession.id }),
+  });
+  if (!data.success) { showToast(data.message, 'red'); return; }
+  currentSession = null;
+  updateSessionUI();
+  showToast('ปิด Session สำเร็จ', 'red');
+});
+
+// ─── QR Input (keyboard wedge scanner) ───────────────────────────────────────
+function focusQrInput() {
+  document.getElementById('qr-input').focus();
+}
+
+document.getElementById('qr-input').addEventListener('input', function() {
+  qrBuffer += this.value;
+  this.value = '';
+  clearTimeout(qrTimer);
+  // scanner ส่ง Enter ท้าย → รอ 50ms แล้ว process
+  qrTimer = setTimeout(() => {
+    if (qrBuffer.trim()) processQR(qrBuffer.trim());
+    qrBuffer = '';
+  }, 80);
+});
+
+document.getElementById('qr-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    clearTimeout(qrTimer);
+    if (qrBuffer.trim()) processQR(qrBuffer.trim());
+    qrBuffer = '';
+    this.value = '';
+  }
+});
+
+// ─── Process QR ───────────────────────────────────────────────────────────────
+async function processQR(raw) {
+  if (!currentActivity || !currentSession || currentSession.status !== 'open') {
+    showToast('กรุณาเลือกกิจกรรมและเปิด Session ก่อน', 'red');
+    focusQrInput();
+    return;
+  }
+
+  const data = await apiFetch('/attendance/scan', {
+    method: 'POST',
+    body: JSON.stringify({ qr_raw: raw, activity_id: currentActivity.id, session_id: currentSession.id }),
+  });
+
+  if (data.success) {
+    beepSuccess();
+    flash('green');
+    showResult('success', '<i class="fa-solid fa-circle-check"></i> เช็คชื่อสำเร็จ', '', data.student);
+    prependAttendance(data.student);
+  } else if (data.already_checked) {
+    beepError();
+    flash('red');
+    showResult('duplicate', '<i class="fa-solid fa-triangle-exclamation"></i> เช็คชื่อซ้ำ', data.message, data.student);
+  } else {
+    beepError();
+    flash('red');
+    showResult('error', '<i class="fa-solid fa-circle-xmark"></i> ไม่สำเร็จ', data.message, null);
+  }
+
+  setTimeout(focusQrInput, 100);
+}
+
+// ─── Show result card ─────────────────────────────────────────────────────────
+function showResult(type, title, sub, student) {
+  const card = document.getElementById('result-card');
+  card.className = type;
+  card.style.display = 'block';
+  document.getElementById('result-title').innerHTML = title;
+  document.getElementById('result-sub').textContent  = sub;
+
+  const studEl = document.getElementById('result-student');
+  if (student) {
+    studEl.style.display = 'flex';
+    document.getElementById('result-name').textContent       = student.full_name || '-';
+    document.getElementById('result-faculty').textContent    = `${student.faculty || ''} ${student.major ? '| ' + student.major : ''}`;
+    document.getElementById('result-student-id').textContent = student.student_id;
+
+    const wrap = document.getElementById('result-photo-wrap');
+    if (student.photo_url) {
+      wrap.innerHTML = `<img class="student-photo" src="${student.photo_url}" onerror="this.style.display='none'">`;
+    } else {
+      wrap.innerHTML = `<div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>`;
+    }
+  } else {
+    studEl.style.display = 'none';
+  }
+
+  // Auto-clear after 5s
+  setTimeout(() => { card.style.display = 'none'; }, 5000);
+
+  // Portrait mode overlay
+  if (portraitMode) showPortraitOverlay(type, student);
+}
+
+// ─── Portrait Mode ────────────────────────────────────────────────────────────
+function showPortraitOverlay(type, student) {
+  const overlay = document.getElementById('portrait-overlay');
+
+  // Status icon & text
+  const icons = { success: '✅', duplicate: '⚠️', error: '❌' };
+  const texts = { success: 'เช็คชื่อสำเร็จ', duplicate: 'เช็คชื่อซ้ำ', error: 'ไม่สำเร็จ' };
+  document.getElementById('po-icon').textContent       = icons[type] || '';
+  document.getElementById('po-status-text').textContent = texts[type] || '';
+
+  // Photo
+  const photoWrap = document.getElementById('po-photo-wrap');
+  if (student && student.photo_url) {
+    photoWrap.innerHTML = `<img src="${student.photo_url}" alt="" onerror="this.innerHTML='<i class=\\'fa-solid fa-user po-photo-icon\\'></i>'">`;
+  } else {
+    photoWrap.innerHTML = `<i class="fa-solid fa-user po-photo-icon"></i>`;
+  }
+
+  // Info
+  document.getElementById('po-name').textContent      = student ? (student.full_name || '-') : '-';
+  document.getElementById('po-faculty').textContent   = student ? `${student.faculty || ''} ${student.major ? '· ' + student.major : ''}`.trim() : '';
+  document.getElementById('po-id-badge').textContent  = student ? (student.student_id || '') : '';
+  document.getElementById('po-activity-name').textContent = currentActivity ? currentActivity.title : '';
+
+  // Clock
+  function updateClock() {
+    document.getElementById('po-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  updateClock();
+  clearInterval(portraitClockInterval);
+  portraitClockInterval = setInterval(updateClock, 1000);
+
+  // Show
+  overlay.className = `active po-${type}`;
+
+  // Auto-dismiss after 5s
+  clearTimeout(portraitDismissTimer);
+  portraitDismissTimer = setTimeout(hidePortraitOverlay, 5000);
+}
+
+function hidePortraitOverlay() {
+  clearTimeout(portraitDismissTimer);
+  clearInterval(portraitClockInterval);
+  const overlay = document.getElementById('portrait-overlay');
+  overlay.className = '';
+  setTimeout(() => { overlay.style.display = ''; }, 10);
+}
+
+// Click overlay to dismiss early
+document.getElementById('portrait-overlay').addEventListener('click', hidePortraitOverlay);
+
+// Toggle portrait mode button
+document.getElementById('btn-portrait').addEventListener('click', () => {
+  portraitMode = !portraitMode;
+  const btn = document.getElementById('btn-portrait');
+  if (portraitMode) {
+    btn.classList.add('active');
+    btn.innerHTML = '<i class="fa-solid fa-tv"></i> จอแสดงผล ON';
+    showToast('เปิดโหมดจอแสดงผลแล้ว — จอแนวตั้งจะแสดงข้อมูลขนาดใหญ่');
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = '<i class="fa-solid fa-tv"></i> จอแสดงผล';
+    hidePortraitOverlay();
+    showToast('ปิดโหมดจอแสดงผล', 'red');
+  }
+  focusQrInput();
+});
+
+// ─── Attendance list ──────────────────────────────────────────────────────────
+async function loadAttendanceList() {
+  if (!currentActivity) return;
+  const data = await apiFetch(`/attendance/${currentActivity.id}`);
+  if (!data.success) return;
+  attendanceList = data.data;
+  renderList();
+}
+
+function renderList() {
+  const container = document.getElementById('list-container');
+  document.getElementById('total-count').textContent = `${attendanceList.length} คน`;
+
+  if (!attendanceList.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon"><i class="fa-solid fa-clipboard-list"></i></div><p>ยังไม่มีผู้เข้าร่วม</p></div>`;
+    return;
+  }
+
+  container.innerHTML = attendanceList.slice().reverse().map((r, i) => `
+    <div class="att-item">
+      <span class="num">${attendanceList.length - i}</span>
+      ${r.photo_url
+        ? `<img src="${r.photo_url}" alt="" onerror="this.style.display='none'">`
+        : `<div class="att-photo-placeholder"><i class="fa-solid fa-user"></i></div>`}
+      <div class="att-info">
+        <div class="att-name">${r.student_name}</div>
+        <div class="att-sub">${r.student_id} · ${r.faculty || ''}</div>
+      </div>
+      <span class="method-badge ${r.method === 'qr_scan' ? 'method-qr' : 'method-manual'}">${r.method === 'qr_scan' ? 'QR' : 'Manual'}</span>
+      <span class="att-time">${new Date(r.checked_at).toLocaleTimeString('th-TH')}</span>
+    </div>
+  `).join('');
+}
+
+function prependAttendance(student, method = 'qr_scan') {
+  attendanceList.push({
+    student_id:   student.student_id,
+    student_name: student.full_name,
+    faculty:      student.faculty,
+    photo_url:    student.photo_url,
+    method,
+    checked_at:   new Date().toISOString(),
+  });
+  renderList();
+}
+
+// ─── Manual search ────────────────────────────────────────────────────────────
+document.getElementById('manual-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doManualSearch();
+});
+
+async function doManualSearch() {
+  const q = document.getElementById('manual-search-input').value.trim();
+  if (!q) return;
+  const data = await apiFetch(`/students/search?q=${encodeURIComponent(q)}`);
+  const container = document.getElementById('search-results');
+  container.style.display = 'block';
+  if (!data.success || !data.data.length) {
+    container.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:13px">ไม่พบข้อมูล</div>';
+    return;
+  }
+  container.innerHTML = data.data.map(s => `
+    <div class="search-result-item" onclick="checkInManual('${s.student_id}')">
+      <div>
+        <div class="name">${s.full_name}</div>
+        <div class="sub">${s.student_id} · ${s.faculty || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function checkInManual(studentId) {
+  if (!currentActivity || !currentSession || currentSession.status !== 'open') {
+    showToast('เปิด Session ก่อนเช็คชื่อ', 'red');
+    return;
+  }
+  const data = await apiFetch('/attendance/manual', {
+    method: 'POST',
+    body: JSON.stringify({ student_id: studentId, activity_id: currentActivity.id, session_id: currentSession.id }),
+  });
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('manual-search-input').value = '';
+  if (data.success) {
+    beepSuccess();
+    showResult('success', '<i class="fa-solid fa-circle-check"></i> เช็คชื่อ Manual สำเร็จ', '', data.student);
+    prependAttendance(data.student, 'manual');
+    showToast('เช็คชื่อสำเร็จ');
+  } else {
+    showToast(data.message, 'red');
+  }
+  focusQrInput();
+}
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-logout').addEventListener('click', async () => {
+  const r = await Swal.fire({
+    title: 'ออกจากระบบ?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ออกจากระบบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#003B7A',
+    cancelButtonColor: '#6c757d',
+  });
+  if (!r.isConfirmed) return;
+  localStorage.removeItem('scanner_token');
+  token = ''; currentUser = null; currentActivity = null; currentSession = null;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+// ─── Event listeners ──────────────────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// Refocus QR input when clicking the main area (not inputs)
+document.getElementById('main-screen').addEventListener('click', (e) => {
+  const tag = e.target.tagName.toLowerCase();
+  if (!['input', 'select', 'button', 'textarea'].includes(tag)) focusQrInput();
+});
+
+// ─── Auto-login if token exists ───────────────────────────────────────────────
+(async () => {
+  if (!token) return;
+  try {
+    // ทดสอบ token โดยดึงรายการกิจกรรม
+    const data = await apiFetch('/activities');
+    if (data.success) {
+      // decode basic info from JWT payload
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      currentUser = { id: payload.id, username: payload.username, role: payload.role, full_name: payload.full_name };
+      showMainScreen();
+    } else {
+      localStorage.removeItem('scanner_token');
+    }
+  } catch {
+    localStorage.removeItem('scanner_token');
+  }
+})();
+</script>
+</body>
+</html>

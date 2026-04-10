@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>นำเข้าข้อมูลนักศึกษา — NBU Activity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #003B7A;
+    --primary-light: #0056b3;
+    --success: #198754;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --gray-50: #f8f9fa;
+    --gray-100: #f0f4ff;
+    --gray-200: #e9ecef;
+    --gray-600: #6c757d;
+    --border: #dee2e6;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  body { font-family: 'Prompt', 'Segoe UI', sans-serif; background: #f0f4ff; color: #212529; }
+
+  /* Nav */
+  .nav { background: var(--primary); color: #fff; padding: 0 24px; display: flex; align-items: center; gap: 16px; height: 56px; }
+  .nav-logo { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #fff; }
+  .nav-back { color: rgba(255,255,255,.8); text-decoration: none; font-size: .9rem; display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .nav-back:hover { color: #fff; }
+
+  /* Main */
+  .main { max-width: 860px; margin: 32px auto; padding: 0 16px 60px; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  .subtitle { color: var(--gray-600); font-size: .9rem; margin-bottom: 28px; }
+
+  /* Steps indicator */
+  .steps { display: flex; gap: 0; margin-bottom: 32px; }
+  .step { flex: 1; display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: #fff; border: 1px solid var(--border); position: relative; }
+  .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .step:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+  .step + .step { border-left: none; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--gray-200); color: var(--gray-600); font-weight: 700; font-size: .8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-label { font-size: .85rem; color: var(--gray-600); }
+  .step.active .step-num   { background: var(--primary); color: #fff; }
+  .step.active .step-label { color: var(--primary); font-weight: 600; }
+  .step.done .step-num     { background: var(--success); color: #fff; }
+  .step.done .step-label   { color: var(--success); }
+
+  /* Card */
+  .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
+  .card-title { font-size: 1.05rem; font-weight: 600; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  /* Upload zone */
+  .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 48px 24px; text-align: center; cursor: pointer; transition: .2s; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--primary); background: var(--gray-100); }
+  .drop-zone i { font-size: 3rem; color: var(--gray-600); display: block; margin-bottom: 12px; }
+  .drop-zone p  { color: var(--gray-600); font-size: .95rem; }
+  .drop-zone span { color: var(--primary); font-weight: 600; text-decoration: underline; }
+  .drop-zone.has-file { border-color: var(--success); background: #f0fff4; }
+  .drop-zone.has-file i { color: var(--success); }
+  #file-input { display: none; }
+
+  /* CSV format hint */
+  .hint-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 16px; margin-top: 16px; font-size: .85rem; }
+  .hint-box strong { color: #92400e; }
+  .hint-box code { background: #fef3c7; padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
+
+  /* Column mapping */
+  .col-map { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .col-map { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: .85rem; font-weight: 500; color: #495057; }
+  .form-group label span { color: var(--danger); }
+  .form-group select { padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .9rem; background: #fff; }
+  .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,59,122,.1); }
+
+  /* Preview table */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  thead th { background: var(--primary); color: #fff; padding: 10px 14px; text-align: left; font-weight: 500; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: var(--gray-100); }
+  tbody td { padding: 8px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Checkbox option */
+  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .checkbox-row input[type=checkbox] { width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary); }
+  .checkbox-row label { font-size: .9rem; cursor: pointer; }
+
+  /* Progress */
+  .progress-wrap { margin-top: 8px; }
+  .progress-bar-bg { background: var(--gray-200); border-radius: 99px; height: 18px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--primary); border-radius: 99px; transition: width .4s ease; width: 0%; }
+  .progress-text { text-align: right; font-size: .8rem; color: var(--gray-600); margin-top: 4px; }
+  .phase-list { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .phase-tag { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; font-size: .82rem; background: var(--gray-200); color: var(--gray-600); }
+  .phase-tag.active { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
+  .phase-tag.done   { background: #dcfce7; color: #166534; }
+  .phase-tag i { font-size: .75rem; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+  .stat-box { background: var(--gray-100); border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-box .num  { font-size: 2rem; font-weight: 700; color: var(--primary); }
+  .stat-box .lbl  { font-size: .8rem; color: var(--gray-600); margin-top: 4px; }
+  .stat-box.success .num { color: var(--success); }
+  .stat-box.danger  .num { color: var(--danger); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: none; border-radius: 8px; font-family: inherit; font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
+  .btn-primary  { background: var(--primary); color: #fff; }
+  .btn-primary:hover  { background: var(--primary-light); }
+  .btn-success  { background: var(--success); color: #fff; }
+  .btn-success:hover  { background: #157347; }
+  .btn-outline  { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-outline:hover  { background: var(--gray-100); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+  /* Alert */
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: .9rem; display: flex; align-items: flex-start; gap: 10px; }
+  .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .alert i { margin-top: 2px; flex-shrink: 0; }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+
+  /* Log */
+  .log-box { background: #1e293b; color: #94a3b8; border-radius: 8px; padding: 14px 16px; font-size: .8rem; font-family: monospace; max-height: 160px; overflow-y: auto; margin-top: 12px; }
+  .log-box .log-ok   { color: #4ade80; }
+  .log-box .log-warn { color: #fbbf24; }
+  .log-box .log-err  { color: #f87171; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a class="nav-logo" href="/admin">
+    <i class="fa-solid fa-shield-halved"></i> NBU Activity
+  </a>
+  <a class="nav-back" href="/admin">
+    <i class="fa-solid fa-arrow-left"></i> กลับหน้า Admin
+  </a>
+</nav>
+
+<div class="main">
+  <h1><i class="fa-solid fa-file-import" style="color:var(--primary);margin-right:8px"></i>นำเข้าข้อมูลนักศึกษา</h1>
+  <p class="subtitle">อัปโหลดไฟล์ CSV จากระบบทะเบียน → ระบบจะดาวน์โหลดรูปภาพและบันทึกลง PostgreSQL + Redis อัตโนมัติ</p>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step-1">
+      <div class="step-num">1</div>
+      <div class="step-label"><i class="fa-solid fa-upload" style="margin-right:4px"></i>อัปโหลดไฟล์</div>
+    </div>
+    <div class="step" id="step-2">
+      <div class="step-num">2</div>
+      <div class="step-label"><i class="fa-solid fa-table-columns" style="margin-right:4px"></i>กำหนด Column</div>
+    </div>
+    <div class="step" id="step-3">
+      <div class="step-num">3</div>
+      <div class="step-label"><i class="fa-solid fa-gauge-high" style="margin-right:4px"></i>ดำเนินการ</div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 1: Upload ─── -->
+  <div id="panel-1">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV</div>
+
+      <div class="drop-zone" id="drop-zone">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>ลากไฟล์มาวางที่นี่ หรือ <span>คลิกเพื่อเลือกไฟล์</span></p>
+        <p style="font-size:.8rem;margin-top:6px">รองรับ .csv ขนาดไม่เกิน 20MB</p>
+      </div>
+      <input type="file" id="file-input" accept=".csv,.txt">
+
+      <div class="hint-box">
+        <strong><i class="fa-solid fa-lightbulb"></i> รูปแบบไฟล์ที่รองรับ:</strong><br>
+        บรรทัดแรกต้องเป็น header — รองรับ <code>UTF-8</code> และ <code>UTF-8 BOM</code> (Export จาก Excel ได้เลย)<br><br>
+        <strong>คอลัมน์ที่รองรับ:</strong><br>
+        <code>student_id</code>, <code>full_name</code>, <code>faculty</code>, <code>major</code>,
+        <code>level</code>, <code>study_duration</code>, <code>study_period</code>, <code>study_plan</code>, <code>loan_status</code><br><br>
+        ตัวอย่างแถวข้อมูล:<br>
+        <code>671280108,นายสมชาย ใจดี,คณะวิทยาศาสตร์และเทคโนโลยี,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,กู้ยืม</code><br><br>
+        <a id="btn-download-sample" href="#" style="color:#92400e;font-weight:600">
+          <i class="fa-solid fa-download"></i> ดาวน์โหลดไฟล์ตัวอย่าง (sample.csv)
+        </a>
+      </div>
+
+      <div id="upload-error" class="alert alert-danger hidden" style="margin-top:16px">
+        <i class="fa-solid fa-circle-xmark"></i>
+        <span id="upload-error-msg"></span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-upload" disabled>
+          <i class="fa-solid fa-arrow-right"></i> ถัดไป: กำหนด Column
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2: Column Mapping ─── -->
+  <div id="panel-2" class="hidden">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-table-columns"></i> กำหนด Column</div>
+      <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:20px">
+        เลือก column ใน CSV ที่ตรงกับแต่ละฟิลด์ (ระบบจะพยายาม auto-detect ให้)
+      </p>
+
+      <div class="col-map" id="col-map">
+        <!-- สร้าง dynamically -->
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="skip-photos">
+        <label for="skip-photos">
+          <i class="fa-solid fa-image"></i>
+          ข้ามการดาวน์โหลดรูปภาพ (เร็วกว่า แต่จะไม่มีรูปถ้ายังไม่เคย import)
+        </label>
+      </div>
+
+      <div style="margin-top:24px">
+        <strong style="font-size:.9rem">ตัวอย่างข้อมูล (5 แถวแรก)</strong>
+        <div class="table-wrap" id="preview-table-wrap"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" id="btn-back-1">
+          <i class="fa-solid fa-arrow-left"></i> กลับ
+        </button>
+        <button class="btn btn-primary" id="btn-start">
+          <i class="fa-solid fa-play"></i> เริ่มนำเข้า
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 3: Progress ─── -->
+  <div id="panel-3" class="hidden">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-gauge-high"></i> กำลังนำเข้าข้อมูล</div>
+
+      <div id="progress-section">
+        <div class="phase-list">
+          <div class="phase-tag" id="tag-photos">
+            <i class="fa-solid fa-image"></i> ดาวน์โหลดรูปภาพ
+          </div>
+          <div class="phase-tag" id="tag-db">
+            <i class="fa-solid fa-database"></i> บันทึก PostgreSQL
+          </div>
+          <div class="phase-tag" id="tag-redis">
+            <i class="fa-solid fa-bolt"></i> บันทึก Redis Cache
+          </div>
+        </div>
+
+        <div class="progress-wrap" style="margin-top:20px">
+          <div id="progress-label" style="font-size:.9rem;margin-bottom:6px;font-weight:500;color:var(--primary)">
+            กำลังเริ่มต้น...
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+          </div>
+          <div class="progress-text" id="progress-pct">0%</div>
+        </div>
+      </div>
+
+      <div id="result-section" class="hidden">
+        <div class="alert alert-success" id="result-alert">
+          <i class="fa-solid fa-circle-check fa-lg"></i>
+          <div>
+            <strong>นำเข้าข้อมูลเสร็จสมบูรณ์</strong>
+            <div id="result-msg" style="margin-top:4px;font-size:.88rem"></div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="num" id="stat-total">0</div>
+            <div class="lbl"><i class="fa-solid fa-users"></i> นักศึกษาทั้งหมด</div>
+          </div>
+          <div class="stat-box success">
+            <div class="num" id="stat-photo-ok">0</div>
+            <div class="lbl"><i class="fa-solid fa-image"></i> รูปภาพสำเร็จ</div>
+          </div>
+          <div class="stat-box danger">
+            <div class="num" id="stat-photo-fail">0</div>
+            <div class="lbl"><i class="fa-solid fa-image-slash"></i> รูปภาพไม่พบ</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="resetAll()">
+            <i class="fa-solid fa-file-import"></i> นำเข้าไฟล์ใหม่
+          </button>
+          <a class="btn btn-outline" href="/admin">
+            <i class="fa-solid fa-arrow-left"></i> กลับหน้า Admin
+          </a>
+        </div>
+      </div>
+
+      <div id="error-section" class="hidden">
+        <div class="alert alert-danger">
+          <i class="fa-solid fa-circle-xmark fa-lg"></i>
+          <div>
+            <strong>เกิดข้อผิดพลาด</strong>
+            <div id="error-msg" style="margin-top:4px;font-size:.88rem"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="resetAll()">
+            <i class="fa-solid fa-rotate-left"></i> ลองใหม่
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1';
+let token      = localStorage.getItem('admin_token');
+
+// ─── Download sample CSV ──────────────────────────────────────────────────────
+document.getElementById('btn-download-sample').addEventListener('click', (e) => {
+    e.preventDefault();
+    const rows = [
+        'student_id,full_name,faculty,major,level,study_duration,study_period,study_plan,loan_status',
+        '671280101,นายสมชาย ใจดี,คณะวิทยาศาสตร์และเทคโนโลยี,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,กู้ยืม',
+        '671280102,นางสาวสมหญิง รักเรียน,คณะบริหารธุรกิจ,การจัดการ,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,ไม่กู้ยืม',
+        '671280103,นายสมศักดิ์ มั่นคง,คณะวิศวกรรมศาสตร์,วิศวกรรมคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคพิเศษ,แผน ข,กู้ยืม',
+        '671280104,นางสาวสมใจ ดีงาม,คณะนิติศาสตร์,นิติศาสตร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,ไม่กู้ยืม',
+        '671280105,นายสมบูรณ์ เจริญ,คณะรัฐศาสตร์,รัฐประศาสนศาสตร์,ปริญญาตรี,4 ปี,เสาร์-อาทิตย์,แผน ข,กู้ยืม',
+    ];
+    const bom  = '\uFEFF'; // UTF-8 BOM สำหรับ Excel
+    const blob = new Blob([bom + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'students_sample.csv'; a.click();
+    URL.revokeObjectURL(url);
+});
+let uploadId   = null;
+let csvHeaders = [];
+let csvPreview = [];
+let csvTotal   = 0;
+
+// ─── Auth check ──────────────────────────────────────────────────────────────
+if (!token) {
+    window.location.href = '/admin/';
+}
+
+async function apiFetch(url, opts = {}) {
+    const res = await fetch(API + url, {
+        ...opts,
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+    return res.json();
+}
+
+// ─── Step helpers ─────────────────────────────────────────────────────────────
+function goStep(n) {
+    [1,2,3].forEach(i => {
+        document.getElementById(`panel-${i}`).classList.toggle('hidden', i !== n);
+        const s = document.getElementById(`step-${i}`);
+        s.classList.remove('active','done');
+        if (i < n)  s.classList.add('done');
+        if (i === n) s.classList.add('active');
+    });
+}
+
+// ─── Step 1: File Upload ──────────────────────────────────────────────────────
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const btnUpload = document.getElementById('btn-upload');
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(f) {
+    selectedFile = f;
+    dropZone.classList.add('has-file');
+    dropZone.innerHTML = `
+        <i class="fa-solid fa-file-csv"></i>
+        <p><strong>${f.name}</strong></p>
+        <p style="font-size:.8rem;margin-top:4px;color:var(--gray-600)">${(f.size/1024).toFixed(1)} KB — คลิกเพื่อเปลี่ยนไฟล์</p>
+    `;
+    btnUpload.disabled = false;
+    document.getElementById('upload-error').classList.add('hidden');
+}
+
+btnUpload.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    btnUpload.disabled = true;
+    btnUpload.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอ่านไฟล์...';
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+        const res = await fetch(API + '/import/upload', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: form,
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        uploadId   = data.data.uploadId;
+        csvHeaders = data.data.headers;
+        csvPreview = data.data.preview;
+        csvTotal   = data.data.total;
+
+        buildColumnMapping();
+        buildPreviewTable();
+        goStep(2);
+    } catch (err) {
+        document.getElementById('upload-error').classList.remove('hidden');
+        document.getElementById('upload-error-msg').textContent = err.message;
+        btnUpload.disabled = false;
+        btnUpload.innerHTML = '<i class="fa-solid fa-arrow-right"></i> ถัดไป: กำหนด Column';
+    }
+});
+
+// ─── Step 2: Column Mapping ───────────────────────────────────────────────────
+const FIELDS = [
+    { key: 'colId',            label: 'รหัสนักศึกษา',   required: true,  guess: ['student_id','studentid','รหัสนักศึกษา','รหัส','id'] },
+    { key: 'colName',          label: 'ชื่อ-นามสกุล',   required: true,  guess: ['full_name','fullname','name','ชื่อ','ชื่อ-นามสกุล','ชื่อนามสกุล'] },
+    { key: 'colFaculty',       label: 'คณะ',             required: false, guess: ['faculty','คณะ'] },
+    { key: 'colMajor',         label: 'สาขา',            required: false, guess: ['major','สาขา','สาขาวิชา'] },
+    { key: 'colLevel',         label: 'ระดับ',           required: false, guess: ['level','ระดับ','ระดับการศึกษา'] },
+    { key: 'colStudyDuration', label: 'ระยะเวลาเรียน',  required: false, guess: ['study_duration','ระยะเวลาเรียน','ระยะเวลา','duration'] },
+    { key: 'colStudyPeriod',   label: 'ช่วงเวลาเรียน',  required: false, guess: ['study_period','ช่วงเวลาเรียน','ช่วงเวลา','period','ภาค'] },
+    { key: 'colStudyPlan',     label: 'แผนการเรียน',    required: false, guess: ['study_plan','แผนการเรียน','แผน','plan'] },
+    { key: 'colLoanStatus',    label: 'สถานะกู้ยืม',    required: false, guess: ['loan_status','สถานะกู้ยืม','กู้ยืม','loan'] },
+];
+
+function autoGuess(guesses) {
+    for (const g of guesses) {
+        const found = csvHeaders.find(h => h.toLowerCase() === g.toLowerCase() || h === g);
+        if (found) return found;
+    }
+    return '';
+}
+
+function buildColumnMapping() {
+    const wrap = document.getElementById('col-map');
+    wrap.innerHTML = FIELDS.map(f => {
+        const guess = autoGuess(f.guess);
+        const opts  = csvHeaders.map(h =>
+            `<option value="${h}" ${h === guess ? 'selected' : ''}>${h}</option>`
+        ).join('');
+        const emptyOpt = !f.required ? `<option value="">-- ไม่มี --</option>` : '';
+        return `
+            <div class="form-group">
+                <label>${f.label} ${f.required ? '<span>*</span>' : ''}</label>
+                <select id="${f.key}">${emptyOpt}${opts}</select>
+            </div>
+        `;
+    }).join('');
+}
+
+function buildPreviewTable() {
+    const wrap = document.getElementById('preview-table-wrap');
+    const ths  = csvHeaders.map(h => `<th>${h}</th>`).join('');
+    const trs  = csvPreview.map(row =>
+        `<tr>${csvHeaders.map(h => `<td title="${row[h]||''}">${row[h]||''}</td>`).join('')}</tr>`
+    ).join('');
+    wrap.innerHTML = `
+        <table>
+            <thead><tr>${ths}</tr></thead>
+            <tbody>${trs}</tbody>
+        </table>
+        <div style="padding:8px 14px;font-size:.8rem;color:var(--gray-600)">
+            แสดง 5 แถวแรก จากทั้งหมด <strong>${csvTotal.toLocaleString()}</strong> แถว
+        </div>
+    `;
+}
+
+document.getElementById('btn-back-1').addEventListener('click', () => goStep(1));
+
+document.getElementById('btn-start').addEventListener('click', async () => {
+    const colId = document.getElementById('colId').value;
+    const colName = document.getElementById('colName').value;
+    if (!colId || !colName) {
+        alert('กรุณาเลือก Column รหัสนักศึกษา และชื่อ-นามสกุล');
+        return;
+    }
+
+    const body = {
+        uploadId,
+        colId,
+        colName,
+        colFaculty:       document.getElementById('colFaculty').value,
+        colMajor:         document.getElementById('colMajor').value,
+        colLevel:         document.getElementById('colLevel').value,
+        colStudyDuration: document.getElementById('colStudyDuration').value,
+        colStudyPeriod:   document.getElementById('colStudyPeriod').value,
+        colStudyPlan:     document.getElementById('colStudyPlan').value,
+        colLoanStatus:    document.getElementById('colLoanStatus').value,
+        skipPhotos:       document.getElementById('skip-photos').checked ? 'true' : 'false',
+    };
+
+    try {
+        const data = await apiFetch('/import/start', { method: 'POST', body: JSON.stringify(body) });
+        if (!data.success) throw new Error(data.message);
+        goStep(3);
+        startProgress(data.data.jobId, document.getElementById('skip-photos').checked);
+    } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+});
+
+// ─── Step 3: SSE Progress ─────────────────────────────────────────────────────
+function startProgress(jobId, skipPhotos) {
+    const bar      = document.getElementById('progress-bar');
+    const pct      = document.getElementById('progress-pct');
+    const lbl      = document.getElementById('progress-label');
+    const tagPhoto = document.getElementById('tag-photos');
+    const tagDb    = document.getElementById('tag-db');
+    const tagRedis = document.getElementById('tag-redis');
+
+    if (skipPhotos) tagPhoto.classList.add('done');
+
+    const phaseLabel = { photos: 'กำลังดาวน์โหลดรูปภาพ...', db: 'กำลังบันทึก PostgreSQL...', redis: 'กำลังบันทึก Redis Cache...', done: 'เสร็จสมบูรณ์' };
+
+    const url = `${API}/import/progress/${jobId}?token=${encodeURIComponent(token)}`;
+    const es  = new EventSource(url);
+
+    es.onmessage = (e) => {
+        const job = JSON.parse(e.data);
+
+        // Phase tags
+        [tagPhoto, tagDb, tagRedis].forEach(t => t.classList.remove('active','done'));
+        if (job.phase === 'photos')  { if (!skipPhotos) tagPhoto.classList.add('active'); }
+        if (job.phase === 'db')      { if (!skipPhotos) tagPhoto.classList.add('done'); tagDb.classList.add('active'); }
+        if (job.phase === 'redis')   { if (!skipPhotos) tagPhoto.classList.add('done'); tagDb.classList.add('done'); tagRedis.classList.add('active'); }
+        if (job.phase === 'done')    { if (!skipPhotos) tagPhoto.classList.add('done'); tagDb.classList.add('done'); tagRedis.classList.add('done'); }
+
+        // Progress bar
+        const pctVal = job.total > 0 ? Math.round((job.done / job.total) * 100) : 0;
+        bar.style.width = pctVal + '%';
+        pct.textContent = pctVal + '%';
+        lbl.textContent = (phaseLabel[job.phase] || '...') + ` (${(job.done||0).toLocaleString()} / ${(job.total||0).toLocaleString()})`;
+
+        if (job.status === 'done') {
+            es.close();
+            showResult(job);
+        }
+        if (job.status === 'error') {
+            es.close();
+            showError(job.errorMsg || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ');
+        }
+    };
+
+    es.onerror = () => {
+        es.close();
+        showError('การเชื่อมต่อขาดหาย กรุณาตรวจสอบสถานะ server');
+    };
+}
+
+function showResult(job) {
+    document.getElementById('progress-section').classList.add('hidden');
+    document.getElementById('result-section').classList.remove('hidden');
+    document.getElementById('result-msg').textContent =
+        `นำเข้า ${(job.total||0).toLocaleString()} คน เรียบร้อยแล้ว`;
+    document.getElementById('stat-total').textContent      = (job.total||0).toLocaleString();
+    document.getElementById('stat-photo-ok').textContent   = (job.photoOk||0).toLocaleString();
+    document.getElementById('stat-photo-fail').textContent = (job.photoFail||0).toLocaleString();
+}
+
+function showError(msg) {
+    document.getElementById('progress-section').classList.add('hidden');
+    document.getElementById('error-section').classList.remove('hidden');
+    document.getElementById('error-msg').textContent = msg;
+}
+
+function resetAll() {
+    uploadId   = null;
+    csvHeaders = [];
+    csvPreview = [];
+    csvTotal   = 0;
+    selectedFile = null;
+    fileInput.value = '';
+    dropZone.classList.remove('has-file');
+    dropZone.innerHTML = `
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>ลากไฟล์มาวางที่นี่ หรือ <span>คลิกเพื่อเลือกไฟล์</span></p>
+        <p style="font-size:.8rem;margin-top:6px">รองรับ .csv ขนาดไม่เกิน 20MB</p>
+    `;
+    btnUpload.disabled = true;
+    btnUpload.innerHTML = '<i class="fa-solid fa-arrow-right"></i> ถัดไป: กำหนด Column';
+    document.getElementById('upload-error').classList.add('hidden');
+    document.getElementById('progress-section').classList.remove('hidden');
+    document.getElementById('result-section').classList.add('hidden');
+    document.getElementById('error-section').classList.add('hidden');
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-pct').textContent = '0%';
+    goStep(1);
+}
+</script>
+</body>
+</html>
