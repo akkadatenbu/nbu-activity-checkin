@@ -40,7 +40,7 @@ router.get('/stats/:activityId', async (req, res) => {
             return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
         }
 
-        const [totalRes, byFacultyRes] = await Promise.all([
+        const [totalRes, byFacultyRes, byMajorRes] = await Promise.all([
             query(
                 `SELECT COUNT(*) AS c FROM nbu_attendance WHERE activity_id = $1`,
                 [activityId]
@@ -52,6 +52,13 @@ router.get('/stats/:activityId', async (req, res) => {
                 WHERE att.activity_id = $1
                 GROUP BY s.faculty ORDER BY count DESC
             `, [activityId]),
+            query(`
+                SELECT s.faculty, s.major AS label, COUNT(*) AS count
+                FROM nbu_attendance att
+                JOIN nbu_students s ON s.student_id = att.student_id
+                WHERE att.activity_id = $1
+                GROUP BY s.faculty, s.major ORDER BY s.faculty, count DESC
+            `, [activityId]),
         ]);
 
         return res.json({
@@ -60,6 +67,7 @@ router.get('/stats/:activityId', async (req, res) => {
                 activity:   actRes.rows[0],
                 total:      parseInt(totalRes.rows[0]?.c || 0),
                 by_faculty: byFacultyRes.rows,
+                by_major:   byMajorRes.rows,
             },
         });
     } catch (err) {

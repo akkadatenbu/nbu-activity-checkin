@@ -13,14 +13,14 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --accent:  #0077ff;
-  --cyan:    #00c6ff;
-  --bg:      #060d1a;
-  --surface: rgba(255,255,255,0.04);
-  --border:  rgba(255,255,255,0.08);
-  --text:    #f1f5f9;
-  --muted:   #94a3b8;
-  --green:   #22c55e;
+  --accent: #0077ff;
+  --cyan:   #00c6ff;
+  --bg:     #060d1a;
+  --surf:   rgba(255,255,255,0.04);
+  --bdr:    rgba(255,255,255,0.08);
+  --text:   #f1f5f9;
+  --muted:  #94a3b8;
+  --green:  #22c55e;
 }
 
 html, body {
@@ -50,7 +50,7 @@ html, body {
 
 .wrap { position:relative;z-index:1;max-width:900px;margin:0 auto;padding:32px 16px 80px; }
 
-/* ─── Header ─── */
+/* ─── Page header ─── */
 .page-header {
   display:flex;align-items:center;gap:14px;margin-bottom:28px;
   animation:fadeUp 0.5s ease both;
@@ -68,25 +68,23 @@ html, body {
   background:linear-gradient(135deg,#fff 40%,var(--cyan));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.header-text p { color:var(--muted);font-size:12px;margin-top:2px;line-height:1.4; }
+.header-text p { color:var(--muted);font-size:12px;margin-top:2px; }
 
-/* ─── Activity cards ─── */
+/* ─── Activity list ─── */
 .section-label { font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
   color:var(--muted);margin-bottom:14px; }
 
-.act-list { display:flex;flex-direction:column;gap:12px;animation:fadeUp 0.5s 0.1s ease both; }
+.act-list { display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.5s 0.1s ease both; }
 
 .act-card {
-  background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
-}
-.act-card:hover { border-color:rgba(0,119,255,0.4);box-shadow:0 8px 32px rgba(0,0,0,0.4);
-  background:rgba(255,255,255,0.055); }
-
-.act-main {
+  background:var(--surf);border:1px solid var(--bdr);border-radius:14px;
+  overflow:hidden;cursor:pointer;
+  transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
   display:flex;align-items:center;gap:14px;padding:16px 18px;
-  cursor:pointer;
 }
+.act-card:hover { border-color:rgba(0,119,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.4);
+  background:rgba(255,255,255,0.055); }
+.act-card:active { transform:scale(0.99); }
 .act-icon {
   width:44px;height:44px;border-radius:12px;flex-shrink:0;
   background:rgba(0,119,255,0.12);border:1px solid rgba(0,119,255,0.2);
@@ -97,55 +95,15 @@ html, body {
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .act-sub { font-size:12px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:8px; }
 .act-sub span { display:inline-flex;align-items:center;gap:4px; }
-.act-count {
-  flex-shrink:0;text-align:right;
-}
+.act-count { flex-shrink:0;text-align:right; }
 .act-count .num { font-size:22px;font-weight:800;color:#fff;line-height:1; }
 .act-count .lbl { font-size:11px;color:var(--muted); }
+.act-arrow { width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:rgba(0,119,255,0.1);display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--accent); }
 
-.act-actions {
-  display:flex;gap:0;border-top:1px solid var(--border);
-}
-.act-btn {
-  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
-  padding:10px 12px;font-size:12px;font-weight:600;font-family:inherit;
-  background:none;border:none;color:var(--muted);cursor:pointer;
-  transition:background 0.2s,color 0.2s;
-}
-.act-btn:first-child { border-right:1px solid var(--border); }
-.act-btn:hover { background:rgba(255,255,255,0.05);color:var(--text); }
-.act-btn.primary:hover { color:var(--accent); }
-.act-btn.copy-btn:hover { color:var(--green); }
-
-/* ─── Detail page ─── */
+/* ─── Detail view ─── */
 #detail-view { animation:fadeUp 0.4s ease both; }
-.back-btn {
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,0.05);border:1px solid var(--border);
-  color:var(--text);padding:8px 16px;border-radius:8px;
-  font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:22px;
-  transition:background 0.2s;
-}
-.back-btn:hover { background:rgba(255,255,255,0.09); }
-
-.share-bar {
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);
-  border-radius:10px;padding:10px 14px;margin-bottom:22px;
-  font-size:12px;color:var(--green);
-}
-.share-bar i { font-size:14px; }
-.share-url {
-  flex:1;min-width:0;font-family:monospace;font-size:11px;
-  color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.share-copy {
-  flex-shrink:0;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);
-  color:var(--green);padding:4px 12px;border-radius:6px;
-  font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;
-  transition:background 0.2s;
-}
-.share-copy:hover { background:rgba(34,197,94,0.25); }
 
 .detail-title {
   font-size:clamp(18px,4vw,26px);font-weight:800;margin-bottom:8px;
@@ -155,32 +113,33 @@ html, body {
 .detail-meta { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px; }
 .chip {
   display:inline-flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  background:rgba(255,255,255,0.06);border:1px solid var(--bdr);
   border-radius:99px;padding:4px 12px;font-size:12px;color:var(--muted);
 }
 .chip i { color:var(--accent);font-size:11px; }
 
 /* ─── Stat boxes ─── */
-.stats-row { display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px; }
+.stats-row { display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px; }
 .stat-box {
   flex:1;min-width:130px;
-  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:14px;
   padding:16px 18px;text-align:center;
 }
 .stat-num { font-size:36px;font-weight:800;color:#fff;line-height:1; }
 .stat-lbl { font-size:11px;color:var(--muted);margin-top:4px; }
 
-/* ─── Chart & table ─── */
+/* ─── Panels ─── */
 .panel {
-  background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  padding:20px;margin-bottom:18px;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:14px;
+  padding:20px;margin-bottom:16px;
 }
 .panel-title { font-size:13px;font-weight:600;margin-bottom:16px; }
 .panel-title i { color:var(--accent);margin-right:6px; }
 .chart-box { position:relative;height:240px; }
 
+/* ─── Faculty table ─── */
 .fac-table { width:100%;border-collapse:collapse; }
-.fac-table th,.fac-table td { padding:9px 12px;text-align:left;border-bottom:1px solid var(--border); }
+.fac-table th,.fac-table td { padding:9px 12px;text-align:left;border-bottom:1px solid var(--bdr); }
 .fac-table th { font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px; }
 .fac-table td { font-size:13px; }
 .fac-table tr:last-child td { border-bottom:none; }
@@ -189,18 +148,39 @@ html, body {
   background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:3px;
   transition:width 0.8s ease; }
 
-/* ─── Toast ─── */
-.toast {
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:#1e293b;border:1px solid rgba(34,197,94,0.4);color:var(--green);
-  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
-  z-index:9999;transition:transform 0.3s ease;pointer-events:none;
+/* ─── Major accordion (nested under each faculty) ─── */
+.fac-group { margin-bottom:12px; }
+.fac-group:last-child { margin-bottom:0; }
+.fac-group-header {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;background:rgba(0,119,255,0.07);border:1px solid rgba(0,119,255,0.15);
+  border-radius:10px;cursor:pointer;user-select:none;
+  transition:background 0.2s;
 }
-.toast.show { transform:translateX(-50%) translateY(0); }
+.fac-group-header:hover { background:rgba(0,119,255,0.12); }
+.fac-group-name { flex:1;font-size:14px;font-weight:700; }
+.fac-group-count { font-size:14px;font-weight:700;color:var(--accent); }
+.fac-group-pct { font-size:12px;color:var(--muted); }
+.fac-toggle { font-size:11px;color:var(--muted);transition:transform 0.2s; }
+.fac-toggle.open { transform:rotate(90deg); }
 
-/* ─── Loading / Empty ─── */
+.major-list { padding:6px 0 0 14px;display:none; }
+.major-list.open { display:block; }
+.major-row {
+  display:flex;align-items:center;gap:10px;
+  padding:7px 12px;border-left:2px solid rgba(0,119,255,0.2);
+  margin-bottom:4px;
+}
+.major-name { flex:1;font-size:13px;color:var(--muted); }
+.major-count { font-size:13px;font-weight:600;color:var(--text); }
+.major-bar-wrap { width:80px;position:relative;height:4px;
+  background:rgba(255,255,255,0.07);border-radius:2px; }
+.major-bar-fill { position:absolute;left:0;top:0;height:100%;
+  background:rgba(0,119,255,0.5);border-radius:2px; }
+
+/* ─── Loading / Empty / Error ─── */
 .loading { text-align:center;padding:60px 20px;color:var(--muted); }
-.loading i { font-size:32px;margin-bottom:12px;opacity:0.4;animation:spin 1s linear infinite; }
+.loading i { font-size:32px;margin-bottom:12px;opacity:0.4;animation:spin 1s linear infinite;display:block; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .empty { text-align:center;color:var(--muted);padding:60px 20px; }
 .empty i { font-size:48px;margin-bottom:16px;opacity:0.3;display:block; }
@@ -209,6 +189,9 @@ html, body {
   border-radius:10px;padding:14px 18px;color:#fca5a5;font-size:13px;margin-bottom:16px;
 }
 
+/* ─── Refresh badge ─── */
+.refresh-note { font-size:11px;color:rgba(255,255,255,0.2);text-align:right;margin-bottom:10px; }
+
 /* ─── Footer ─── */
 footer { position:relative;z-index:1;margin-top:48px;text-align:center;
   color:rgba(255,255,255,0.2);font-size:12px; }
@@ -216,27 +199,31 @@ footer strong { color:rgba(255,255,255,0.35); }
 
 @media (max-width:520px) {
   .wrap { padding:20px 12px 60px; }
-  .act-main { padding:14px; }
   .stat-num { font-size:28px; }
-  .chart-box { height:200px; }
+  .chart-box { height:190px; }
+  .act-card { padding:12px 14px; }
+  .major-bar-wrap { display:none; }
 }
 </style>
 </head>
 <body>
-<div class="bg-wrap">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-</div>
+<div class="bg-wrap"><div class="orb orb1"></div><div class="orb orb2"></div></div>
 <div class="grid-overlay"></div>
 
 <div class="wrap">
-  <!-- Header -->
+
+  <!-- Page header (always visible) -->
   <div class="page-header">
     <div class="logo-ring"><i class="fa-solid fa-chart-bar"></i></div>
     <div class="header-text">
-      <h1>รายงานกิจกรรม</h1>
+      <h1 id="page-title">รายงานกิจกรรม</h1>
       <p>มหาวิทยาลัยนอร์ทกรุงเทพ — สถิติการเข้าร่วม (ข้อมูลสาธารณะ)</p>
     </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-view">
+    <div class="loading"><i class="fa-solid fa-spinner"></i>กำลังโหลดข้อมูล…</div>
   </div>
 
   <!-- List view -->
@@ -247,45 +234,29 @@ footer strong { color:rgba(255,255,255,0.35); }
 
   <!-- Detail view -->
   <div id="detail-view" style="display:none">
-    <button class="back-btn" id="back-btn">
-      <i class="fa-solid fa-arrow-left"></i> กลับรายการกิจกรรม
-    </button>
-
-    <div class="share-bar">
-      <i class="fa-solid fa-link"></i>
-      <span>ลิงก์แชร์:</span>
-      <span class="share-url" id="share-url"></span>
-      <button class="share-copy" id="share-copy-btn">คัดลอก</button>
-    </div>
-
     <div id="d-error" style="display:none"></div>
-    <div class="detail-title" id="d-title">กำลังโหลด…</div>
+    <div class="detail-title" id="d-title"></div>
     <div class="detail-meta" id="d-meta"></div>
     <div class="stats-row" id="d-stats"></div>
+
     <div class="panel" id="d-chart-panel" style="display:none">
-      <div class="panel-title"><i class="fa-solid fa-chart-bar"></i>จำนวนผู้เข้าร่วมแยกตามคณะ</div>
+      <div class="panel-title"><i class="fa-solid fa-chart-bar"></i>ผู้เข้าร่วมแยกตามคณะ</div>
       <div class="chart-box"><canvas id="fac-chart"></canvas></div>
     </div>
-    <div class="panel" id="d-table-panel" style="display:none">
-      <div class="panel-title"><i class="fa-solid fa-table"></i>สรุปแยกตามคณะ</div>
-      <table class="fac-table" id="d-table"></table>
+
+    <div class="panel" id="d-major-panel" style="display:none">
+      <div class="panel-title"><i class="fa-solid fa-layer-group"></i>แยกตามคณะและสาขา</div>
+      <div id="d-major-list"></div>
     </div>
+
+    <div class="refresh-note" id="refresh-note"></div>
   </div>
 
-  <!-- Loading -->
-  <div id="loading-view">
-    <div class="loading">
-      <i class="fa-solid fa-spinner"></i>
-      <p>กำลังโหลดข้อมูล…</p>
-    </div>
-  </div>
 </div>
 
 <footer>
   <strong>NBU Activity Check-in System</strong> &nbsp;·&nbsp; มหาวิทยาลัยนอร์ทกรุงเทพ
 </footer>
-
-<div class="toast" id="toast">คัดลอกลิงก์แล้ว!</div>
 
 <script>
 const API = '/api/v1/public';
@@ -310,222 +281,153 @@ function showView(name) {
     document.getElementById(id).style.display = id === name ? 'block' : 'none';
   });
 }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
 
 // ─── URL routing ──────────────────────────────────────────────────────────────
-function getActivityIdFromURL() {
-  return new URLSearchParams(window.location.search).get('id');
-}
-function setActivityURL(id) {
-  const url = id
-    ? `${location.origin}/report?id=${id}`
-    : `${location.origin}/report`;
-  history.pushState({ id }, '', id ? `?id=${id}` : '/report');
-  return `${location.origin}/report?id=${id}`;
+function getIdFromURL() {
+  return new URLSearchParams(location.search).get('id');
 }
 
-window.addEventListener('popstate', e => {
-  const id = e.state?.id;
-  if (id) loadDetail(id);
-  else loadList();
-});
-
-// ─── List ─────────────────────────────────────────────────────────────────────
+// ─── Activity list ────────────────────────────────────────────────────────────
 async function loadList() {
   clearInterval(refreshTimer);
+  document.getElementById('page-title').textContent = 'รายงานกิจกรรม';
   showView('loading-view');
   try {
     const r = await fetch(`${API}/activities`);
     const { success, data } = await r.json();
-    const list = document.getElementById('act-list');
+    const el = document.getElementById('act-list');
 
-    if (!success || !data || !data.length) {
-      list.innerHTML = `<div class="empty"><i class="fa-solid fa-calendar-xmark"></i>ไม่มีกิจกรรมที่เปิดใช้งาน</div>`;
+    if (!success || !data?.length) {
+      el.innerHTML = `<div class="empty"><i class="fa-solid fa-calendar-xmark"></i>ไม่มีกิจกรรมที่เปิดใช้งาน</div>`;
       showView('list-view');
       return;
     }
 
-    list.innerHTML = data.map(a => `
+    el.innerHTML = data.map(a => `
       <div class="act-card" data-id="${a.id}">
-        <div class="act-main" data-action="open" data-id="${a.id}">
-          <div class="act-icon"><i class="fa-solid fa-calendar-check"></i></div>
-          <div class="act-info">
-            <div class="act-title" title="${esc(a.title)}">${esc(a.title)}</div>
-            <div class="act-sub">
-              <span><i class="fa-regular fa-clock"></i>${fmtDate(a.start_datetime)}</span>
-              <span><i class="fa-solid fa-location-dot"></i>${esc(a.location || '—')}</span>
-            </div>
-          </div>
-          <div class="act-count">
-            <div class="num">${Number(a.attendee_count).toLocaleString()}</div>
-            <div class="lbl">คน</div>
+        <div class="act-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="act-info">
+          <div class="act-title">${esc(a.title)}</div>
+          <div class="act-sub">
+            <span><i class="fa-regular fa-clock"></i>${fmtDate(a.start_datetime)}</span>
+            <span><i class="fa-solid fa-location-dot"></i>${esc(a.location || '—')}</span>
           </div>
         </div>
-        <div class="act-actions">
-          <button class="act-btn primary" data-action="open" data-id="${a.id}">
-            <i class="fa-solid fa-chart-bar"></i> ดูสถิติ
-          </button>
-          <button class="act-btn copy-btn" data-action="copy" data-id="${a.id}">
-            <i class="fa-solid fa-link"></i> คัดลอกลิงก์
-          </button>
+        <div class="act-count">
+          <div class="num">${Number(a.attendee_count).toLocaleString()}</div>
+          <div class="lbl">คน</div>
         </div>
+        <div class="act-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </div>
     `).join('');
 
-    // Event delegation — safer than inline onclick with closures
-    list.addEventListener('click', handleListClick, { once: true });
+    el.addEventListener('click', e => {
+      const card = e.target.closest('.act-card');
+      if (card) loadDetail(card.dataset.id);
+    });
 
     showView('list-view');
     refreshTimer = setInterval(loadList, 60000);
   } catch (err) {
-    const list = document.getElementById('act-list');
-    list.innerHTML = `<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i><p>เกิดข้อผิดพลาด: ${esc(err.message)}</p></div>`;
+    document.getElementById('act-list').innerHTML =
+      `<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i><p>เกิดข้อผิดพลาด: ${esc(err.message)}</p></div>`;
     showView('list-view');
   }
-}
-
-function handleListClick(e) {
-  const btn = e.target.closest('[data-action]');
-  if (!btn) {
-    // re-attach since once:true
-    document.getElementById('act-list').addEventListener('click', handleListClick, { once: true });
-    return;
-  }
-  const id = btn.dataset.id;
-  const action = btn.dataset.action;
-  if (action === 'open') {
-    loadDetail(id);
-  } else if (action === 'copy') {
-    const url = `${location.origin}/report?id=${id}`;
-    navigator.clipboard.writeText(url).then(() => showToast('คัดลอกลิงก์แล้ว!'))
-      .catch(() => {
-        prompt('คัดลอกลิงก์นี้:', url);
-      });
-  }
-  // re-attach since once:true removed it
-  document.getElementById('act-list').addEventListener('click', handleListClick, { once: true });
 }
 
 // ─── Detail ───────────────────────────────────────────────────────────────────
 async function loadDetail(id) {
   clearInterval(refreshTimer);
   showView('loading-view');
-
-  const shareUrl = setActivityURL(id);
-  document.getElementById('share-url').textContent = shareUrl;
-  document.getElementById('share-copy-btn').onclick = () => {
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => showToast('คัดลอกลิงก์แล้ว!'))
-      .catch(() => prompt('คัดลอกลิงก์นี้:', shareUrl));
-  };
-
   try {
     const r = await fetch(`${API}/stats/${id}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const { success, data, message } = await r.json();
     if (!success) throw new Error(message || 'เกิดข้อผิดพลาด');
 
-    const { activity, total, by_faculty } = data;
-
-    // Error area
-    document.getElementById('d-error').style.display = 'none';
-
-    // Title & meta
-    document.title = `${activity.title} — NBU Activity`;
-    document.getElementById('d-title').textContent = activity.title;
-    document.getElementById('d-meta').innerHTML = [
-      `<span class="chip"><i class="fa-regular fa-clock"></i>${fmtDate(activity.start_datetime)}</span>`,
-      activity.end_datetime ? `<span class="chip"><i class="fa-regular fa-clock"></i>ถึง ${fmtDate(activity.end_datetime)}</span>` : '',
-      activity.location ? `<span class="chip"><i class="fa-solid fa-location-dot"></i>${esc(activity.location)}</span>` : '',
-    ].join('');
-
-    // Stat boxes
-    document.getElementById('d-stats').innerHTML = `
-      <div class="stat-box">
-        <div class="stat-num">${Number(total).toLocaleString()}</div>
-        <div class="stat-lbl">ผู้เข้าร่วมทั้งหมด (คน)</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num">${by_faculty.length}</div>
-        <div class="stat-lbl">คณะที่เข้าร่วม</div>
-      </div>
-    `;
-
-    // Chart
-    if (by_faculty.length) {
-      document.getElementById('d-chart-panel').style.display = 'block';
-      renderChart(by_faculty);
-    } else {
-      document.getElementById('d-chart-panel').style.display = 'none';
-    }
-
-    // Table
-    if (by_faculty.length) {
-      document.getElementById('d-table-panel').style.display = 'block';
-      const maxC = Math.max(...by_faculty.map(f => +f.count), 1);
-      document.getElementById('d-table').innerHTML = `
-        <thead><tr>
-          <th>#</th><th>คณะ</th><th>จำนวน (คน)</th><th style="min-width:80px">สัดส่วน</th>
-        </tr></thead>
-        <tbody>${by_faculty.map((f,i) => `
-          <tr>
-            <td style="color:var(--muted)">${i+1}</td>
-            <td>${esc(f.label || '—')}</td>
-            <td style="font-weight:700">${Number(f.count).toLocaleString()}</td>
-            <td><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(f.count/maxC*100)}%"></div></div></td>
-          </tr>`).join('')}
-        </tbody>
-      `;
-    } else {
-      document.getElementById('d-table-panel').style.display = 'none';
-    }
-
+    renderDetail(data);
     showView('detail-view');
-    refreshTimer = setInterval(() => loadDetailSilent(id), 60000);
-
+    refreshTimer = setInterval(async () => {
+      try {
+        const r2 = await fetch(`${API}/stats/${id}`);
+        const { success: ok, data: d2 } = await r2.json();
+        if (ok) renderDetail(d2, true);
+      } catch {}
+    }, 60000);
   } catch (err) {
-    const errEl = document.getElementById('d-error');
-    errEl.innerHTML = `<div class="error-msg"><i class="fa-solid fa-triangle-exclamation"></i> โหลดข้อมูลไม่สำเร็จ: ${esc(err.message)}</div>`;
-    errEl.style.display = 'block';
+    document.getElementById('d-error').innerHTML =
+      `<div class="error-msg"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(err.message)}</div>`;
+    document.getElementById('d-error').style.display = 'block';
     document.getElementById('d-title').textContent = 'เกิดข้อผิดพลาด';
     document.getElementById('d-meta').innerHTML = '';
     document.getElementById('d-stats').innerHTML = '';
     document.getElementById('d-chart-panel').style.display = 'none';
-    document.getElementById('d-table-panel').style.display = 'none';
+    document.getElementById('d-major-panel').style.display = 'none';
     showView('detail-view');
   }
 }
 
-async function loadDetailSilent(id) {
-  // Refresh without showing loading spinner
-  try {
-    const r = await fetch(`${API}/stats/${id}`);
-    if (!r.ok) return;
-    const { success, data } = await r.json();
-    if (!success) return;
-    const { total, by_faculty } = data;
-    document.getElementById('d-stats').innerHTML = `
-      <div class="stat-box">
-        <div class="stat-num">${Number(total).toLocaleString()}</div>
-        <div class="stat-lbl">ผู้เข้าร่วมทั้งหมด (คน)</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num">${by_faculty.length}</div>
-        <div class="stat-lbl">คณะที่เข้าร่วม</div>
-      </div>
-    `;
-    if (by_faculty.length) renderChart(by_faculty);
-  } catch {}
+function renderDetail(data, silent = false) {
+  const { activity, total, by_faculty, by_major } = data;
+
+  if (!silent) {
+    document.getElementById('d-error').style.display = 'none';
+    document.title = `${activity.title} — NBU Activity`;
+    document.getElementById('page-title').textContent = activity.title;
+    document.getElementById('d-title').textContent = activity.title;
+    document.getElementById('d-meta').innerHTML = [
+      `<span class="chip"><i class="fa-regular fa-clock"></i>${fmtDate(activity.start_datetime)}</span>`,
+      activity.end_datetime
+        ? `<span class="chip"><i class="fa-solid fa-arrow-right"></i>${fmtDate(activity.end_datetime)}</span>`
+        : '',
+      activity.location
+        ? `<span class="chip"><i class="fa-solid fa-location-dot"></i>${esc(activity.location)}</span>`
+        : '',
+    ].join('');
+  }
+
+  // Stat boxes
+  document.getElementById('d-stats').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-num">${Number(total).toLocaleString()}</div>
+      <div class="stat-lbl">ผู้เข้าร่วมทั้งหมด (คน)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${by_faculty.length}</div>
+      <div class="stat-lbl">คณะที่เข้าร่วม</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${[...new Set((by_major||[]).map(m=>m.label))].length}</div>
+      <div class="stat-lbl">สาขาที่เข้าร่วม</div>
+    </div>
+  `;
+
+  // Faculty bar chart
+  if (by_faculty.length) {
+    document.getElementById('d-chart-panel').style.display = 'block';
+    renderFacultyChart(by_faculty);
+  } else {
+    document.getElementById('d-chart-panel').style.display = 'none';
+  }
+
+  // Faculty + Major accordion
+  if (by_faculty.length) {
+    document.getElementById('d-major-panel').style.display = 'block';
+    renderMajorAccordion(by_faculty, by_major || []);
+  } else {
+    document.getElementById('d-major-panel').style.display = 'none';
+  }
+
+  // Refresh timestamp
+  document.getElementById('refresh-note').textContent =
+    `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
 }
 
-function renderChart(byFac) {
-  const COLORS = ['#0077ff','#00c6ff','#22c55e','#f59e0b','#a855f7',
-                  '#ef4444','#06b6d4','#84cc16','#f97316','#ec4899'];
+// ─── Faculty chart ────────────────────────────────────────────────────────────
+const COLORS = ['#0077ff','#00c6ff','#22c55e','#f59e0b','#a855f7',
+                '#ef4444','#06b6d4','#84cc16','#f97316','#ec4899'];
+
+function renderFacultyChart(byFac) {
   if (facChart) { facChart.destroy(); facChart = null; }
   const ctx = document.getElementById('fac-chart').getContext('2d');
   facChart = new Chart(ctx, {
@@ -535,34 +437,91 @@ function renderChart(byFac) {
       datasets: [{
         label: 'จำนวนนักศึกษา',
         data: byFac.map(f => +f.count),
-        backgroundColor: byFac.map((_,i) => COLORS[i % COLORS.length] + 'bb'),
-        borderColor:     byFac.map((_,i) => COLORS[i % COLORS.length]),
-        borderWidth: 1, borderRadius: 6,
+        backgroundColor: byFac.map((_,i) => COLORS[i%COLORS.length]+'bb'),
+        borderColor:     byFac.map((_,i) => COLORS[i%COLORS.length]),
+        borderWidth:1, borderRadius:6,
       }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw.toLocaleString()} คน` } } },
-      scales: {
-        x: { ticks: { color:'#94a3b8', font:{ family:'Prompt', size:11 } },
-             grid: { color:'rgba(255,255,255,0.04)' } },
-        y: { ticks: { color:'#94a3b8', font:{ family:'Prompt' } },
-             grid: { color:'rgba(255,255,255,0.06)' }, beginAtZero: true },
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{ callbacks:{ label: c => ` ${c.raw.toLocaleString()} คน` } },
+      },
+      scales:{
+        x:{ ticks:{color:'#94a3b8',font:{family:'Prompt',size:11}},
+            grid:{color:'rgba(255,255,255,0.04)'} },
+        y:{ ticks:{color:'#94a3b8',font:{family:'Prompt'}},
+            grid:{color:'rgba(255,255,255,0.06)'},beginAtZero:true },
       },
     },
   });
 }
 
-// ─── Back button ──────────────────────────────────────────────────────────────
-document.getElementById('back-btn').addEventListener('click', () => {
-  document.title = 'NBU Activity — รายงานกิจกรรม';
-  history.pushState({}, '', '/report');
-  loadList();
-});
+// ─── Faculty + Major accordion ────────────────────────────────────────────────
+function renderMajorAccordion(byFaculty, byMajor) {
+  const maxFac = Math.max(...byFaculty.map(f => +f.count), 1);
+  const container = document.getElementById('d-major-list');
+
+  // Group major rows by faculty
+  const majorMap = {};
+  byMajor.forEach(m => {
+    if (!majorMap[m.faculty]) majorMap[m.faculty] = [];
+    majorMap[m.faculty].push(m);
+  });
+
+  container.innerHTML = byFaculty.map((fac, fi) => {
+    const majors = majorMap[fac.label] || [];
+    const maxMaj = Math.max(...majors.map(m => +m.count), 1);
+    const color  = COLORS[fi % COLORS.length];
+    const pct    = Math.round(+fac.count / maxFac * 100);
+
+    const majorRows = majors.map(m => `
+      <div class="major-row">
+        <div class="major-name">${esc(m.label || '—')}</div>
+        <div class="major-count">${Number(m.count).toLocaleString()} คน</div>
+        <div class="major-bar-wrap">
+          <div class="major-bar-fill" style="width:${Math.round(+m.count/maxMaj*100)}%;background:${color}88"></div>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="fac-group">
+        <div class="fac-group-header" data-fac="${fi}">
+          <div style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:${color}"></div>
+          <div class="fac-group-name">${esc(fac.label || '—')}</div>
+          <div class="fac-group-count">${Number(fac.count).toLocaleString()} คน</div>
+          <div class="fac-group-pct">(${pct}%)</div>
+          <i class="fa-solid fa-chevron-right fac-toggle"></i>
+        </div>
+        <div class="major-list" id="major-${fi}">
+          ${majorRows || '<div class="major-row"><div class="major-name" style="color:var(--muted)">—</div></div>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Toggle accordion
+  container.querySelectorAll('.fac-group-header').forEach(h => {
+    h.addEventListener('click', () => {
+      const idx = h.dataset.fac;
+      const list = document.getElementById(`major-${idx}`);
+      const icon = h.querySelector('.fac-toggle');
+      const isOpen = list.classList.toggle('open');
+      icon.classList.toggle('open', isOpen);
+    });
+  });
+
+  // Auto-open first faculty
+  if (byFaculty.length > 0) {
+    const first = container.querySelector('.fac-group-header');
+    if (first) first.click();
+  }
+}
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-const initId = getActivityIdFromURL();
+const initId = getIdFromURL();
 if (initId) {
   loadDetail(initId);
 } else {
