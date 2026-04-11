@@ -40,18 +40,26 @@ router.get('/stats/:activityId', async (req, res) => {
             return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
         }
 
-        const { rows: targetRows } = await query(
-            'SELECT faculty, year FROM nbu_activity_targets WHERE activity_id = $1',
-            [activityId]
-        );
-        const hasTargets = targetRows.length > 0;
+        const [tgtStuRes, tgtRuleRes] = await Promise.all([
+            query('SELECT student_id FROM nbu_activity_target_students WHERE activity_id = $1', [activityId]),
+            query('SELECT faculty, year, level FROM nbu_activity_targets WHERE activity_id = $1', [activityId]),
+        ]);
+        const hasExplicit    = tgtStuRes.rows.length > 0;
+        const targetRows     = tgtRuleRes.rows;
+        const hasRules       = targetRows.length > 0;
+        const hasTargets     = hasExplicit || hasRules;
 
         function buildTargetWhere(alias = 's') {
             if (!hasTargets) return 'TRUE';
+            if (hasExplicit) {
+                const ids = tgtStuRes.rows.map(r => `'${r.student_id.replace(/'/g,"''")}'`).join(',');
+                return `${alias}.student_id IN (${ids})`;
+            }
             const parts = targetRows.map(t => {
                 const fc = t.faculty ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'` : 'TRUE';
+                const lv = t.level   ? `${alias}.level = '${t.level.replace(/'/g, "''")}'`     : 'TRUE';
                 const yr = t.year    ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
-                return `(${fc} AND ${yr})`;
+                return `(${fc} AND ${lv} AND ${yr})`;
             });
             return `(${parts.join(' OR ')})`;
         }

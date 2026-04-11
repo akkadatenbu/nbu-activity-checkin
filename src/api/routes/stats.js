@@ -73,21 +73,30 @@ router.get('/:activityId', async (req, res) => {
             return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
         }
 
-        // โหลด targets ของกิจกรรม
-        const { rows: targetRows } = await query(
-            'SELECT faculty, year FROM nbu_activity_targets WHERE activity_id = $1',
-            [activityId]
-        );
-        const hasTargets = targetRows.length > 0;
+        // โหลด targets ของกิจกรรม — ลำดับความสำคัญ: explicit list > rules
+        const [targetStudentsRes, targetRows_r] = await Promise.all([
+            query('SELECT student_id FROM nbu_activity_target_students WHERE activity_id = $1', [activityId]),
+            query('SELECT faculty, year, level FROM nbu_activity_targets WHERE activity_id = $1', [activityId]),
+        ]);
+        const hasExplicitList = targetStudentsRes.rows.length > 0;
+        const targetRows      = targetRows_r.rows;
+        const hasRuleTargets  = targetRows.length > 0;
+        const hasTargets      = hasExplicitList || hasRuleTargets;
 
         // สร้าง WHERE สำหรับกรองนักศึกษาในกลุ่มเป้าหมาย
-        // ชั้นปีดูจาก 2 ตัวแรกของรหัสนักศึกษา (เช่น 67xxxx = รุ่น 2567)
         function buildTargetWhere(alias = 's') {
             if (!hasTargets) return { clause: 'TRUE', params: [] };
+            if (hasExplicitList) {
+                // ใช้รายชื่อที่ import มา
+                const ids = targetStudentsRes.rows.map(r => `'${r.student_id.replace(/'/g,"''")}'`).join(',');
+                return { clause: `${alias}.student_id IN (${ids})`, params: [] };
+            }
+            // ใช้ rule-based
             const parts = targetRows.map(t => {
                 const fc = t.faculty ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'` : 'TRUE';
+                const lv = t.level   ? `${alias}.level = '${t.level.replace(/'/g, "''")}'`     : 'TRUE';
                 const yr = t.year    ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
-                return `(${fc} AND ${yr})`;
+                return `(${fc} AND ${lv} AND ${yr})`;
             });
             return { clause: `(${parts.join(' OR ')})`, params: [] };
         }
@@ -170,6 +179,8 @@ router.get('/:activityId', async (req, res) => {
                 recent:           recentRes.rows,
                 absent:           absentRes.rows,
                 targets:          targetRows,
+                has_explicit_list: hasExplicitList,
+                explicit_list_count: hasExplicitList ? targetStudentsRes.rows.length : 0,
                 scope,
             },
         });

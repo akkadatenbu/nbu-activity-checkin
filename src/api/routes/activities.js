@@ -64,7 +64,7 @@ router.get('/:id', async (req, res) => {
             query(`SELECT id, status, opened_at, closed_at, opened_by
                    FROM nbu_sessions WHERE activity_id = $1 ORDER BY opened_at DESC LIMIT 1`,
                 [req.params.id]),
-            query(`SELECT id, faculty, year FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
+            query(`SELECT id, faculty, year, level FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
                 [req.params.id]),
         ]);
         return res.json({ success: true, data: {
@@ -105,8 +105,8 @@ router.post('/', async (req, res) => {
             if (Array.isArray(targets) && targets.length > 0) {
                 for (const t of targets) {
                     await client.query(
-                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
-                        [activity.id, t.faculty || null, t.year || null]
+                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+                        [activity.id, t.faculty || null, t.year || null, t.level || null]
                     );
                 }
             }
@@ -148,8 +148,8 @@ router.put('/:id', async (req, res) => {
             await query('DELETE FROM nbu_activity_targets WHERE activity_id = $1', [req.params.id]);
             for (const t of targets) {
                 await query(
-                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
-                    [req.params.id, t.faculty || null, t.year || null]
+                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+                    [req.params.id, t.faculty || null, t.year || null, t.level || null]
                 );
             }
         }
@@ -277,6 +277,7 @@ router.post('/targets/preview', async (req, res) => {
         const validConditions = targets.map(t => {
             const parts = [];
             if (t.faculty) { validParams.push(t.faculty); parts.push(`s.faculty = $${validParams.length}`); }
+            if (t.level)   { validParams.push(t.level);   parts.push(`s.level = $${validParams.length}`); }
             if (t.year)    { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });
@@ -288,6 +289,48 @@ router.post('/targets/preview', async (req, res) => {
         return res.json({ success: true, count: parseInt(rows[0]?.count || 0) });
     } catch (err) {
         console.error('Target preview error:', err);
+        return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
+    }
+});
+
+// ─── POST /api/v1/activities/:id/targets/students ────────────────────────────
+// import รายชื่อนักศึกษาเป้าหมายสำหรับกิจกรรม (แทนที่รายชื่อเดิม)
+router.post('/:id/targets/students', async (req, res) => {
+    if (!isAdmin(req.user.role)) return res.status(403).json({ success: false, message: 'ไม่มีสิทธิ์' });
+    const { student_ids } = req.body; // array of string
+    if (!Array.isArray(student_ids)) {
+        return res.status(400).json({ success: false, message: 'student_ids ต้องเป็น array' });
+    }
+    const activityId = req.params.id;
+    try {
+        // ลบรายชื่อเดิม แล้ว insert ใหม่ (ไม่กระทบ attendance)
+        await query('DELETE FROM nbu_activity_target_students WHERE activity_id = $1', [activityId]);
+        let inserted = 0;
+        for (const sid of student_ids) {
+            const clean = String(sid).trim();
+            if (!clean) continue;
+            await query(
+                `INSERT INTO nbu_activity_target_students (activity_id, student_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+                [activityId, clean]
+            );
+            inserted++;
+        }
+        return res.json({ success: true, inserted, message: `นำเข้า ${inserted} รายชื่อสำเร็จ` });
+    } catch (err) {
+        console.error('Import target students error:', err);
+        return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
+    }
+});
+
+// ─── GET /api/v1/activities/:id/targets/students/count ───────────────────────
+router.get('/:id/targets/students/count', async (req, res) => {
+    try {
+        const { rows } = await query(
+            'SELECT COUNT(*) AS c FROM nbu_activity_target_students WHERE activity_id = $1',
+            [req.params.id]
+        );
+        return res.json({ success: true, count: parseInt(rows[0]?.c || 0) });
+    } catch (err) {
         return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
     }
 });

@@ -541,41 +541,93 @@
           <i class="fa-solid fa-users" style="color:var(--blue2)"></i> กลุ่มเป้าหมาย
           <span style="font-weight:400;font-size:12px;color:var(--muted)">(สำหรับนับ % เข้าร่วมและรายชื่อขาด)</span>
         </label>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:10px">
-          <div>
-            <label style="font-size:12px;color:var(--muted)">คณะ</label>
-            <select class="form-control" id="tgt-faculty" style="font-size:13px">
-              <option value="">ทุกคณะ</option>
-              <option value="รัฐศาสตร์">รัฐศาสตร์</option>
-              <option value="บริหารธุรกิจ">บริหารธุรกิจ</option>
-              <option value="เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล">เทคโนโลยีสารสนเทศฯ</option>
-              <option value="ศิลปศาสตร์">ศิลปศาสตร์</option>
-              <option value="ศึกษาศาสตร์">ศึกษาศาสตร์</option>
-              <option value="พยาบาลศาสตร์">พยาบาลศาสตร์</option>
-              <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
-              <option value="นิเทศศาสตร์">นิเทศศาสตร์</option>
-              <option value="วิเทศสัมพันธ์">วิเทศสัมพันธ์</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:12px;color:var(--muted)">รุ่น (2 หลักท้ายปีที่เข้า)</label>
-            <select class="form-control" id="tgt-year" style="font-size:13px">
-              <option value="">ทุกรุ่น</option>
-              <option value="70">รุ่น 70 (เข้า 2570)</option>
-              <option value="69">รุ่น 69 (เข้า 2569)</option>
-              <option value="68">รุ่น 68 (เข้า 2568)</option>
-              <option value="67">รุ่น 67 (เข้า 2567)</option>
-              <option value="66">รุ่น 66 (เข้า 2566)</option>
-              <option value="65">รุ่น 65 (เข้า 2565)</option>
-              <option value="64">รุ่น 64 (เข้า 2564)</option>
-              <option value="63">รุ่น 63 (เข้า 2563)</option>
-            </select>
-          </div>
-          <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">+ เพิ่ม</button>
-          <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" style="white-space:nowrap" id="tgt-preview-btn">คำนวณ</button>
+
+        <!-- แท็บ -->
+        <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px">
+          <button id="tgt-tab-rule" onclick="switchTgtTab('rule')"
+            style="flex:1;padding:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;
+                   background:var(--blue2);color:#fff;border:none">
+            <i class="fa-solid fa-sliders"></i> กำหนดกลุ่ม
+          </button>
+          <button id="tgt-tab-import" onclick="switchTgtTab('import')"
+            style="flex:1;padding:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;
+                   background:#fff;color:var(--muted);border:none;border-left:1px solid var(--border)">
+            <i class="fa-solid fa-file-import"></i> นำเข้ารายชื่อ
+          </button>
         </div>
-        <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
-        <div id="tgt-count-msg" style="margin-top:8px;font-size:13px;color:var(--blue2);font-weight:600"></div>
+
+        <!-- แท็บ: กำหนดกลุ่ม -->
+        <div id="tgt-panel-rule">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:10px">
+            <div>
+              <label style="font-size:12px;color:var(--muted)">คณะ</label>
+              <select class="form-control" id="tgt-faculty" style="font-size:13px">
+                <option value="">ทุกคณะ</option>
+                <option value="รัฐศาสตร์">รัฐศาสตร์</option>
+                <option value="บริหารธุรกิจ">บริหารธุรกิจ</option>
+                <option value="เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล">เทคโนโลยีสารสนเทศฯ</option>
+                <option value="ศิลปศาสตร์">ศิลปศาสตร์</option>
+                <option value="ศึกษาศาสตร์">ศึกษาศาสตร์</option>
+                <option value="พยาบาลศาสตร์">พยาบาลศาสตร์</option>
+                <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
+                <option value="นิเทศศาสตร์">นิเทศศาสตร์</option>
+                <option value="วิเทศสัมพันธ์">วิเทศสัมพันธ์</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--muted)">ระดับ</label>
+              <select class="form-control" id="tgt-level" style="font-size:13px">
+                <option value="">ทุกระดับ</option>
+                <option value="ปริญญาตรี">ปริญญาตรี</option>
+                <option value="บัณฑิตศึกษา">บัณฑิตศึกษา (โท/เอก)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--muted)">รุ่น (2 หลักท้ายปีที่เข้า)</label>
+              <select class="form-control" id="tgt-year" style="font-size:13px">
+                <option value="">ทุกรุ่น</option>
+                <option value="70">รุ่น 70 (เข้า 2570)</option>
+                <option value="69">รุ่น 69 (เข้า 2569)</option>
+                <option value="68">รุ่น 68 (เข้า 2568)</option>
+                <option value="67">รุ่น 67 (เข้า 2567)</option>
+                <option value="66">รุ่น 66 (เข้า 2566)</option>
+                <option value="65">รุ่น 65 (เข้า 2565)</option>
+                <option value="64">รุ่น 64 (เข้า 2564)</option>
+                <option value="63">รุ่น 63 (เข้า 2563)</option>
+              </select>
+            </div>
+            <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">+ เพิ่ม</button>
+            <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" style="white-space:nowrap" id="tgt-preview-btn">คำนวณ</button>
+          </div>
+          <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
+          <div id="tgt-count-msg" style="margin-top:8px;font-size:13px;color:var(--blue2);font-weight:600"></div>
+        </div>
+
+        <!-- แท็บ: นำเข้ารายชื่อ -->
+        <div id="tgt-panel-import" style="display:none">
+          <div id="tgt-import-status" style="margin-bottom:8px;font-size:13px"></div>
+          <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">
+            วางรหัสนักศึกษา (บรรทัดละ 1 รหัส หรือ CSV หัวคอลัมน์แรก = student_id)
+          </label>
+          <textarea id="tgt-import-ids" class="form-control" rows="5"
+            placeholder="67128xxxx&#10;67128yyyy&#10;68129zzzz&#10;..."></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+            <label class="btn btn-gray btn-sm" style="cursor:pointer;margin:0">
+              <i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV
+              <input type="file" accept=".csv,.txt" id="tgt-import-file" style="display:none" onchange="loadImportFile(event)">
+            </label>
+            <button class="btn btn-blue btn-sm" onclick="importTargetStudents()" id="tgt-import-btn">
+              <i class="fa-solid fa-file-import"></i> นำเข้า
+            </button>
+            <button class="btn btn-gray btn-sm" onclick="clearImportStudents()" style="color:var(--red)">
+              <i class="fa-solid fa-trash"></i> ล้างรายชื่อ
+            </button>
+            <span id="tgt-import-count" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px">
+            การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
+          </p>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -856,6 +908,74 @@ function filterActivities() {
 // ─── Target management ────────────────────────────────────────────────────────
 let currentTargets = []; // [{faculty, year}]
 
+function switchTgtTab(tab) {
+  const isRule = tab === 'rule';
+  document.getElementById('tgt-panel-rule').style.display   = isRule ? 'block' : 'none';
+  document.getElementById('tgt-panel-import').style.display = isRule ? 'none'  : 'block';
+  document.getElementById('tgt-tab-rule').style.background   = isRule ? 'var(--blue2)' : '#fff';
+  document.getElementById('tgt-tab-rule').style.color        = isRule ? '#fff' : 'var(--muted)';
+  document.getElementById('tgt-tab-import').style.background = isRule ? '#fff' : 'var(--blue2)';
+  document.getElementById('tgt-tab-import').style.color      = isRule ? 'var(--muted)' : '#fff';
+}
+
+function loadImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    // รองรับ CSV (ดึงเฉพาะคอลัมน์แรก) หรือ plain text
+    const lines = text.split(/\r?\n/).map(l => l.split(',')[0].trim()).filter(Boolean);
+    // ข้ามหัวถ้าเป็น header
+    const skipHeader = lines[0] && isNaN(lines[0]) && lines[0].toLowerCase().includes('id');
+    document.getElementById('tgt-import-ids').value = (skipHeader ? lines.slice(1) : lines).join('\n');
+    document.getElementById('tgt-import-count').textContent = `${skipHeader ? lines.length-1 : lines.length} รายการ`;
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function importTargetStudents() {
+  const actId = document.getElementById('act-id').value;
+  if (!actId) { toast('กรุณาบันทึกกิจกรรมก่อน แล้วค่อย import รายชื่อ', 'yellow'); return; }
+  const raw = document.getElementById('tgt-import-ids').value;
+  const ids = raw.split(/\r?\n/).map(l => l.split(',')[0].trim()).filter(l => l && /^\d+$/.test(l));
+  if (!ids.length) { toast('ไม่พบรหัสนักศึกษา', 'red'); return; }
+
+  const btn = document.getElementById('tgt-import-btn');
+  btn.textContent = 'กำลังนำเข้า...';
+  btn.disabled = true;
+
+  const data = await apiFetch(`/activities/${actId}/targets/students`, {
+    method: 'POST',
+    body: JSON.stringify({ student_ids: ids }),
+  });
+
+  btn.textContent = 'นำเข้า';
+  btn.disabled = false;
+
+  if (data.success) {
+    toast(`นำเข้า ${data.inserted} รายชื่อสำเร็จ`);
+    document.getElementById('tgt-import-status').innerHTML =
+      `<span style="color:var(--green)"><i class="fa-solid fa-circle-check"></i> นำเข้า ${data.inserted} รายชื่อแล้ว (แทนที่รายชื่อเดิม)</span>`;
+    document.getElementById('tgt-import-count').textContent = `${data.inserted} รายการ`;
+  } else {
+    toast(data.message, 'red');
+  }
+}
+
+async function clearImportStudents() {
+  const actId = document.getElementById('act-id').value;
+  document.getElementById('tgt-import-ids').value = '';
+  document.getElementById('tgt-import-count').textContent = '';
+  document.getElementById('tgt-import-status').innerHTML = '';
+  if (!actId) return;
+  await apiFetch(`/activities/${actId}/targets/students`, {
+    method: 'POST',
+    body: JSON.stringify({ student_ids: [] }),
+  });
+  toast('ล้างรายชื่อเป้าหมายแล้ว');
+}
+
 function renderTargetTags() {
   const container = document.getElementById('tgt-tags');
   document.getElementById('tgt-count-msg').textContent = '';
@@ -865,10 +985,12 @@ function renderTargetTags() {
   }
   container.innerHTML = currentTargets.map((t, i) => {
     const facLabel = t.faculty || 'ทุกคณะ';
-    const yrLabel  = t.year    ? `รุ่น ${t.year}` : 'ทุกรุ่น';
+    const lvLabel  = t.level   ? t.level : '';
+    const yrLabel  = t.year    ? `รุ่น ${t.year}` : '';
+    const subLabel = [lvLabel, yrLabel].filter(Boolean).join(' · ') || 'ทุกระดับ ทุกรุ่น';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
-      ${facLabel} — ${yrLabel}
+      ${facLabel} — ${subLabel}
       <button onclick="removeTarget(${i})" style="background:none;border:none;cursor:pointer;color:#0055b3;
         font-size:14px;line-height:1;padding:0">&times;</button>
     </span>`;
@@ -877,13 +999,15 @@ function renderTargetTags() {
 
 function addTarget() {
   const faculty = document.getElementById('tgt-faculty').value || null;
+  const level   = document.getElementById('tgt-level').value   || null;
   const year    = document.getElementById('tgt-year').value    ? parseInt(document.getElementById('tgt-year').value) : null;
-  // ตรวจซ้ำ
   const dup = currentTargets.some(t =>
-    (t.faculty ?? null) === (faculty ?? null) && (t.year ?? null) === (year ?? null)
+    (t.faculty ?? null) === (faculty ?? null) &&
+    (t.level   ?? null) === (level   ?? null) &&
+    (t.year    ?? null) === (year    ?? null)
   );
   if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, year });
+  currentTargets.push({ faculty, level, year });
   renderTargetTags();
 }
 
@@ -901,7 +1025,7 @@ async function previewTargetCount() {
   btn.textContent = '...';
   const data = await apiFetch('/activities/targets/preview', {
     method: 'POST',
-    body: JSON.stringify({ targets: currentTargets }),
+    body: JSON.stringify({ targets: currentTargets.map(t => ({ faculty: t.faculty, level: t.level, year: t.year })) }),
   });
   btn.textContent = 'คำนวณ';
   if (data.success) {
@@ -939,7 +1063,13 @@ async function openActivityModal(id = null) {
     });
 
     // โหลด targets
-    currentTargets = (a.targets || []).map(t => ({ faculty: t.faculty || null, year: t.year || null }));
+    currentTargets = (a.targets || []).map(t => ({ faculty: t.faculty || null, year: t.year || null, level: t.level || null }));
+    // โหลดจำนวน import รายชื่อ (ถ้ามี)
+    const cntData = await apiFetch(`/activities/${id}/targets/students/count`);
+    if (cntData.success && cntData.count > 0) {
+      document.getElementById('tgt-import-status').innerHTML =
+        `<span style="color:var(--blue2)"><i class="fa-solid fa-circle-info"></i> มีรายชื่อที่ import ไว้ ${cntData.count} รายชื่อ</span>`;
+    }
   } else {
     ['act-title','act-desc','act-start','act-end','act-location'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('act-max').value = 0;
