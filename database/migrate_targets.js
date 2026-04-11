@@ -5,10 +5,11 @@ import { query } from '../src/api/db.js';
 async function migrate() {
     console.log('Running migrate_targets...');
 
+    await query(`DROP TABLE IF EXISTS nbu_activity_targets`);
     await query(`
-        CREATE TABLE IF NOT EXISTS nbu_activity_targets (
+        CREATE TABLE nbu_activity_targets (
             id          SERIAL PRIMARY KEY,
-            activity_id INTEGER NOT NULL,
+            activity_id UUID NOT NULL,
             faculty     VARCHAR(100)  DEFAULT NULL,
             year        SMALLINT      DEFAULT NULL,
             created_at  TIMESTAMPTZ  DEFAULT NOW(),
