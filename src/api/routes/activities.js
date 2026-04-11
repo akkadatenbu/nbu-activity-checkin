@@ -272,22 +272,15 @@ router.post('/targets/preview', async (req, res) => {
         return res.json({ success: true, count: 0 });
     }
     try {
-        // สร้าง WHERE clause สำหรับแต่ละ target (union conditions)
-        const conditions = targets.map((t, i) => {
-            const fac = t.faculty ? `s.faculty = $${i * 2 + 1}` : 'TRUE';
-            const yr  = t.year    ? `s.year = $${i * 2 + 2}`    : 'TRUE';
-            return `(${fac} AND ${yr})`;
-        });
-        const params = targets.flatMap(t => [t.faculty || null, t.year || null]);
-        // ใช้ตัวกรอง NULL ออกจาก params
+        // ชั้นปีดูจาก 2 ตัวแรกของรหัสนักศึกษา (เช่น 67xxxx = รุ่น 2567)
         const validParams = [];
         const validConditions = targets.map(t => {
             const parts = [];
             if (t.faculty) { validParams.push(t.faculty); parts.push(`s.faculty = $${validParams.length}`); }
-            if (t.year)    { validParams.push(t.year);    parts.push(`s.year = $${validParams.length}`); }
+            if (t.year)    { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });
-        const whereClause = validConditions.map((c, i) => c).join(' OR ');
+        const whereClause = validConditions.join(' OR ');
         const { rows } = await query(
             `SELECT COUNT(DISTINCT s.student_id) AS count FROM nbu_students s WHERE ${whereClause}`,
             validParams

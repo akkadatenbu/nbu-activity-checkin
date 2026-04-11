@@ -50,7 +50,7 @@ router.get('/stats/:activityId', async (req, res) => {
             if (!hasTargets) return 'TRUE';
             const parts = targetRows.map(t => {
                 const fc = t.faculty ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'` : 'TRUE';
-                const yr = t.year    ? `${alias}.year = ${parseInt(t.year)}`                    : 'TRUE';
+                const yr = t.year    ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
                 return `(${fc} AND ${yr})`;
             });
             return `(${parts.join(' OR ')})`;

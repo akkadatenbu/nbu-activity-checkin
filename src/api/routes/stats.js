@@ -81,11 +81,12 @@ router.get('/:activityId', async (req, res) => {
         const hasTargets = targetRows.length > 0;
 
         // สร้าง WHERE สำหรับกรองนักศึกษาในกลุ่มเป้าหมาย
+        // ชั้นปีดูจาก 2 ตัวแรกของรหัสนักศึกษา (เช่น 67xxxx = รุ่น 2567)
         function buildTargetWhere(alias = 's') {
             if (!hasTargets) return { clause: 'TRUE', params: [] };
             const parts = targetRows.map(t => {
                 const fc = t.faculty ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'` : 'TRUE';
-                const yr = t.year    ? `${alias}.year = ${parseInt(t.year)}`                    : 'TRUE';
+                const yr = t.year    ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
                 return `(${fc} AND ${yr})`;
             });
             return { clause: `(${parts.join(' OR ')})`, params: [] };

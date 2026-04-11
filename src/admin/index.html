@@ -558,15 +558,17 @@
             </select>
           </div>
           <div>
-            <label style="font-size:12px;color:var(--muted)">ชั้นปี</label>
+            <label style="font-size:12px;color:var(--muted)">รุ่น (2 หลักท้ายปีที่เข้า)</label>
             <select class="form-control" id="tgt-year" style="font-size:13px">
-              <option value="">ทุกชั้นปี</option>
-              <option value="1">ปี 1</option>
-              <option value="2">ปี 2</option>
-              <option value="3">ปี 3</option>
-              <option value="4">ปี 4</option>
-              <option value="5">ปี 5</option>
-              <option value="6">ปี 6</option>
+              <option value="">ทุกรุ่น</option>
+              <option value="70">รุ่น 70 (เข้า 2570)</option>
+              <option value="69">รุ่น 69 (เข้า 2569)</option>
+              <option value="68">รุ่น 68 (เข้า 2568)</option>
+              <option value="67">รุ่น 67 (เข้า 2567)</option>
+              <option value="66">รุ่น 66 (เข้า 2566)</option>
+              <option value="65">รุ่น 65 (เข้า 2565)</option>
+              <option value="64">รุ่น 64 (เข้า 2564)</option>
+              <option value="63">รุ่น 63 (เข้า 2563)</option>
             </select>
           </div>
           <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">+ เพิ่ม</button>
@@ -863,7 +865,7 @@ function renderTargetTags() {
   }
   container.innerHTML = currentTargets.map((t, i) => {
     const facLabel = t.faculty || 'ทุกคณะ';
-    const yrLabel  = t.year    ? `ปี ${t.year}` : 'ทุกชั้นปี';
+    const yrLabel  = t.year    ? `รุ่น ${t.year}` : 'ทุกรุ่น';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
       ${facLabel} — ${yrLabel}
