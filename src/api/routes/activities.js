@@ -64,7 +64,7 @@ router.get('/:id', async (req, res) => {
             query(`SELECT id, status, opened_at, closed_at, opened_by
                    FROM nbu_sessions WHERE activity_id = $1 ORDER BY opened_at DESC LIMIT 1`,
                 [req.params.id]),
-            query(`SELECT id, faculty, year, level FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
+            query(`SELECT id, faculty, year, level, student_status FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
                 [req.params.id]),
         ]);
         return res.json({ success: true, data: {
@@ -105,8 +105,8 @@ router.post('/', async (req, res) => {
             if (Array.isArray(targets) && targets.length > 0) {
                 for (const t of targets) {
                     await client.query(
-                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
-                        [activity.id, t.faculty || null, t.year || null, t.level || null]
+                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, student_status) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
+                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.student_status || null]
                     );
                 }
             }
@@ -148,8 +148,8 @@ router.put('/:id', async (req, res) => {
             await query('DELETE FROM nbu_activity_targets WHERE activity_id = $1', [req.params.id]);
             for (const t of targets) {
                 await query(
-                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
-                    [req.params.id, t.faculty || null, t.year || null, t.level || null]
+                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, student_status) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
+                    [req.params.id, t.faculty || null, t.year || null, t.level || null, t.student_status || null]
                 );
             }
         }
@@ -276,9 +276,10 @@ router.post('/targets/preview', async (req, res) => {
         const validParams = [];
         const validConditions = targets.map(t => {
             const parts = [];
-            if (t.faculty) { validParams.push(t.faculty); parts.push(`s.faculty = $${validParams.length}`); }
-            if (t.level)   { validParams.push(t.level);   parts.push(`s.level = $${validParams.length}`); }
-            if (t.year)    { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
+            if (t.faculty)        { validParams.push(t.faculty);        parts.push(`s.faculty = $${validParams.length}`); }
+            if (t.level)          { validParams.push(t.level);          parts.push(`s.level = $${validParams.length}`); }
+            if (t.student_status) { validParams.push(t.student_status); parts.push(`s.student_status = $${validParams.length}`); }
+            if (t.year)           { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });
         const whereClause = validConditions.join(' OR ');

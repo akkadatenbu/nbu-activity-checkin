@@ -570,7 +570,7 @@
 
         <!-- แท็บ: กำหนดกลุ่ม -->
         <div id="tgt-panel-rule">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:10px">
             <div>
               <label style="font-size:12px;color:var(--muted)">คณะ</label>
               <select class="form-control" id="tgt-faculty" style="font-size:13px">
@@ -587,6 +587,12 @@
               <label style="font-size:12px;color:var(--muted)">รุ่น (2 หลักท้ายปีที่เข้า)</label>
               <select class="form-control" id="tgt-year" style="font-size:13px">
                 <option value="">ทุกรุ่น</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--muted)">สถานะนักศึกษา</label>
+              <select class="form-control" id="tgt-student-status" style="font-size:13px">
+                <option value="">ทุกสถานะ</option>
               </select>
             </div>
             <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">+ เพิ่ม</button>
@@ -871,7 +877,7 @@ async function loadDashboard() {
 async function loadStudentMeta() {
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
-  const { faculties, levels, cohorts } = data.data;
+  const { faculties, levels, cohorts, student_statuses } = data.data;
 
   const selFac = document.getElementById('tgt-faculty');
   selFac.innerHTML = '<option value="">ทุกคณะ</option>' +
@@ -884,6 +890,10 @@ async function loadStudentMeta() {
   const selYr = document.getElementById('tgt-year');
   selYr.innerHTML = '<option value="">ทุกรุ่น</option>' +
     cohorts.map(c => `<option value="${c}">รุ่น ${c} (เข้า ${2500 + parseInt(c)})</option>`).join('');
+
+  const selSt = document.getElementById('tgt-student-status');
+  selSt.innerHTML = '<option value="">ทุกสถานะ</option>' +
+    (student_statuses || []).map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────
@@ -1006,10 +1016,11 @@ function renderTargetTags() {
     return;
   }
   container.innerHTML = currentTargets.map((t, i) => {
-    const facLabel = t.faculty || 'ทุกคณะ';
-    const lvLabel  = t.level   ? t.level : '';
-    const yrLabel  = t.year    ? `รุ่น ${t.year}` : '';
-    const subLabel = [lvLabel, yrLabel].filter(Boolean).join(' · ') || 'ทุกระดับ ทุกรุ่น';
+    const facLabel = t.faculty        || 'ทุกคณะ';
+    const lvLabel  = t.level          ? t.level              : '';
+    const yrLabel  = t.year           ? `รุ่น ${t.year}`     : '';
+    const stLabel  = t.student_status ? `สถานะ ${t.student_status}` : '';
+    const subLabel = [lvLabel, yrLabel, stLabel].filter(Boolean).join(' · ') || 'ทุกระดับ ทุกรุ่น ทุกสถานะ';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
       ${facLabel} — ${subLabel}
@@ -1020,16 +1031,18 @@ function renderTargetTags() {
 }
 
 function addTarget() {
-  const faculty = document.getElementById('tgt-faculty').value || null;
-  const level   = document.getElementById('tgt-level').value   || null;
-  const year    = document.getElementById('tgt-year').value    ? parseInt(document.getElementById('tgt-year').value) : null;
+  const faculty        = document.getElementById('tgt-faculty').value        || null;
+  const level          = document.getElementById('tgt-level').value          || null;
+  const year           = document.getElementById('tgt-year').value           ? parseInt(document.getElementById('tgt-year').value) : null;
+  const student_status = document.getElementById('tgt-student-status').value || null;
   const dup = currentTargets.some(t =>
-    (t.faculty ?? null) === (faculty ?? null) &&
-    (t.level   ?? null) === (level   ?? null) &&
-    (t.year    ?? null) === (year    ?? null)
+    (t.faculty        ?? null) === (faculty        ?? null) &&
+    (t.level          ?? null) === (level          ?? null) &&
+    (t.year           ?? null) === (year           ?? null) &&
+    (t.student_status ?? null) === (student_status ?? null)
   );
   if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, level, year });
+  currentTargets.push({ faculty, level, year, student_status });
   renderTargetTags();
 }
 
@@ -1047,7 +1060,7 @@ async function previewTargetCount() {
   btn.textContent = '...';
   const data = await apiFetch('/activities/targets/preview', {
     method: 'POST',
-    body: JSON.stringify({ targets: currentTargets.map(t => ({ faculty: t.faculty, level: t.level, year: t.year })) }),
+    body: JSON.stringify({ targets: currentTargets.map(t => ({ faculty: t.faculty, level: t.level, year: t.year, student_status: t.student_status })) }),
   });
   btn.textContent = 'คำนวณ';
   if (data.success) {
@@ -1087,7 +1100,7 @@ async function openActivityModal(id = null) {
     });
 
     // โหลด targets
-    currentTargets = (a.targets || []).map(t => ({ faculty: t.faculty || null, year: t.year || null, level: t.level || null }));
+    currentTargets = (a.targets || []).map(t => ({ faculty: t.faculty || null, year: t.year || null, level: t.level || null, student_status: t.student_status || null }));
     // โหลดจำนวน import รายชื่อ (ถ้ามี)
     const cntData = await apiFetch(`/activities/${id}/targets/students/count`);
     if (cntData.success && cntData.count > 0) {

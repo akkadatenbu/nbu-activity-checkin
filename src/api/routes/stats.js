@@ -76,7 +76,7 @@ router.get('/:activityId', async (req, res) => {
         // โหลด targets ของกิจกรรม — ลำดับความสำคัญ: explicit list > rules
         const [targetStudentsRes, targetRows_r] = await Promise.all([
             query('SELECT student_id FROM nbu_activity_target_students WHERE activity_id = $1', [activityId]),
-            query('SELECT faculty, year, level FROM nbu_activity_targets WHERE activity_id = $1', [activityId]),
+            query('SELECT faculty, year, level, student_status FROM nbu_activity_targets WHERE activity_id = $1', [activityId]),
         ]);
         const hasExplicitList = targetStudentsRes.rows.length > 0;
         const targetRows      = targetRows_r.rows;
@@ -93,10 +93,11 @@ router.get('/:activityId', async (req, res) => {
             }
             // ใช้ rule-based
             const parts = targetRows.map(t => {
-                const fc = t.faculty ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'` : 'TRUE';
-                const lv = t.level   ? `${alias}.level = '${t.level.replace(/'/g, "''")}'`     : 'TRUE';
-                const yr = t.year    ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
-                return `(${fc} AND ${lv} AND ${yr})`;
+                const fc = t.faculty        ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'`               : 'TRUE';
+                const lv = t.level          ? `${alias}.level = '${t.level.replace(/'/g, "''")}'`                   : 'TRUE';
+                const st = t.student_status ? `${alias}.student_status = '${t.student_status.replace(/'/g, "''")}'` : 'TRUE';
+                const yr = t.year           ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
+                return `(${fc} AND ${lv} AND ${st} AND ${yr})`;
             });
             return { clause: `(${parts.join(' OR ')})`, params: [] };
         }

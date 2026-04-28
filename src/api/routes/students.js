@@ -10,17 +10,19 @@ router.use(verifyJWT);
 // ดึง distinct faculties, levels, cohorts จาก nbu_students สำหรับ dropdown
 router.get('/meta', async (_req, res) => {
     try {
-        const [facRes, lvlRes, cohRes] = await Promise.all([
-            query(`SELECT DISTINCT faculty FROM nbu_students WHERE faculty IS NOT NULL AND faculty != '' ORDER BY faculty`),
-            query(`SELECT DISTINCT level   FROM nbu_students WHERE level   IS NOT NULL AND level   != '' ORDER BY level`),
+        const [facRes, lvlRes, cohRes, statusRes] = await Promise.all([
+            query(`SELECT DISTINCT faculty        FROM nbu_students WHERE faculty        IS NOT NULL AND faculty        != '' ORDER BY faculty`),
+            query(`SELECT DISTINCT level          FROM nbu_students WHERE level          IS NOT NULL AND level          != '' ORDER BY level`),
             query(`SELECT DISTINCT SUBSTRING(student_id,1,2) AS cohort FROM nbu_students WHERE student_id IS NOT NULL ORDER BY cohort DESC`),
+            query(`SELECT DISTINCT student_status FROM nbu_students WHERE student_status IS NOT NULL AND student_status != '' ORDER BY student_status`),
         ]);
         return res.json({
             success: true,
             data: {
-                faculties: facRes.rows.map(r => r.faculty),
-                levels:    lvlRes.rows.map(r => r.level),
-                cohorts:   cohRes.rows.map(r => r.cohort),
+                faculties:       facRes.rows.map(r => r.faculty),
+                levels:          lvlRes.rows.map(r => r.level),
+                cohorts:         cohRes.rows.map(r => r.cohort),
+                student_statuses: statusRes.rows.map(r => r.student_status),
             },
         });
     } catch (err) {
