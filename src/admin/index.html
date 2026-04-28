@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  input, select, textarea, button { font-family: 'Prompt', 'Segoe UI', sans-serif; }
   :root {
     --blue:  #003B7A;
     --blue2: #0066cc;
@@ -206,6 +207,44 @@
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
+  .modal-xl {
+    max-width: 1100px;
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-xl .modal-body {
+    padding: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .modal-xl .modal-body-inner {
+    display: grid;
+    grid-template-columns: 55% 45%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .modal-xl .modal-col {
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .modal-xl .modal-col-left  { border-right: 1px solid var(--border); padding: 20px 16px 20px 24px; }
+  .modal-xl .modal-col-right { padding: 20px 24px 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .staff-card {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border: 2px solid var(--border);
+    border-radius: 10px; cursor: pointer;
+    transition: all 0.15s; background: #fff;
+    user-select: none;
+  }
+  .staff-card:hover { border-color: var(--blue2); background: #eff6ff; }
+  .staff-card.selected { border-color: var(--blue2); background: #dbeafe; }
+  .staff-card .staff-avatar { font-size:22px; color: var(--muted); line-height:1; }
+  .staff-card.selected .staff-avatar { color: var(--blue2); }
+  .staff-card .staff-name { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; }
+  .staff-card .staff-role { font-size:10px; font-weight:600; }
   .modal-header {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
@@ -490,148 +529,194 @@
 
 <!-- Activity Modal -->
 <div class="modal-backdrop" id="activity-modal">
-  <div class="modal">
+  <div class="modal modal-xl">
     <div class="modal-header">
       <h3 id="activity-modal-title">สร้างกิจกรรม</h3>
       <button class="modal-close" onclick="closeModal('activity-modal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <input type="hidden" id="act-id">
+    <input type="hidden" id="act-max" value="0">
+
     <div class="modal-body">
-      <input type="hidden" id="act-id">
-      <div class="form-group">
-        <label>ชื่อกิจกรรม *</label>
-        <input class="form-control" id="act-title" placeholder="ชื่อกิจกรรม">
-      </div>
-      <div class="form-group">
-        <label>คำอธิบาย</label>
-        <textarea class="form-control" id="act-desc" placeholder="รายละเอียดกิจกรรม"></textarea>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label>วันที่เริ่ม *</label>
-          <input class="form-control" id="act-start" type="datetime-local">
-        </div>
-        <div class="form-group">
-          <label>วันที่สิ้นสุด *</label>
-          <input class="form-control" id="act-end" type="datetime-local">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label>สถานที่</label>
-          <input class="form-control" id="act-location" placeholder="ห้อง / อาคาร">
-        </div>
-        <div class="form-group">
-          <label>ประเภทกิจกรรม</label>
-          <select class="form-control" id="act-type">
-            <option value="general">ทั่วไป</option>
-            <option value="academic">วิชาการ</option>
-            <option value="sport">กีฬา</option>
-            <option value="culture">วัฒนธรรม</option>
-            <option value="volunteer">จิตอาสา</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>จำนวนที่รับ (0 = ไม่จำกัด)</label>
-        <input class="form-control" id="act-max" type="number" min="0" value="0">
-      </div>
-      <div class="form-group" id="act-active-group" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0">
-          <input type="checkbox" id="act-active" style="width:18px;height:18px;cursor:pointer;accent-color:#16a34a">
-          <span style="font-size:14px;font-weight:600;color:#15803d">แสดงในหน้าสถิติ (Stats) <span style="font-size:12px;font-weight:400;color:var(--muted)">— ปิดเพื่อซ่อนกิจกรรมออกจากหน้ารายงาน</span></span>
-        </label>
-      </div>
-      <div class="form-group">
-        <label>มอบหมาย Staff (เลือกได้หลายคน)</label>
-        <select class="form-control" id="act-staff" multiple style="min-height:100px"></select>
-        <p style="font-size:12px;color:var(--muted);margin-top:4px">Ctrl+Click เพื่อเลือกหลายคน</p>
-      </div>
+      <div class="modal-body-inner">
 
-      <!-- กลุ่มเป้าหมาย -->
-      <div class="form-group" style="border:1px solid var(--border);border-radius:10px;padding:14px;background:#f8fafc">
-        <label style="font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <i class="fa-solid fa-users" style="color:var(--blue2)"></i> กลุ่มเป้าหมาย
-          <span style="font-weight:400;font-size:12px;color:var(--muted)">(สำหรับนับ % เข้าร่วมและรายชื่อขาด)</span>
-        </label>
-
-        <!-- แท็บ -->
-        <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px">
-          <button id="tgt-tab-rule" onclick="switchTgtTab('rule')"
-            style="flex:1;padding:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;
-                   background:var(--blue2);color:#fff;border:none">
-            <i class="fa-solid fa-sliders"></i> กำหนดกลุ่ม
-          </button>
-          <button id="tgt-tab-import" onclick="switchTgtTab('import')"
-            style="flex:1;padding:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;
-                   background:#fff;color:var(--muted);border:none;border-left:1px solid var(--border)">
-            <i class="fa-solid fa-file-import"></i> นำเข้ารายชื่อ
-          </button>
-        </div>
-
-        <!-- แท็บ: กำหนดกลุ่ม -->
-        <div id="tgt-panel-rule">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:10px">
-            <div>
-              <label style="font-size:12px;color:var(--muted)">คณะ</label>
-              <select class="form-control" id="tgt-faculty" style="font-size:13px">
-                <option value="">ทุกคณะ</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12px;color:var(--muted)">ระดับ</label>
-              <select class="form-control" id="tgt-level" style="font-size:13px">
-                <option value="">ทุกระดับ</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12px;color:var(--muted)">รุ่น (2 หลักท้ายปีที่เข้า)</label>
-              <select class="form-control" id="tgt-year" style="font-size:13px">
-                <option value="">ทุกรุ่น</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12px;color:var(--muted)">สถานะนักศึกษา</label>
-              <select class="form-control" id="tgt-student-status" style="font-size:13px">
-                <option value="">ทุกสถานะ</option>
-              </select>
-            </div>
-            <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">+ เพิ่ม</button>
-            <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" style="white-space:nowrap" id="tgt-preview-btn">คำนวณ</button>
+        <!-- ─── คอลัมน์ซ้าย: ข้อมูลกิจกรรม ─── -->
+        <div class="modal-col modal-col-left">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px">
+            <i class="fa-solid fa-calendar-plus" style="color:var(--blue2)"></i> ข้อมูลกิจกรรม
           </div>
-          <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
-          <div id="tgt-count-msg" style="margin-top:8px;font-size:13px;color:var(--blue2);font-weight:600"></div>
-        </div>
 
-        <!-- แท็บ: นำเข้ารายชื่อ -->
-        <div id="tgt-panel-import" style="display:none">
-          <div id="tgt-import-status" style="margin-bottom:8px;font-size:13px"></div>
-          <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">
-            วางรหัสนักศึกษา (บรรทัดละ 1 รหัส หรือ CSV หัวคอลัมน์แรก = student_id)
-          </label>
-          <textarea id="tgt-import-ids" class="form-control" rows="5"
-            placeholder="67128xxxx&#10;67128yyyy&#10;68129zzzz&#10;..."></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-            <label class="btn btn-gray btn-sm" style="cursor:pointer;margin:0">
-              <i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV
-              <input type="file" accept=".csv,.txt" id="tgt-import-file" style="display:none" onchange="loadImportFile(event)">
+          <div class="form-group">
+            <label>ชื่อกิจกรรม *</label>
+            <input class="form-control" id="act-title" placeholder="ชื่อกิจกรรม">
+          </div>
+          <div class="form-group">
+            <label>คำอธิบาย</label>
+            <textarea class="form-control" id="act-desc" placeholder="รายละเอียดกิจกรรม" style="min-height:68px;resize:vertical"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label>วันที่เริ่ม *</label>
+              <input class="form-control" id="act-start" type="datetime-local">
+            </div>
+            <div class="form-group">
+              <label>วันที่สิ้นสุด *</label>
+              <input class="form-control" id="act-end" type="datetime-local">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>สถานที่</label>
+              <input class="form-control" id="act-location" placeholder="ห้อง / อาคาร">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>ประเภทกิจกรรม</label>
+              <select class="form-control" id="act-type">
+                <option value="general">ทั่วไป</option>
+                <option value="academic">วิชาการ</option>
+                <option value="sport">กีฬา</option>
+                <option value="culture">วัฒนธรรม</option>
+                <option value="volunteer">จิตอาสา</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="act-active-group" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-top:14px;margin-bottom:0">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0">
+              <input type="checkbox" id="act-active" style="width:18px;height:18px;cursor:pointer;accent-color:#16a34a">
+              <span style="font-size:13px;font-weight:600;color:#15803d">
+                แสดงในหน้าสถิติ (Stats)
+                <span style="font-size:11px;font-weight:400;color:var(--muted)">— ปิดเพื่อซ่อนจากรายงาน</span>
+              </span>
             </label>
-            <button class="btn btn-blue btn-sm" onclick="importTargetStudents()" id="tgt-import-btn">
-              <i class="fa-solid fa-file-import"></i> นำเข้า
-            </button>
-            <button class="btn btn-gray btn-sm" onclick="clearImportStudents()" style="color:var(--red)">
-              <i class="fa-solid fa-trash"></i> ล้างรายชื่อ
-            </button>
-            <span id="tgt-import-count" style="font-size:12px;color:var(--muted)"></span>
           </div>
-          <p style="font-size:11px;color:var(--muted);margin-top:6px">
-            การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
-          </p>
+        </div>
+
+        <!-- ─── คอลัมน์ขวา: Staff + กลุ่มเป้าหมาย ─── -->
+        <div class="modal-col modal-col-right">
+
+          <!-- Staff Section -->
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">
+              <i class="fa-solid fa-user-shield" style="color:var(--blue2)"></i> มอบหมาย Staff
+            </div>
+            <div id="act-staff-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto;padding:2px;min-height:40px">
+              <span style="font-size:12px;color:var(--muted)">กำลังโหลด...</span>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fa-solid fa-hand-pointer"></i> คลิกการ์ดเพื่อเลือก / ยกเลิก</p>
+          </div>
+
+          <!-- กลุ่มเป้าหมาย -->
+          <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:#f8fafc;flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">
+              <i class="fa-solid fa-users" style="color:var(--blue2)"></i> กลุ่มเป้าหมาย
+              <span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)">(สำหรับนับ % เข้าร่วมและรายชื่อขาด)</span>
+            </div>
+
+            <!-- แท็บ -->
+            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;flex-shrink:0">
+              <button id="tgt-tab-rule" onclick="switchTgtTab('rule')"
+                style="flex:1;padding:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--blue2);color:#fff;border:none">
+                <i class="fa-solid fa-sliders"></i> กำหนดกลุ่ม
+              </button>
+              <button id="tgt-tab-import" onclick="switchTgtTab('import')"
+                style="flex:1;padding:6px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);border:none;border-left:1px solid var(--border)">
+                <i class="fa-solid fa-file-import"></i> นำเข้ารายชื่อ
+              </button>
+            </div>
+
+            <!-- แท็บ: กำหนดกลุ่ม -->
+            <div id="tgt-panel-rule" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
+              <!-- Row 1: รุ่น | ระดับ | คณะ -->
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">รุ่น</label>
+                  <select class="form-control" id="tgt-year" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกรุ่น</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">ระดับ</label>
+                  <select class="form-control" id="tgt-level" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกระดับ</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">คณะ</label>
+                  <select class="form-control" id="tgt-faculty" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกคณะ</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Row 2: สาขา | แผนการเรียน | สถานะ -->
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">สาขา</label>
+                  <select class="form-control" id="tgt-major" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกสาขา</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">แผนการเรียน</label>
+                  <select class="form-control" id="tgt-study-plan" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกแผน</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">สถานะนักศึกษา</label>
+                  <select class="form-control" id="tgt-student-status" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกสถานะ</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Buttons -->
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">
+                  <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
+                </button>
+                <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" style="white-space:nowrap" id="tgt-preview-btn">
+                  <i class="fa-solid fa-calculator"></i> คำนวณ
+                </button>
+                <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
+              </div>
+              <!-- Tags -->
+              <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px"></div>
+            </div>
+
+            <!-- แท็บ: นำเข้ารายชื่อ -->
+            <div id="tgt-panel-import" style="display:none;flex:1;flex-direction:column;gap:6px">
+              <div id="tgt-import-status" style="font-size:12px"></div>
+              <label style="font-size:11px;color:var(--muted);display:block">
+                วางรหัสนักศึกษา (บรรทัดละ 1 รหัส หรือ CSV หัวคอลัมน์แรก = student_id)
+              </label>
+              <textarea id="tgt-import-ids" class="form-control" rows="4"
+                placeholder="67128xxxx&#10;67128yyyy&#10;68129zzzz&#10;..." style="font-size:12px;resize:none"></textarea>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <label class="btn btn-gray btn-sm" style="cursor:pointer;margin:0">
+                  <i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV
+                  <input type="file" accept=".csv,.txt" id="tgt-import-file" style="display:none" onchange="loadImportFile(event)">
+                </label>
+                <button class="btn btn-blue btn-sm" onclick="importTargetStudents()" id="tgt-import-btn">
+                  <i class="fa-solid fa-file-import"></i> นำเข้า
+                </button>
+                <button class="btn btn-gray btn-sm" onclick="clearImportStudents()" style="color:var(--red)">
+                  <i class="fa-solid fa-trash"></i> ล้างรายชื่อ
+                </button>
+                <span id="tgt-import-count" style="font-size:11px;color:var(--muted)"></span>
+              </div>
+              <p style="font-size:10px;color:var(--muted)">
+                การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="closeModal('activity-modal')">ยกเลิก</button>
-      <button class="btn btn-blue" onclick="saveActivity()">บันทึก</button>
+      <button class="btn btn-blue" onclick="saveActivity()"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button>
     </div>
   </div>
 </div>
@@ -877,23 +962,25 @@ async function loadDashboard() {
 async function loadStudentMeta() {
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
-  const { faculties, levels, cohorts, student_statuses } = data.data;
+  const { faculties, levels, cohorts, majors, study_plans, student_statuses } = data.data;
 
-  const selFac = document.getElementById('tgt-faculty');
-  selFac.innerHTML = '<option value="">ทุกคณะ</option>' +
-    faculties.map(f => `<option value="${f}">${f}</option>`).join('');
+  document.getElementById('tgt-faculty').innerHTML = '<option value="">ทุกคณะ</option>' +
+    (faculties||[]).map(f => `<option value="${f}">${f}</option>`).join('');
 
-  const selLvl = document.getElementById('tgt-level');
-  selLvl.innerHTML = '<option value="">ทุกระดับ</option>' +
-    levels.map(l => `<option value="${l}">${l}</option>`).join('');
+  document.getElementById('tgt-level').innerHTML = '<option value="">ทุกระดับ</option>' +
+    (levels||[]).map(l => `<option value="${l}">${l}</option>`).join('');
 
-  const selYr = document.getElementById('tgt-year');
-  selYr.innerHTML = '<option value="">ทุกรุ่น</option>' +
-    cohorts.map(c => `<option value="${c}">รุ่น ${c} (เข้า ${2500 + parseInt(c)})</option>`).join('');
+  document.getElementById('tgt-year').innerHTML = '<option value="">ทุกรุ่น</option>' +
+    (cohorts||[]).map(c => `<option value="${c}">รุ่น ${c} (เข้า ${2500 + parseInt(c)})</option>`).join('');
 
-  const selSt = document.getElementById('tgt-student-status');
-  selSt.innerHTML = '<option value="">ทุกสถานะ</option>' +
-    (student_statuses || []).map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('tgt-major').innerHTML = '<option value="">ทุกสาขา</option>' +
+    (majors||[]).map(m => `<option value="${m}">${m}</option>`).join('');
+
+  document.getElementById('tgt-study-plan').innerHTML = '<option value="">ทุกแผน</option>' +
+    (study_plans||[]).map(p => `<option value="${p}">${p}</option>`).join('');
+
+  document.getElementById('tgt-student-status').innerHTML = '<option value="">ทุกสถานะ</option>' +
+    (student_statuses||[]).map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────
@@ -1017,10 +1104,12 @@ function renderTargetTags() {
   }
   container.innerHTML = currentTargets.map((t, i) => {
     const facLabel = t.faculty        || 'ทุกคณะ';
-    const lvLabel  = t.level          ? t.level              : '';
-    const yrLabel  = t.year           ? `รุ่น ${t.year}`     : '';
-    const stLabel  = t.student_status ? `สถานะ ${t.student_status}` : '';
-    const subLabel = [lvLabel, yrLabel, stLabel].filter(Boolean).join(' · ') || 'ทุกระดับ ทุกรุ่น ทุกสถานะ';
+    const yrLabel  = t.year           ? `รุ่น ${t.year}`          : '';
+    const lvLabel  = t.level          ? t.level                   : '';
+    const mjLabel  = t.major          ? t.major                   : '';
+    const spLabel  = t.study_plan     ? `แผน:${t.study_plan}`     : '';
+    const stLabel  = t.student_status ? `สถานะ:${t.student_status}` : '';
+    const subLabel = [yrLabel, lvLabel, mjLabel, spLabel, stLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
       ${facLabel} — ${subLabel}
@@ -1034,15 +1123,19 @@ function addTarget() {
   const faculty        = document.getElementById('tgt-faculty').value        || null;
   const level          = document.getElementById('tgt-level').value          || null;
   const year           = document.getElementById('tgt-year').value           ? parseInt(document.getElementById('tgt-year').value) : null;
+  const major          = document.getElementById('tgt-major').value          || null;
+  const study_plan     = document.getElementById('tgt-study-plan').value     || null;
   const student_status = document.getElementById('tgt-student-status').value || null;
   const dup = currentTargets.some(t =>
     (t.faculty        ?? null) === (faculty        ?? null) &&
     (t.level          ?? null) === (level          ?? null) &&
     (t.year           ?? null) === (year           ?? null) &&
+    (t.major          ?? null) === (major          ?? null) &&
+    (t.study_plan     ?? null) === (study_plan     ?? null) &&
     (t.student_status ?? null) === (student_status ?? null)
   );
   if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, level, year, student_status });
+  currentTargets.push({ faculty, level, year, major, study_plan, student_status });
   renderTargetTags();
 }
 
@@ -1060,7 +1153,10 @@ async function previewTargetCount() {
   btn.textContent = '...';
   const data = await apiFetch('/activities/targets/preview', {
     method: 'POST',
-    body: JSON.stringify({ targets: currentTargets.map(t => ({ faculty: t.faculty, level: t.level, year: t.year, student_status: t.student_status })) }),
+    body: JSON.stringify({ targets: currentTargets.map(t => ({
+      faculty: t.faculty, level: t.level, year: t.year,
+      major: t.major, study_plan: t.study_plan, student_status: t.student_status,
+    })) }),
   });
   btn.textContent = 'คำนวณ';
   if (data.success) {
@@ -1094,13 +1190,17 @@ async function openActivityModal(id = null) {
     document.getElementById('act-active-group').style.display = 'block';
 
     // เลือก staff ที่มอบหมายแล้ว
-    const assignedIds = (a.staff || []).map(s => s.user_id);
-    Array.from(document.getElementById('act-staff').options).forEach(opt => {
-      opt.selected = assignedIds.includes(opt.value);
+    const assignedIds = (a.staff || []).map(s => String(s.user_id));
+    document.querySelectorAll('#act-staff-list .staff-card').forEach(card => {
+      card.classList.toggle('selected', assignedIds.includes(card.dataset.userId));
     });
 
     // โหลด targets
-    currentTargets = (a.targets || []).map(t => ({ faculty: t.faculty || null, year: t.year || null, level: t.level || null, student_status: t.student_status || null }));
+    currentTargets = (a.targets || []).map(t => ({
+      faculty: t.faculty || null, year: t.year || null, level: t.level || null,
+      major: t.major || null, study_plan: t.study_plan || null,
+      student_status: t.student_status || null,
+    }));
     // โหลดจำนวน import รายชื่อ (ถ้ามี)
     const cntData = await apiFetch(`/activities/${id}/targets/students/count`);
     if (cntData.success && cntData.count > 0) {
@@ -1109,9 +1209,8 @@ async function openActivityModal(id = null) {
     }
   } else {
     ['act-title','act-desc','act-start','act-end','act-location'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('act-max').value = 0;
     document.getElementById('act-type').value = 'general';
-    Array.from(document.getElementById('act-staff').options).forEach(o => o.selected = false);
+    document.querySelectorAll('#act-staff-list .staff-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('act-active-group').style.display = 'none';
   }
 
@@ -1119,16 +1218,31 @@ async function openActivityModal(id = null) {
   openModal('activity-modal');
 }
 
+const ROLE_LABEL = { superadmin:'Superadmin', admin:'Admin', staff:'Staff', dean:'Dean', manager:'Manager' };
+const ROLE_COLOR = { superadmin:'#7c3aed', admin:'#0066cc', staff:'#16a34a', dean:'#b45309', manager:'#be185d' };
+
 async function loadStaffList() {
   const data = await apiFetch('/users');
   if (!data.success) return;
-  const sel = document.getElementById('act-staff');
-  sel.innerHTML = data.data.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
+  const container = document.getElementById('act-staff-list');
+  container.innerHTML = data.data.map(u => `
+    <div class="staff-card" data-user-id="${u.id}" onclick="toggleStaff(this)" title="${u.full_name}">
+      <i class="fa-solid fa-circle-user staff-avatar"></i>
+      <div>
+        <div class="staff-name">${u.full_name}</div>
+        <div class="staff-role" style="color:${ROLE_COLOR[u.role]||'#64748b'}">${ROLE_LABEL[u.role]||u.role}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleStaff(el) {
+  el.classList.toggle('selected');
 }
 
 async function saveActivity() {
   const id       = document.getElementById('act-id').value;
-  const staffOpts = Array.from(document.getElementById('act-staff').selectedOptions).map(o => o.value);
+  const staffOpts = Array.from(document.querySelectorAll('#act-staff-list .staff-card.selected')).map(el => el.dataset.userId);
   const payload = {
     title:           document.getElementById('act-title').value.trim(),
     description:     document.getElementById('act-desc').value,
