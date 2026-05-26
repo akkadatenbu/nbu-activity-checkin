@@ -1,6 +1,6 @@
 // src/api/routes/liff.js — API สำหรับ LIFF App (ไม่ต้อง JWT)
 import { Router } from 'express';
-import { query } from '../db.js';
+import { query, queryAvs } from '../db.js';
 
 const router = Router();
 
@@ -30,14 +30,38 @@ router.get('/me', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Token ไม่ถูกต้องหรือหมดอายุ' });
         }
 
-        // หา student จาก line_student_links
-        const { rows } = await query(
-            `SELECT s.student_id, s.full_name, s.faculty, s.major,
-                    s.level, s.study_period, s.photo_url
-             FROM nbu_students s
-             JOIN line_student_links l ON l.student_id = s.student_id
-             WHERE l.line_user_id = $1`,
+        // หา student_id — ลอง AVS_DB ก่อน ถ้าไม่เจอ fallback ไป line_student_links
+        let studentId = null;
+
+        const { rows: avsRows } = await queryAvs(
+            `SELECT studentcode FROM nbc_line_map
+             WHERE line_uuid = $1 AND is_active = true
+             LIMIT 1`,
             [profile.userId]
+        );
+        if (avsRows.length && avsRows[0].studentcode) {
+            studentId = avsRows[0].studentcode;
+        } else {
+            const { rows: localRows } = await query(
+                `SELECT student_id FROM line_student_links WHERE line_user_id = $1 LIMIT 1`,
+                [profile.userId]
+            );
+            if (localRows.length) studentId = localRows[0].student_id;
+        }
+
+        if (!studentId) {
+            return res.json({
+                success: true,
+                data: { linked: false, lineDisplayName: profile.displayName },
+            });
+        }
+
+        // ดึงข้อมูลนักศึกษาจาก main DB
+        const { rows } = await query(
+            `SELECT student_id, full_name, faculty, major, level, study_period, photo_url
+             FROM nbu_students
+             WHERE student_id = $1`,
+            [studentId]
         );
 
         if (!rows.length) {
@@ -89,16 +113,28 @@ router.get('/attendance', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Token ไม่ถูกต้องหรือหมดอายุ' });
         }
 
-        // หา student_id
-        const { rows: linkRows } = await query(
-            'SELECT s.student_id FROM nbu_students s JOIN line_student_links l ON l.student_id = s.student_id WHERE l.line_user_id = $1',
+        // หา student_id — ลอง AVS_DB ก่อน ถ้าไม่เจอ fallback ไป line_student_links
+        let studentId = null;
+
+        const { rows: avsRows } = await queryAvs(
+            `SELECT studentcode FROM nbc_line_map
+             WHERE line_uuid = $1 AND is_active = true
+             LIMIT 1`,
             [profile.userId]
         );
-        if (!linkRows.length) {
-            return res.json({ success: true, data: [] });
+        if (avsRows.length && avsRows[0].studentcode) {
+            studentId = avsRows[0].studentcode;
+        } else {
+            const { rows: localRows } = await query(
+                `SELECT student_id FROM line_student_links WHERE line_user_id = $1 LIMIT 1`,
+                [profile.userId]
+            );
+            if (localRows.length) studentId = localRows[0].student_id;
         }
 
-        const studentId = linkRows[0].student_id;
+        if (!studentId) {
+            return res.json({ success: true, data: [] });
+        }
         const limit  = 20;
         const offset = (parseInt(page) - 1) * limit;
 

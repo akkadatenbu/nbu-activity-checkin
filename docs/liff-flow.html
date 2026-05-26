@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIFF Flow Reference — NBU Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary:   #003B7A;
+  --primary-l: #1a5fa8;
+  --line:      #06C755;
+  --db:        #336791;
+  --server:    #e35d00;
+  --browser:   #7c3aed;
+  --success:   #16a34a;
+  --gray-50:   #f8fafc;
+  --gray-100:  #f1f5f9;
+  --gray-200:  #e2e8f0;
+  --gray-400:  #94a3b8;
+  --gray-600:  #475569;
+  --gray-800:  #1e293b;
+  --radius:    10px;
+}
+body {
+  font-family: 'Prompt', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  padding: 32px 20px 60px;
+}
+
+/* ─── Page header ─── */
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.page-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+.page-header p {
+  font-size: .9rem;
+  color: var(--gray-600);
+}
+.page-header .meta {
+  display: inline-flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: .78rem;
+  color: var(--gray-400);
+}
+.page-header .meta span::before { content: '■ '; }
+
+/* ─── Legend ─── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 36px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  font-weight: 500;
+}
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ─── Section wrapper ─── */
+.section {
+  max-width: 860px;
+  margin: 0 auto 28px;
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.section-label h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ─── Flow card ─── */
+.flow-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gray-200);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+.flow-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: #fff;
+}
+.flow-card-header .icon { font-size: 1rem; }
+.flow-card-body { padding: 16px; }
+
+/* colour themes */
+.theme-line   { background: var(--line); }
+.theme-server { background: var(--server); }
+.theme-browser { background: var(--browser); }
+.theme-db     { background: var(--db); }
+.theme-primary { background: var(--primary); }
+
+.step-line   { background: var(--line); }
+.step-server { background: var(--server); }
+.step-browser { background: var(--browser); }
+.step-db     { background: var(--db); }
+.step-primary { background: var(--primary); }
+
+/* ─── Flow nodes ─── */
+.flow-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.flow-node {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.node-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex-shrink: 0;
+}
+.node-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: #fff;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.node-line {
+  width: 2px;
+  flex: 1;
+  min-height: 12px;
+  background: var(--gray-200);
+  margin: 2px 0;
+}
+.node-body {
+  flex: 1;
+  padding-bottom: 14px;
+}
+.node-body h3 {
+  font-size: .85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.node-body p {
+  font-size: .8rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+/* ─── Code block ─── */
+.code-block {
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'Fira Code', monospace;
+  font-size: .78rem;
+  line-height: 1.7;
+  color: #e2e8f0;
+  overflow-x: auto;
+  margin-top: 10px;
+}
+.code-block .c-green  { color: #4ade80; }
+.code-block .c-yellow { color: #fbbf24; }
+.code-block .c-blue   { color: #60a5fa; }
+.code-block .c-orange { color: #fb923c; }
+.code-block .c-pink   { color: #f472b6; }
+.code-block .c-gray   { color: #64748b; }
+.code-block .c-comment { color: #475569; font-style: italic; }
+
+/* ─── Arrow divider ─── */
+.arrow-divider {
+  text-align: center;
+  font-size: 1.4rem;
+  color: var(--gray-400);
+  margin: 6px 0;
+  line-height: 1;
+}
+
+/* ─── Table ─── */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.ref-table th {
+  background: var(--gray-100);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-600);
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 2px solid var(--gray-200);
+}
+.ref-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: top;
+  line-height: 1.6;
+}
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table td:first-child { font-weight: 600; font-family: 'Fira Code', monospace; font-size: .78rem; color: var(--db); }
+
+/* ─── Pill tags ─── */
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.pill-line   { background: #dcfce7; color: #15803d; }
+.pill-server { background: #fff7ed; color: #c2410c; }
+.pill-db     { background: #eff6ff; color: #1d4ed8; }
+.pill-warn   { background: #fef9c3; color: #a16207; }
+
+/* ─── Warning box ─── */
+.warn-box {
+  display: flex;
+  gap: 10px;
+  background: #fef9c3;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: .8rem;
+  line-height: 1.6;
+  margin-top: 10px;
+  color: #713f12;
+}
+.warn-box .icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+/* ─── Full flow diagram ─── */
+.full-flow {
+  max-width: 860px;
+  margin: 0 auto 28px;
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gray-200);
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+.full-flow-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: .9rem;
+}
+.full-flow-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 640px;
+}
+.flow-box {
+  flex: 1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: .8rem;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.4;
+}
+.flow-box small { display: block; font-weight: 300; font-size: .7rem; opacity: .85; margin-top: 2px; }
+.flow-arrow { font-size: 1.2rem; color: var(--gray-400); flex-shrink: 0; }
+.flow-down  { text-align: center; font-size: 1.3rem; color: var(--gray-400); width: 100%; max-width: 640px; margin: 2px 0; }
+
+.bg-line    { background: var(--line); }
+.bg-server  { background: var(--server); }
+.bg-browser { background: var(--browser); }
+.bg-db      { background: var(--db); }
+.bg-primary { background: var(--primary); }
+.bg-gray    { background: var(--gray-600); }
+</style>
+</head>
+<body>
+
+<!-- ─── Page Header ─────────────────────────────────────── -->
+<div class="page-header">
+  <h1>📋 LIFF Flow Reference</h1>
+  <p>ประวัติการเข้าร่วมกิจกรรม — NBU Activity System</p>
+  <div class="meta">
+    <span>LIFF ID: 2009129078-S3eyzf0X</span>
+    <span>Endpoint: https://activity.northbkk.ac.th/liff</span>
+  </div>
+</div>
+
+<!-- ─── Legend ──────────────────────────────────────────── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--browser)"></div> Browser / LIFF SDK</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--line)"></div> LINE Platform</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--server)"></div> Express Server (Node.js)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--db)"></div> PostgreSQL</div>
+</div>
+
+<!-- ─── Full flow overview ──────────────────────────────── -->
+<div class="full-flow">
+  <div class="full-flow-header">🗺️ ภาพรวม Flow ทั้งหมด</div>
+  <div class="full-flow-body">
+    <div class="flow-row">
+      <div class="flow-box bg-line">👆 ผู้ใช้คลิก<small>liff.line.me/2009129078-S3eyzf0X</small></div>
+    </div>
+    <div class="flow-down">↓</div>
+    <div class="flow-row">
+      <div class="flow-box bg-line">LINE Platform<small>ตรวจสอบ LIFF ID → redirect</small></div>
+    </div>
+    <div class="flow-down">↓</div>
+    <div class="flow-row">
+      <div class="flow-box bg-server">Express Server<small>GET /liff → ส่ง src/liff/index.html</small></div>
+    </div>
+    <div class="flow-down">↓</div>
+    <div class="flow-row">
+      <div class="flow-box bg-browser">LIFF SDK ใน Browser<small>liff.init() → liff.login() → getAccessToken()</small></div>
+    </div>
+    <div class="flow-down">↓ Access Token (LINE JWT)</div>
+    <div class="flow-row">
+      <div class="flow-box bg-server">GET /api/v1/liff/me</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box bg-line">LINE Profile API<small>verify token → userId</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box bg-db">PostgreSQL<small>nbu_students + line_student_links</small></div>
+    </div>
+    <div class="flow-down">↓ student info + stats</div>
+    <div class="flow-row">
+      <div class="flow-box bg-server">GET /api/v1/liff/attendance</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box bg-line">LINE Profile API<small>verify token อีกครั้ง</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box bg-db">PostgreSQL<small>nbu_attendance + nbu_activities</small></div>
+    </div>
+    <div class="flow-down">↓ activity list</div>
+    <div class="flow-row">
+      <div class="flow-box bg-browser">แสดงผลบนหน้าจอ<small>ชื่อ · คณะ · สถิติ · ประวัติกิจกรรม</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 1: LINE Platform ────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-line">1</div>
+    <h2>LINE LIFF Platform — รับ Request และ Redirect</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-line">
+      <span class="icon">💬</span> LINE Platform
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--line)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>ผู้ใช้คลิก Rich Menu / Flex Message</h3>
+            <p>URL ที่คลิก: <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-family:'Fira Code',monospace;font-size:.78rem">https://liff.line.me/2009129078-S3eyzf0X</code></p>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--line)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>LINE ตรวจสอบ LIFF ID</h3>
+            <p>ค้นหา LIFF ID <strong>2009129078-S3eyzf0X</strong> ใน LINE Developer Console → ดึง Endpoint URL ที่ตั้งค่าไว้</p>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--line)"></div>
+          </div>
+          <div class="node-body">
+            <h3>Redirect ไปยัง Endpoint URL</h3>
+            <div class="code-block">
+<span class="c-comment"># ตั้งค่าใน LINE Developer Console</span>
+LIFF ID  : <span class="c-yellow">2009129078-S3eyzf0X</span>
+Endpoint : <span class="c-green">https://activity.northbkk.ac.th/liff</span>
+Size     : <span class="c-blue">Full</span>  <span class="c-comment">(เต็มจอ)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 2: Server ────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-server">2</div>
+    <h2>Express Server — เสิร์ฟไฟล์ HTML</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-server">
+      <span class="icon">⚙️</span> Node.js / Express (server.js)
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--server)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Request เข้า Server</h3>
+            <p><code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-family:'Fira Code',monospace;font-size:.78rem">GET https://activity.northbkk.ac.th/liff</code></p>
+            <p style="margin-top:4px">ผ่าน Nginx reverse proxy → Node.js port 5533</p>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--server)"></div>
+          </div>
+          <div class="node-body">
+            <h3>Static File Route ใน server.js</h3>
+            <div class="code-block">
+<span class="c-comment">// server.js บรรทัด 44</span>
+app.<span class="c-blue">use</span>(<span class="c-green">'/liff'</span>, express.<span class="c-blue">static</span>(
+  path.<span class="c-blue">join</span>(__dirname, <span class="c-green">'src/liff'</span>)
+));
+
+<span class="c-comment">// ส่งไฟล์: src/liff/index.html กลับไปให้ browser</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 3: LIFF SDK ──────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-browser">3</div>
+    <h2>LIFF SDK ใน Browser — Login และ Access Token</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-browser">
+      <span class="icon">📱</span> Browser — src/liff/index.html
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--browser)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>โหลด LIFF SDK จาก LINE CDN</h3>
+            <div class="code-block">
+<span class="c-comment">&lt;!-- index.html บรรทัด 11 --&gt;</span>
+&lt;<span class="c-yellow">script</span> <span class="c-blue">src</span>=<span class="c-green">"https://static.line-scdn.net/liff/edge/2/sdk.js"</span>&gt;&lt;/<span class="c-yellow">script</span>&gt;
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--browser)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>liff.init() — เริ่มต้น LIFF</h3>
+            <div class="code-block">
+<span class="c-comment">// index.html บรรทัด 335-342</span>
+await liff.<span class="c-blue">init</span>({ liffId: <span class="c-green">'2009129078-S3eyzf0X'</span> });
+
+<span class="c-pink">if</span> (!liff.<span class="c-blue">isLoggedIn</span>()) {
+    liff.<span class="c-blue">login</span>();  <span class="c-comment">// redirect ไป LINE login แล้วกลับมา</span>
+    <span class="c-pink">return</span>;
+}
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--browser)"></div>
+          </div>
+          <div class="node-body">
+            <h3>liff.getAccessToken() — ได้ LINE Access Token</h3>
+            <div class="code-block">
+accessToken = liff.<span class="c-blue">getAccessToken</span>();
+<span class="c-comment">// ได้ JWT string ของ LINE อายุ ~12 ชั่วโมง</span>
+<span class="c-comment">// ใช้ยืนยันตัวตนกับ LINE API ในขั้นต่อไป</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 4: /liff/me ──────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-server">4</div>
+    <h2>API /liff/me — ดึงข้อมูลนักศึกษาและสถิติ</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-server">
+      <span class="icon">👤</span> GET /api/v1/liff/me?token=&lt;access_token&gt;
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--browser)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Browser ส่ง Request <span class="pill pill-browser" style="background:#ede9fe;color:#6d28d9">Browser → Server</span></h3>
+            <div class="code-block">
+<span class="c-comment">// index.html บรรทัด 345</span>
+<span class="c-pink">const</span> res = await <span class="c-blue">fetch</span>(
+  <span class="c-green">`/api/v1/liff/me?token=<span class="c-yellow">${encodeURIComponent(accessToken)}</span>`</span>
+);
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--line)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Server ตรวจสอบ Token กับ LINE <span class="pill pill-line">LINE API</span></h3>
+            <div class="code-block">
+<span class="c-comment">// liff.js บรรทัด 10-15</span>
+<span class="c-pink">const</span> res = await <span class="c-blue">fetch</span>(<span class="c-green">'https://api.line.me/v2/profile'</span>, {
+    headers: { Authorization: <span class="c-green">`Bearer <span class="c-yellow">${accessToken}</span>`</span> }
+});
+<span class="c-comment">// LINE คืน: { userId, displayName, pictureUrl }</span>
+<span class="c-comment">// userId เช่น "Uabc123def456..."</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--db)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Query ข้อมูลนักศึกษา <span class="pill pill-db">PostgreSQL</span></h3>
+            <div class="code-block">
+<span class="c-comment">-- liff.js บรรทัด 34-41</span>
+<span class="c-yellow">SELECT</span> s.student_id, s.full_name, s.faculty,
+       s.major, s.level, s.study_period, s.photo_url
+<span class="c-yellow">FROM</span> nbu_students s
+<span class="c-yellow">JOIN</span> line_student_links l
+  <span class="c-yellow">ON</span> l.student_id = s.student_id
+<span class="c-yellow">WHERE</span> l.line_user_id = <span class="c-green">'Uabc123...'</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--db)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Query นับสถิติการเข้าร่วม <span class="pill pill-db">PostgreSQL</span></h3>
+            <div class="code-block">
+<span class="c-comment">-- liff.js บรรทัด 53-58</span>
+<span class="c-yellow">SELECT</span>
+  <span class="c-blue">COUNT</span>(*) <span class="c-yellow">AS</span> total,
+  <span class="c-blue">COUNT</span>(*) <span class="c-yellow">FILTER</span> (
+    <span class="c-yellow">WHERE</span> att.checked_at >= date_trunc(<span class="c-green">'month'</span>, <span class="c-blue">NOW</span>())
+  ) <span class="c-yellow">AS</span> this_month
+<span class="c-yellow">FROM</span> nbu_attendance att
+<span class="c-yellow">WHERE</span> att.student_id = <span class="c-green">'671280108'</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--server)"></div>
+          </div>
+          <div class="node-body">
+            <h3>Response กลับไป Browser</h3>
+            <div class="code-block">
+{
+  <span class="c-blue">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-blue">"data"</span>: {
+    <span class="c-blue">"linked"</span>: <span class="c-green">true</span>,
+    <span class="c-blue">"student"</span>: {
+      <span class="c-blue">"student_id"</span>: <span class="c-green">"671280108"</span>,
+      <span class="c-blue">"full_name"</span>:  <span class="c-green">"สมชาย ใจดี"</span>,
+      <span class="c-blue">"faculty"</span>:    <span class="c-green">"คณะวิศวกรรมศาสตร์"</span>,
+      <span class="c-blue">"major"</span>:      <span class="c-green">"วิศวกรรมคอมพิวเตอร์"</span>,
+      <span class="c-blue">"photo_url"</span>:  <span class="c-green">"/thumbnails/671280108.jpg"</span>
+    },
+    <span class="c-blue">"stats"</span>: { <span class="c-blue">"total"</span>: <span class="c-orange">12</span>, <span class="c-blue">"this_month"</span>: <span class="c-orange">3</span> }
+  }
+}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 5: /liff/attendance ─────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-server">5</div>
+    <h2>API /liff/attendance — ดึงประวัติกิจกรรม</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-server">
+      <span class="icon">📅</span> GET /api/v1/liff/attendance?token=&lt;access_token&gt;&amp;page=1
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--browser)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Browser ส่ง Request <span class="pill pill-browser" style="background:#ede9fe;color:#6d28d9">Browser → Server</span></h3>
+            <div class="code-block">
+<span class="c-comment">// index.html บรรทัด 300</span>
+<span class="c-pink">const</span> res = await <span class="c-blue">fetch</span>(
+  <span class="c-green">`/api/v1/liff/attendance?token=<span class="c-yellow">${...}</span>&amp;page=<span class="c-yellow">${page}</span>`</span>
+);
+<span class="c-comment">// page เริ่มที่ 1, แต่ละหน้า = 20 รายการ</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--line)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Server ตรวจสอบ Token กับ LINE อีกครั้ง <span class="pill pill-warn">⚠ 2nd call</span></h3>
+            <p>เรียก <code style="font-family:'Fira Code',monospace;font-size:.78rem">verifyLineToken()</code> ซ้ำเพื่อได้ userId → ค้นหา student_id จาก line_student_links</p>
+            <div class="warn-box">
+              <span class="icon">⚠️</span>
+              <span>ทุก page load จะยิง LINE Profile API <strong>2 ครั้ง</strong> (/me + /attendance) ทำให้ช้าขึ้น ~200–400ms หากต้องการเพิ่มประสิทธิภาพในอนาคตควร cache token ด้วย Redis</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--db)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Query ประวัติ Paginated <span class="pill pill-db">PostgreSQL</span></h3>
+            <div class="code-block">
+<span class="c-comment">-- liff.js บรรทัด 105-114</span>
+<span class="c-yellow">SELECT</span> a.title, a.location,
+       a.start_datetime, a.end_datetime,
+       att.checked_at, att.method
+<span class="c-yellow">FROM</span>  nbu_attendance att
+<span class="c-yellow">JOIN</span>  nbu_activities a <span class="c-yellow">ON</span> a.id = att.activity_id
+<span class="c-yellow">WHERE</span> att.student_id = <span class="c-green">'671280108'</span>
+<span class="c-yellow">ORDER</span> <span class="c-yellow">BY</span> att.checked_at <span class="c-yellow">DESC</span>
+<span class="c-yellow">LIMIT</span> <span class="c-orange">20</span>  <span class="c-yellow">OFFSET</span> <span class="c-orange">0</span>   <span class="c-comment">-- page 1</span>
+<span class="c-comment">-- OFFSET = (page - 1) × 20</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--server)"></div>
+          </div>
+          <div class="node-body">
+            <h3>Response — Array of Activities</h3>
+            <div class="code-block">
+{
+  <span class="c-blue">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-blue">"data"</span>: [
+    {
+      <span class="c-blue">"title"</span>:          <span class="c-green">"วันไหว้ครู 2567"</span>,
+      <span class="c-blue">"location"</span>:       <span class="c-green">"หอประชุมใหญ่"</span>,
+      <span class="c-blue">"start_datetime"</span>: <span class="c-green">"2024-08-15T09:00:00Z"</span>,
+      <span class="c-blue">"checked_at"</span>:     <span class="c-green">"2024-08-15T08:47:22Z"</span>,
+      <span class="c-blue">"method"</span>:         <span class="c-green">"qr_scan"</span>
+    },
+    ...  <span class="c-comment">// สูงสุด 20 รายการต่อหน้า</span>
+  ]
+}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Step 6: Photo ─────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-primary">6</div>
+    <h2>รูปภาพนักศึกษามาจากไหน</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-header theme-primary">
+      <span class="icon">🖼️</span> Photo URL — Local Thumbnail
+    </div>
+    <div class="flow-card-body">
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--primary)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>ที่มาของรูปภาพ</h3>
+            <div class="code-block">
+<span class="c-comment"># รูปต้นฉบับ (ต้อง VPN หรืออยู่ใน network มหาวิทยาลัย)</span>
+Pattern: <span class="c-green">https://reg.northbkk.ac.th/studentimg/{yy}/{student_id}.jpg</span>
+ตัวอย่าง: <span class="c-green">https://reg.northbkk.ac.th/studentimg/67/671280108.jpg</span>
+          <span class="c-comment"># yy = 2 ตัวแรกของรหัส "671280108" → "67"</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--primary)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>Thumbnail เก็บใน Server</h3>
+            <div class="code-block">
+<span class="c-comment"># import_students.py ดาวน์โหลด + resize ด้วย sharp</span>
+เก็บที่: <span class="c-yellow">/var/www/activity/public/thumbnails/671280108.jpg</span>
+
+<span class="c-comment"># server.js บรรทัด 37</span>
+app.<span class="c-blue">use</span>(<span class="c-green">'/thumbnails'</span>,
+  express.<span class="c-blue">static</span>(process.env.THUMBNAIL_DIR)
+);
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--primary)"></div>
+            <div class="node-line"></div>
+          </div>
+          <div class="node-body">
+            <h3>URL ที่ Browser เรียก</h3>
+            <div class="code-block">
+photo_url ใน DB  : <span class="c-yellow">/thumbnails/671280108.jpg</span>
+URL จริง (public): <span class="c-green">https://activity.northbkk.ac.th/thumbnails/671280108.jpg</span>
+
+<span class="c-comment">// index.html บรรทัด 368-370</span>
+<span class="c-pink">if</span> (student.photo_url) {
+  avatarWrap.innerHTML = <span class="c-green">`&lt;img src="<span class="c-yellow">${student.photo_url}</span>"
+    onerror="this.parentElement.innerHTML='...icon...'"&gt;`</span>;
+}
+            </div>
+          </div>
+        </div>
+        <div class="flow-node">
+          <div class="node-connector">
+            <div class="node-dot" style="border-color:var(--primary)"></div>
+          </div>
+          <div class="node-body">
+            <h3>Fallback เมื่อไม่มีรูป</h3>
+            <p>ถ้าโหลดรูปไม่สำเร็จ (onerror) → แสดง icon <code style="font-family:'Fira Code',monospace;font-size:.78rem">fa-solid fa-user</code> แทน</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DB Tables Reference ──────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge step-db">📊</div>
+    <h2>ตาราง PostgreSQL ที่ใช้ใน LIFF</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-body" style="padding:0">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>ตาราง</th>
+            <th>ใช้ใน Endpoint</th>
+            <th>ข้อมูลที่ดึง</th>
+            <th>เงื่อนไข</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>line_student_links</td>
+            <td><span class="pill pill-server">/me</span> <span class="pill pill-server">/attendance</span></td>
+            <td>เชื่อม LINE userId ↔ student_id</td>
+            <td>WHERE line_user_id = userId</td>
+          </tr>
+          <tr>
+            <td>nbu_students</td>
+            <td><span class="pill pill-server">/me</span></td>
+            <td>full_name, faculty, major, level, photo_url</td>
+            <td>JOIN line_student_links</td>
+          </tr>
+          <tr>
+            <td>nbu_attendance</td>
+            <td><span class="pill pill-server">/me</span> <span class="pill pill-server">/attendance</span></td>
+            <td>checked_at, method, activity_id</td>
+            <td>WHERE student_id = studentId</td>
+          </tr>
+          <tr>
+            <td>nbu_activities</td>
+            <td><span class="pill pill-server">/attendance</span></td>
+            <td>title, location, start_datetime, end_datetime</td>
+            <td>JOIN nbu_attendance ON id = activity_id</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─── State machine ────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">
+    <div class="step-badge" style="background:var(--gray-600)">UI</div>
+    <h2>UI States — หน้าจอที่แสดงตามสถานการณ์</h2>
+  </div>
+  <div class="flow-card">
+    <div class="flow-card-body" style="padding:0">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Element ID</th>
+            <th>แสดงเมื่อ</th>
+            <th>เหตุการณ์</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#loading</td>
+            <td>เริ่มต้นเสมอ</td>
+            <td>ระหว่าง liff.init() และ fetch /me</td>
+          </tr>
+          <tr>
+            <td>#not-linked</td>
+            <td>data.linked === false</td>
+            <td>LINE userId ไม่พบใน line_student_links</td>
+          </tr>
+          <tr>
+            <td>#error-screen</td>
+            <td>เกิด Exception / HTTP error</td>
+            <td>Token หมดอายุ, DB error, network error</td>
+          </tr>
+          <tr>
+            <td>#main</td>
+            <td>data.linked === true</td>
+            <td>โหลดข้อมูลสำเร็จ แสดง header + activity list</td>
+          </tr>
+          <tr>
+            <td>#empty-state</td>
+            <td>data.data.length === 0 (page 1)</td>
+            <td>นักศึกษาไม่มีประวัติเข้าร่วมกิจกรรมเลย</td>
+          </tr>
+          <tr>
+            <td>#btn-load-more</td>
+            <td>data.data.length === 20</td>
+            <td>คาดว่ายังมีหน้าถัดไป (LIMIT 20)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:40px;font-size:.75rem;color:var(--gray-400)">
+  NBU Activity System — LIFF Flow Reference &nbsp;·&nbsp; Generated 2026-05-26
+</div>
+
+</body>
+</html>
