@@ -208,7 +208,7 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
   .modal-xl {
-    max-width: 1100px;
+    max-width: 860px;
     max-height: 92vh;
     overflow: hidden;
     display: flex;
@@ -219,19 +219,90 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .modal-xl .modal-body-inner {
-    display: grid;
-    grid-template-columns: 55% 45%;
-    height: 100%;
-    overflow: hidden;
+  /* ─── Activity Modal Tabs ─── */
+  .act-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    background: #f8fafc;
+    padding: 0 20px;
+    flex-shrink: 0;
   }
-  .modal-xl .modal-col {
+  .act-tab {
+    padding: 11px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .act-tab:hover { color: var(--blue2); }
+  .act-tab.active { color: var(--blue2); border-bottom-color: var(--blue2); }
+  .act-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--blue2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 99px;
+    padding: 0 5px;
+  }
+  .act-panel {
+    padding: 20px 24px;
     overflow-y: auto;
-    padding: 20px;
+    flex: 1;
+    min-height: 0;
   }
-  .modal-xl .modal-col-left  { border-right: 1px solid var(--border); padding: 20px 16px 20px 24px; }
-  .modal-xl .modal-col-right { padding: 20px 24px 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+  /* ─── Staff 2-column layout ─── */
+  .staff-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    min-height: 280px;
+  }
+  .staff-col-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .staff-col-hdr {
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .staff-col-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 220px;
+    max-height: 340px;
+  }
   .staff-card {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 10px; border: 2px solid var(--border);
@@ -537,22 +608,33 @@
     <input type="hidden" id="act-id">
     <input type="hidden" id="act-max" value="0">
 
+    <!-- ─── Tab Bar ─── -->
+    <div class="act-tabs">
+      <button class="act-tab active" id="act-tab-btn-info" onclick="switchActTab('info')">
+        <i class="fa-solid fa-calendar-plus"></i> ข้อมูลกิจกรรม
+      </button>
+      <button class="act-tab" id="act-tab-btn-staff" onclick="switchActTab('staff')">
+        <i class="fa-solid fa-user-shield"></i> Staff
+        <span class="act-tab-badge" id="act-staff-badge" style="display:none">0</span>
+      </button>
+      <button class="act-tab" id="act-tab-btn-target" onclick="switchActTab('target')">
+        <i class="fa-solid fa-users"></i> กลุ่มเป้าหมาย
+        <span class="act-tab-badge" id="act-target-badge" style="display:none">0</span>
+      </button>
+    </div>
+
     <div class="modal-body">
-      <div class="modal-body-inner">
 
-        <!-- ─── คอลัมน์ซ้าย: ข้อมูลกิจกรรม ─── -->
-        <div class="modal-col modal-col-left">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px">
-            <i class="fa-solid fa-calendar-plus" style="color:var(--blue2)"></i> ข้อมูลกิจกรรม
-          </div>
-
+      <!-- ─── Tab 1: ข้อมูลกิจกรรม ─── -->
+      <div id="act-panel-info" class="act-panel">
+        <div style="max-width:540px;margin:0 auto">
           <div class="form-group">
             <label>ชื่อกิจกรรม *</label>
             <input class="form-control" id="act-title" placeholder="ชื่อกิจกรรม">
           </div>
           <div class="form-group">
             <label>คำอธิบาย</label>
-            <textarea class="form-control" id="act-desc" placeholder="รายละเอียดกิจกรรม" style="min-height:68px;resize:vertical"></textarea>
+            <textarea class="form-control" id="act-desc" placeholder="รายละเอียดกิจกรรม" style="min-height:80px;resize:vertical"></textarea>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group">
@@ -580,7 +662,6 @@
               </select>
             </div>
           </div>
-
           <div class="form-group" id="act-active-group" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-top:14px;margin-bottom:0">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0">
               <input type="checkbox" id="act-active" style="width:18px;height:18px;cursor:pointer;accent-color:#16a34a">
@@ -591,143 +672,158 @@
             </label>
           </div>
         </div>
+      </div>
 
-        <!-- ─── คอลัมน์ขวา: Staff + กลุ่มเป้าหมาย ─── -->
-        <div class="modal-col modal-col-right">
-
-          <!-- Staff Section -->
-          <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">
-              <i class="fa-solid fa-user-shield" style="color:var(--blue2)"></i> มอบหมาย Staff
+      <!-- ─── Tab 2: Staff ─── -->
+      <div id="act-panel-staff" class="act-panel" style="display:none">
+        <div style="margin-bottom:12px">
+          <input class="form-control" id="staff-search"
+            placeholder="🔍 ค้นหาชื่อ หรือ Role..."
+            oninput="filterStaff()"
+            style="max-width:320px">
+        </div>
+        <div class="staff-2col">
+          <!-- ซ้าย: Staff ทั้งหมด -->
+          <div class="staff-col-box">
+            <div class="staff-col-hdr">
+              <i class="fa-solid fa-list"></i> Staff ทั้งหมด
+              <span id="staff-total-count" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"></span>
             </div>
-            <div id="act-staff-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto;padding:2px;min-height:40px">
+            <div class="staff-col-body" id="act-staff-list">
               <span style="font-size:12px;color:var(--muted)">กำลังโหลด...</span>
             </div>
-            <p style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fa-solid fa-hand-pointer"></i> คลิกการ์ดเพื่อเลือก / ยกเลิก</p>
           </div>
-
-          <!-- กลุ่มเป้าหมาย -->
-          <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:#f8fafc;flex:1;min-height:0;display:flex;flex-direction:column">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">
-              <i class="fa-solid fa-users" style="color:var(--blue2)"></i> กลุ่มเป้าหมาย
-              <span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)">(สำหรับนับ % เข้าร่วมและรายชื่อขาด)</span>
+          <!-- ขวา: เลือกแล้ว -->
+          <div class="staff-col-box">
+            <div class="staff-col-hdr" style="color:var(--blue2)">
+              <i class="fa-solid fa-circle-check"></i> เลือกแล้ว
+              <span id="act-staff-badge2" style="font-weight:700;font-size:12px">0</span> คน
             </div>
-
-            <!-- แท็บ -->
-            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;flex-shrink:0">
-              <button id="tgt-tab-rule" onclick="switchTgtTab('rule')"
-                style="flex:1;padding:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--blue2);color:#fff;border:none">
-                <i class="fa-solid fa-sliders"></i> กำหนดกลุ่ม
-              </button>
-              <button id="tgt-tab-import" onclick="switchTgtTab('import')"
-                style="flex:1;padding:6px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);border:none;border-left:1px solid var(--border)">
-                <i class="fa-solid fa-file-import"></i> นำเข้ารายชื่อ
-              </button>
-            </div>
-
-            <!-- แท็บ: กำหนดกลุ่ม -->
-            <div id="tgt-panel-rule" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
-              <!-- Row 1: รุ่น | ระดับ | คณะ -->
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">รุ่น</label>
-                  <select class="form-control" id="tgt-year" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกรุ่น</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">ระดับ</label>
-                  <select class="form-control" id="tgt-level" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกระดับ</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">คณะ</label>
-                  <select class="form-control" id="tgt-faculty" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกคณะ</option>
-                  </select>
-                </div>
-              </div>
-              <!-- Row 2: สาขา | แผนการเรียน | สถานะ -->
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">สาขา</label>
-                  <select class="form-control" id="tgt-major" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกสาขา</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">หลักสูตร</label>
-                  <select class="form-control" id="tgt-program" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกหลักสูตร</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">สถานะนักศึกษา</label>
-                  <select class="form-control" id="tgt-student-status" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกสถานะ</option>
-                  </select>
-                </div>
-              </div>
-              <!-- Row 3: ประเภทหลักสูตร | วิทยาเขต -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">ประเภทหลักสูตร</label>
-                  <select class="form-control" id="tgt-international" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทั้งหมด</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="font-size:11px;color:var(--muted)">วิทยาเขต</label>
-                  <select class="form-control" id="tgt-campus" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกวิทยาเขต</option>
-                  </select>
-                </div>
-              </div>
-              <!-- Buttons -->
-              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-                <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">
-                  <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
-                </button>
-                <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" style="white-space:nowrap" id="tgt-preview-btn">
-                  <i class="fa-solid fa-calculator"></i> คำนวณ
-                </button>
-                <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
-              </div>
-              <!-- Tags -->
-              <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px"></div>
-            </div>
-
-            <!-- แท็บ: นำเข้ารายชื่อ -->
-            <div id="tgt-panel-import" style="display:none;flex:1;flex-direction:column;gap:6px">
-              <div id="tgt-import-status" style="font-size:12px"></div>
-              <label style="font-size:11px;color:var(--muted);display:block">
-                วางรหัสนักศึกษา (บรรทัดละ 1 รหัส หรือ CSV หัวคอลัมน์แรก = student_id)
-              </label>
-              <textarea id="tgt-import-ids" class="form-control" rows="4"
-                placeholder="67128xxxx&#10;67128yyyy&#10;68129zzzz&#10;..." style="font-size:12px;resize:none"></textarea>
-              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-                <label class="btn btn-gray btn-sm" style="cursor:pointer;margin:0">
-                  <i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV
-                  <input type="file" accept=".csv,.txt" id="tgt-import-file" style="display:none" onchange="loadImportFile(event)">
-                </label>
-                <button class="btn btn-blue btn-sm" onclick="importTargetStudents()" id="tgt-import-btn">
-                  <i class="fa-solid fa-file-import"></i> นำเข้า
-                </button>
-                <button class="btn btn-gray btn-sm" onclick="clearImportStudents()" style="color:var(--red)">
-                  <i class="fa-solid fa-trash"></i> ล้างรายชื่อ
-                </button>
-                <span id="tgt-import-count" style="font-size:11px;color:var(--muted)"></span>
-              </div>
-              <p style="font-size:10px;color:var(--muted)">
-                การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
-              </p>
+            <div class="staff-col-body" id="act-staff-selected-list">
+              <span style="font-size:12px;color:var(--muted)">ยังไม่ได้เลือก Staff</span>
             </div>
           </div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">
+          <i class="fa-solid fa-hand-pointer"></i> คลิกการ์ดซ้ายเพื่อเลือก · กด <strong>×</strong> ในคอลัมน์ขวาเพื่อยกเลิก
+        </p>
+      </div>
 
+      <!-- ─── Tab 3: กลุ่มเป้าหมาย ─── -->
+      <div id="act-panel-target" class="act-panel" style="display:none">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+          <i class="fa-solid fa-circle-info" style="color:var(--blue2)"></i>
+          สำหรับนับ % เข้าร่วมและรายชื่อขาด — หากไม่กำหนด ระบบจะนับจากผู้เข้าร่วมทั้งหมด
+        </div>
+
+        <!-- Sub-tabs -->
+        <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;width:fit-content">
+          <button id="tgt-tab-rule" onclick="switchTgtTab('rule')"
+            style="padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;background:var(--blue2);color:#fff;border:none">
+            <i class="fa-solid fa-sliders"></i> กำหนดกลุ่ม
+          </button>
+          <button id="tgt-tab-import" onclick="switchTgtTab('import')"
+            style="padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);border:none;border-left:1px solid var(--border)">
+            <i class="fa-solid fa-file-import"></i> นำเข้ารายชื่อ
+          </button>
+        </div>
+
+        <!-- Sub-Tab: กำหนดกลุ่ม -->
+        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:11px;color:var(--muted)">รุ่น</label>
+              <select class="form-control" id="tgt-year" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกรุ่น</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted)">ระดับ</label>
+              <select class="form-control" id="tgt-level" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกระดับ</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted)">คณะ</label>
+              <select class="form-control" id="tgt-faculty" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกคณะ</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:11px;color:var(--muted)">สาขา</label>
+              <select class="form-control" id="tgt-major" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกสาขา</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted)">หลักสูตร</label>
+              <select class="form-control" id="tgt-program" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกหลักสูตร</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted)">สถานะนักศึกษา</label>
+              <select class="form-control" id="tgt-student-status" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกสถานะ</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:11px;color:var(--muted)">ประเภทหลักสูตร</label>
+              <select class="form-control" id="tgt-international" style="font-size:12px;padding:6px 8px">
+                <option value="">ทั้งหมด</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted)">วิทยาเขต</label>
+              <select class="form-control" id="tgt-campus" style="font-size:12px;padding:6px 8px">
+                <option value="">ทุกวิทยาเขต</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-blue btn-sm" onclick="addTarget()">
+              <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
+            </button>
+            <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" id="tgt-preview-btn">
+              <i class="fa-solid fa-calculator"></i> คำนวณ
+            </button>
+            <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
+          </div>
+          <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px"></div>
+        </div>
+
+        <!-- Sub-Tab: นำเข้ารายชื่อ -->
+        <div id="tgt-panel-import" style="display:none;flex-direction:column;gap:8px">
+          <div id="tgt-import-status" style="font-size:12px"></div>
+          <label style="font-size:11px;color:var(--muted);display:block">
+            วางรหัสนักศึกษา (บรรทัดละ 1 รหัส หรือ CSV หัวคอลัมน์แรก = student_id)
+          </label>
+          <textarea id="tgt-import-ids" class="form-control" rows="5"
+            placeholder="67128xxxx&#10;67128yyyy&#10;68129zzzz&#10;..." style="font-size:12px;resize:vertical"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label class="btn btn-gray btn-sm" style="cursor:pointer;margin:0">
+              <i class="fa-solid fa-file-csv"></i> เลือกไฟล์ CSV
+              <input type="file" accept=".csv,.txt" id="tgt-import-file" style="display:none" onchange="loadImportFile(event)">
+            </label>
+            <button class="btn btn-blue btn-sm" onclick="importTargetStudents()" id="tgt-import-btn">
+              <i class="fa-solid fa-file-import"></i> นำเข้า
+            </button>
+            <button class="btn btn-gray btn-sm" onclick="clearImportStudents()" style="color:var(--red)">
+              <i class="fa-solid fa-trash"></i> ล้างรายชื่อ
+            </button>
+            <span id="tgt-import-count" style="font-size:11px;color:var(--muted)"></span>
+          </div>
+          <p style="font-size:10px;color:var(--muted)">
+            การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
+          </p>
         </div>
       </div>
-    </div>
+
+    </div><!-- /modal-body -->
 
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="closeModal('activity-modal')">ยกเลิก</button>
@@ -1068,10 +1164,83 @@ function filterActivities() {
 // ─── Target management ────────────────────────────────────────────────────────
 let currentTargets = []; // [{faculty, year}]
 
+// ─── Activity Modal Tabs ──────────────────────────────────────────────────────
+function switchActTab(tab) {
+  ['info','staff','target'].forEach(t => {
+    document.getElementById(`act-panel-${t}`).style.display = t === tab ? 'flex' : 'none';
+    document.getElementById(`act-tab-btn-${t}`).classList.toggle('active', t === tab);
+  });
+  // info panel ใช้ block ปกติ ไม่ใช่ flex
+  if (tab === 'info') document.getElementById('act-panel-info').style.display = 'block';
+}
+
+// ─── Staff helpers ────────────────────────────────────────────────────────────
+function filterStaff() {
+  const q = (document.getElementById('staff-search').value || '').toLowerCase();
+  document.querySelectorAll('#act-staff-list .staff-card').forEach(card => {
+    const name = (card.querySelector('.staff-name')?.textContent || '').toLowerCase();
+    const role = (card.querySelector('.staff-role')?.textContent || '').toLowerCase();
+    card.style.display = (!q || name.includes(q) || role.includes(q)) ? '' : 'none';
+  });
+}
+
+function updateStaffBadge() {
+  const count = document.querySelectorAll('#act-staff-list .staff-card.selected').length;
+  // badge บน tab
+  const badge = document.getElementById('act-staff-badge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  // badge ในคอลัมน์ขวา
+  const b2 = document.getElementById('act-staff-badge2');
+  if (b2) b2.textContent = count;
+  updateSelectedStaffPanel();
+}
+
+function updateSelectedStaffPanel() {
+  const panel = document.getElementById('act-staff-selected-list');
+  if (!panel) return;
+  const selected = Array.from(document.querySelectorAll('#act-staff-list .staff-card.selected'));
+  if (!selected.length) {
+    panel.innerHTML = '<span style="font-size:12px;color:var(--muted)">ยังไม่ได้เลือก Staff</span>';
+    return;
+  }
+  panel.innerHTML = selected.map(card => {
+    const name      = card.querySelector('.staff-name')?.textContent || '';
+    const roleEl    = card.querySelector('.staff-role');
+    const roleText  = roleEl?.textContent || '';
+    const roleColor = roleEl?.style.color || 'var(--muted)';
+    const uid       = card.dataset.userId;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:#fff">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${name}</div>
+        <div style="font-size:10px;font-weight:600;color:${roleColor}">${roleText}</div>
+      </div>
+      <button onclick="deselectStaff('${uid}')"
+        style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0 2px"
+        title="ยกเลิก">&times;</button>
+    </div>`;
+  }).join('');
+}
+
+function deselectStaff(uid) {
+  const card = document.querySelector(`#act-staff-list .staff-card[data-user-id="${uid}"]`);
+  if (card) { card.classList.remove('selected'); updateStaffBadge(); }
+}
+
+// ─── Target badge ─────────────────────────────────────────────────────────────
+function updateTargetBadge() {
+  const count = currentTargets.length;
+  const badge = document.getElementById('act-target-badge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
 function switchTgtTab(tab) {
   const isRule = tab === 'rule';
-  document.getElementById('tgt-panel-rule').style.display   = isRule ? 'block' : 'none';
-  document.getElementById('tgt-panel-import').style.display = isRule ? 'none'  : 'block';
+  document.getElementById('tgt-panel-rule').style.display   = isRule ? 'flex' : 'none';
+  document.getElementById('tgt-panel-import').style.display = isRule ? 'none' : 'flex';
   document.getElementById('tgt-tab-rule').style.background   = isRule ? 'var(--blue2)' : '#fff';
   document.getElementById('tgt-tab-rule').style.color        = isRule ? '#fff' : 'var(--muted)';
   document.getElementById('tgt-tab-import').style.background = isRule ? '#fff' : 'var(--blue2)';
@@ -1137,6 +1306,7 @@ async function clearImportStudents() {
 }
 
 function renderTargetTags() {
+  updateTargetBadge();
   const container = document.getElementById('tgt-tags');
   document.getElementById('tgt-count-msg').textContent = '';
   if (!currentTargets.length) {
@@ -1223,6 +1393,12 @@ async function openActivityModal(id = null) {
   document.getElementById('act-id').value = '';
   currentTargets = [];
 
+  // เริ่มต้นที่ Tab 1 เสมอ
+  switchActTab('info');
+  // reset search staff
+  const srch = document.getElementById('staff-search');
+  if (srch) srch.value = '';
+
   // โหลด staff list + student meta สำหรับ dropdown
   await Promise.all([loadStaffList(), loadStudentMeta()]);
 
@@ -1246,6 +1422,7 @@ async function openActivityModal(id = null) {
     document.querySelectorAll('#act-staff-list .staff-card').forEach(card => {
       card.classList.toggle('selected', assignedIds.includes(card.dataset.userId));
     });
+    updateStaffBadge();
 
     // โหลด targets
     currentTargets = (a.targets || []).map(t => ({
@@ -1266,6 +1443,7 @@ async function openActivityModal(id = null) {
     document.getElementById('act-type').value = 'general';
     document.querySelectorAll('#act-staff-list .staff-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('act-active-group').style.display = 'none';
+    updateStaffBadge();
   }
 
   renderTargetTags();
@@ -1288,10 +1466,15 @@ async function loadStaffList() {
       </div>
     </div>
   `).join('');
+  // อัปเดต total count label
+  const totalEl = document.getElementById('staff-total-count');
+  if (totalEl) totalEl.textContent = ` (${data.data.length} คน)`;
+  updateStaffBadge();
 }
 
 function toggleStaff(el) {
   el.classList.toggle('selected');
+  updateStaffBadge();
 }
 
 async function saveActivity() {
