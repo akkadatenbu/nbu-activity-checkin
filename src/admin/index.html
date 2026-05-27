@@ -535,6 +535,9 @@
           <option value="2">ภาค 2</option>
           <option value="3">ฤดูร้อน</option>
         </select>
+        <button class="btn btn-gray btn-sm" style="flex-shrink:0;white-space:nowrap" title="ล้าง filter" onclick="clearActivityFilter()">
+          <i class="fa-solid fa-xmark"></i> ล้าง
+        </button>
         <button class="btn btn-blue" style="flex-shrink:0" onclick="openActivityModal()">+ สร้างกิจกรรม</button>
       </div>
       <div class="card">
@@ -1206,6 +1209,13 @@ function filterActivities() {
     (!year || String(a.academic_year) === year) &&
     (!sem  || String(a.semester) === sem)
   ));
+}
+
+function clearActivityFilter() {
+  document.getElementById('act-search').value  = '';
+  document.getElementById('filter-acyear').value = '';
+  document.getElementById('filter-sem').value   = '';
+  renderActivities(allActivities);
 }
 
 // ─── Auto-detect ปีการศึกษา/ภาคจากวันที่เริ่มกิจกรรม ──────────────────────────
