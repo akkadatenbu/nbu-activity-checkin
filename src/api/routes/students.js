@@ -17,7 +17,7 @@ router.get('/meta', async (_req, res) => {
             // student_status เป็น INTEGER แล้ว — ใช้ IS NOT NULL เท่านั้น
             query(`SELECT DISTINCT student_status FROM nbu_students WHERE student_status IS NOT NULL ORDER BY student_status`),
             query(`SELECT DISTINCT major           FROM nbu_students WHERE major          IS NOT NULL AND major          != '' ORDER BY major`),
-            query(`SELECT DISTINCT study_plan      FROM nbu_students WHERE study_plan     IS NOT NULL AND study_plan     != '' ORDER BY study_plan`),
+            query(`SELECT DISTINCT program         FROM nbu_students WHERE program        IS NOT NULL AND program        != '' ORDER BY program`),
             // international เป็น VARCHAR — ดึงค่าที่มีจริงในฐานข้อมูล
             query(`SELECT DISTINCT international  FROM nbu_students WHERE international  IS NOT NULL AND international  != '' ORDER BY international`),
             // campus — ดึงวิทยาเขตที่มีจริงในฐานข้อมูล
@@ -31,7 +31,7 @@ router.get('/meta', async (_req, res) => {
                 cohorts:          cohRes.rows.map(r => r.cohort),
                 student_statuses: statusRes.rows.map(r => r.student_status),
                 majors:           majorRes.rows.map(r => r.major),
-                study_plans:      planRes.rows.map(r => r.study_plan),
+                programs:         planRes.rows.map(r => r.program),
                 internationals:   intlRes.rows.map(r => r.international),
                 campuses:         campRes.rows.map(r => r.campus),
             },

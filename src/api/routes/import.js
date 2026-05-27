@@ -206,7 +206,7 @@ async function runImport(jobId, rows, {
             level:          col(r, colLevel),
             study_duration: col(r, colStudyDuration),
             study_period:   col(r, colStudyPeriod),
-            study_plan:     col(r, colStudyPlan),
+            program:        col(r, colStudyPlan),
             loan_status:    col(r, colLoanStatus),
             student_status: col(r, colStudentStatus),
             photo_url:      '',
@@ -248,13 +248,13 @@ async function runImport(jobId, rows, {
         ).join(',');
         const params = batch.flatMap(s => [
             s.student_id, s.full_name, s.faculty, s.major,
-            s.level, s.study_duration, s.study_period, s.study_plan,
+            s.level, s.study_duration, s.study_period, s.program,
             s.loan_status, s.student_status, s.photo_url,
         ]);
         await query(`
             INSERT INTO nbu_students
                 (student_id, full_name, faculty, major,
-                 level, study_duration, study_period, study_plan,
+                 level, study_duration, study_period, program,
                  loan_status, student_status, photo_url)
             VALUES ${vals}
             ON CONFLICT (student_id) DO UPDATE SET
@@ -264,7 +264,7 @@ async function runImport(jobId, rows, {
                 level          = EXCLUDED.level,
                 study_duration = EXCLUDED.study_duration,
                 study_period   = EXCLUDED.study_period,
-                study_plan     = EXCLUDED.study_plan,
+                program        = EXCLUDED.program,
                 loan_status    = EXCLUDED.loan_status,
                 student_status = EXCLUDED.student_status,
                 photo_url      = CASE WHEN EXCLUDED.photo_url != ''

@@ -31,7 +31,7 @@ async function getReportData(activityId) {
                     s.level,
                     s.study_duration,
                     s.study_period,
-                    s.study_plan,
+                    s.program,
                     s.loan_status,
                     u.full_name      AS checked_by_name
              FROM nbu_attendance att
@@ -112,7 +112,7 @@ router.get('/:activityId/excel', async (req, res) => {
                 r.level               || '-',
                 r.study_duration      || '-',
                 r.study_period        || '-',
-                r.study_plan          || '-',
+                r.program             || '-',
                 r.loan_status         || '-',
                 new Date(r.checked_at).toLocaleString('th-TH'),
                 r.method === 'qr_scan' ? 'QR Scan' : 'Manual',
@@ -201,7 +201,7 @@ router.get('/:activityId/csv', async (req, res) => {
                 r.level            || '',
                 r.study_duration   || '',
                 r.study_period     || '',
-                r.study_plan       || '',
+                r.program          || '',
                 r.loan_status      || '',
                 new Date(r.checked_at).toLocaleString('th-TH'),
                 r.method === 'qr_scan' ? 'QR Scan' : 'Manual',

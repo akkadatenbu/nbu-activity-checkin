@@ -657,9 +657,9 @@
                   </select>
                 </div>
                 <div>
-                  <label style="font-size:11px;color:var(--muted)">แผนการเรียน</label>
-                  <select class="form-control" id="tgt-study-plan" style="font-size:12px;padding:6px 8px">
-                    <option value="">ทุกแผน</option>
+                  <label style="font-size:11px;color:var(--muted)">หลักสูตร</label>
+                  <select class="form-control" id="tgt-program" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทุกหลักสูตร</option>
                   </select>
                 </div>
                 <div>
@@ -974,7 +974,7 @@ async function loadDashboard() {
 async function loadStudentMeta() {
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
-  const { faculties, levels, cohorts, majors, study_plans, student_statuses, internationals, campuses } = data.data;
+  const { faculties, levels, cohorts, majors, programs, student_statuses, internationals, campuses } = data.data;
 
   document.getElementById('tgt-faculty').innerHTML = '<option value="">ทุกคณะ</option>' +
     (faculties||[]).map(f => `<option value="${f}">${f}</option>`).join('');
@@ -988,8 +988,8 @@ async function loadStudentMeta() {
   document.getElementById('tgt-major').innerHTML = '<option value="">ทุกสาขา</option>' +
     (majors||[]).map(m => `<option value="${m}">${m}</option>`).join('');
 
-  document.getElementById('tgt-study-plan').innerHTML = '<option value="">ทุกแผน</option>' +
-    (study_plans||[]).map(p => `<option value="${p}">${p}</option>`).join('');
+  document.getElementById('tgt-program').innerHTML = '<option value="">ทุกหลักสูตร</option>' +
+    (programs||[]).map(p => `<option value="${p}">${p}</option>`).join('');
 
   // student_status เป็น INTEGER — แสดงเลขตรงๆ
   document.getElementById('tgt-student-status').innerHTML = '<option value="">ทุกสถานะ</option>' +
@@ -1148,7 +1148,7 @@ function renderTargetTags() {
     const yrLabel   = t.year           ? `รุ่น ${t.year}`            : '';
     const lvLabel   = t.level          ? t.level                     : '';
     const mjLabel   = t.major          ? t.major                     : '';
-    const spLabel   = t.study_plan     ? `แผน:${t.study_plan}`       : '';
+    const spLabel   = t.program        ? t.program                    : '';
     const stLabel   = t.student_status ? `สถานะ:${t.student_status}` : '';
     const intlLabel = t.international === 'หลักสูตรนานาชาติ' ? '🌏 หลักสูตรนานาชาติ'
                     : t.international === 'หลักสูตรไทย'      ? '🇹🇭 หลักสูตรไทย'
@@ -1169,7 +1169,7 @@ function addTarget() {
   const level          = document.getElementById('tgt-level').value          || null;
   const year           = document.getElementById('tgt-year').value           ? parseInt(document.getElementById('tgt-year').value) : null;
   const major          = document.getElementById('tgt-major').value          || null;
-  const study_plan     = document.getElementById('tgt-study-plan').value     || null;
+  const program        = document.getElementById('tgt-program').value         || null;
   const student_status = document.getElementById('tgt-student-status').value || null;
   // international: '' → null (ทั้งหมด), มีค่า → กรองตามหลักสูตร
   const international  = document.getElementById('tgt-international').value || null;
@@ -1180,13 +1180,13 @@ function addTarget() {
     (t.level          ?? null) === (level          ?? null) &&
     (t.year           ?? null) === (year           ?? null) &&
     (t.major          ?? null) === (major          ?? null) &&
-    (t.study_plan     ?? null) === (study_plan     ?? null) &&
+    (t.program        ?? null) === (program        ?? null) &&
     (t.student_status ?? null) === (student_status ?? null) &&
     (t.international  ?? null) === (international  ?? null) &&
     (t.campus         ?? null) === (campus         ?? null)
   );
   if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, level, year, major, study_plan, student_status, international, campus });
+  currentTargets.push({ faculty, level, year, major, program, student_status, international, campus });
   renderTargetTags();
 }
 
@@ -1206,7 +1206,7 @@ async function previewTargetCount() {
     method: 'POST',
     body: JSON.stringify({ targets: currentTargets.map(t => ({
       faculty: t.faculty, level: t.level, year: t.year,
-      major: t.major, study_plan: t.study_plan, student_status: t.student_status,
+      major: t.major, program: t.program, student_status: t.student_status,
       international: t.international, campus: t.campus,
     })) }),
   });
@@ -1250,7 +1250,7 @@ async function openActivityModal(id = null) {
     // โหลด targets
     currentTargets = (a.targets || []).map(t => ({
       faculty: t.faculty || null, year: t.year || null, level: t.level || null,
-      major: t.major || null, study_plan: t.study_plan || null,
+      major: t.major || null, program: t.program || null,
       student_status: t.student_status || null,
       international: t.international || null,
       campus:        t.campus        || null,
