@@ -10,7 +10,7 @@ router.use(verifyJWT);
 // ดึง distinct faculties, levels, cohorts จาก nbu_students สำหรับ dropdown
 router.get('/meta', async (_req, res) => {
     try {
-        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes, intlRes] = await Promise.all([
+        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes, intlRes, campRes] = await Promise.all([
             query(`SELECT DISTINCT faculty        FROM nbu_students WHERE faculty        IS NOT NULL AND faculty        != '' ORDER BY faculty`),
             query(`SELECT DISTINCT level          FROM nbu_students WHERE level          IS NOT NULL AND level          != '' ORDER BY level`),
             query(`SELECT DISTINCT SUBSTRING(student_id,1,2) AS cohort FROM nbu_students WHERE student_id IS NOT NULL ORDER BY cohort DESC`),
@@ -20,6 +20,8 @@ router.get('/meta', async (_req, res) => {
             query(`SELECT DISTINCT study_plan      FROM nbu_students WHERE study_plan     IS NOT NULL AND study_plan     != '' ORDER BY study_plan`),
             // international เป็น VARCHAR — ดึงค่าที่มีจริงในฐานข้อมูล
             query(`SELECT DISTINCT international  FROM nbu_students WHERE international  IS NOT NULL AND international  != '' ORDER BY international`),
+            // campus — ดึงวิทยาเขตที่มีจริงในฐานข้อมูล
+            query(`SELECT DISTINCT campus         FROM nbu_students WHERE campus         IS NOT NULL AND campus         != '' ORDER BY campus`),
         ]);
         return res.json({
             success: true,
@@ -31,6 +33,7 @@ router.get('/meta', async (_req, res) => {
                 majors:           majorRes.rows.map(r => r.major),
                 study_plans:      planRes.rows.map(r => r.study_plan),
                 internationals:   intlRes.rows.map(r => r.international),
+                campuses:         campRes.rows.map(r => r.campus),
             },
         });
     } catch (err) {

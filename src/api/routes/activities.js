@@ -68,7 +68,7 @@ router.get('/:id', async (req, res) => {
             query(`SELECT id, status, opened_at, closed_at, opened_by
                    FROM nbu_sessions WHERE activity_id = $1 ORDER BY opened_at DESC LIMIT 1`,
                 [req.params.id]),
-            query(`SELECT id, faculty, year, level, major, study_plan, student_status, international FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
+            query(`SELECT id, faculty, year, level, major, study_plan, student_status, international, campus FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
                 [req.params.id]),
         ]);
         return res.json({ success: true, data: {
@@ -109,8 +109,8 @@ router.post('/', async (req, res) => {
             if (Array.isArray(targets) && targets.length > 0) {
                 for (const t of targets) {
                     await client.query(
-                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status, international) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING`,
-                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null, t.international || null]
+                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status, international, campus) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
+                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null, t.international || null, t.campus || null]
                     );
                 }
             }
@@ -291,6 +291,11 @@ router.post('/targets/preview', async (req, res) => {
             if (t.international) {
                 validParams.push(t.international);
                 parts.push(`s.international = $${validParams.length}`);
+            }
+            // campus: '' หรือ null = ทั้งหมด (ไม่กรอง), มีค่า = กรองตามวิทยาเขต
+            if (t.campus) {
+                validParams.push(t.campus);
+                parts.push(`s.campus = $${validParams.length}`);
             }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });
