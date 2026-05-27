@@ -33,17 +33,17 @@ async function migrate() {
         `);
 
         // ── 2. student_status : VARCHAR → INTEGER ───────────────────────────
+        // ต้อง DROP DEFAULT ก่อน เพราะ DEFAULT '' cast เป็น integer ไม่ได้
+        await client.query(`
+            ALTER TABLE nbu_students
+            ALTER COLUMN student_status DROP DEFAULT
+        `);
         // แปลงค่าเดิม: '10','20','40' → 10,20,40 / '' หรือ NULL → NULL
         await client.query(`
             ALTER TABLE nbu_students
             ALTER COLUMN student_status
             TYPE INTEGER
             USING NULLIF(TRIM(student_status), '')::integer
-        `);
-        // เปลี่ยน DEFAULT จาก '' → NULL (integer ไม่ใช้ empty string)
-        await client.query(`
-            ALTER TABLE nbu_students
-            ALTER COLUMN student_status DROP DEFAULT
         `);
 
         await client.query('COMMIT');
