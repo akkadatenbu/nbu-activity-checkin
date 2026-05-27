@@ -68,7 +68,7 @@ router.get('/:id', async (req, res) => {
             query(`SELECT id, status, opened_at, closed_at, opened_by
                    FROM nbu_sessions WHERE activity_id = $1 ORDER BY opened_at DESC LIMIT 1`,
                 [req.params.id]),
-            query(`SELECT id, faculty, year, level, major, study_plan, student_status FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
+            query(`SELECT id, faculty, year, level, major, study_plan, student_status, international FROM nbu_activity_targets WHERE activity_id = $1 ORDER BY id`,
                 [req.params.id]),
         ]);
         return res.json({ success: true, data: {
@@ -108,9 +108,13 @@ router.post('/', async (req, res) => {
             }
             if (Array.isArray(targets) && targets.length > 0) {
                 for (const t of targets) {
+                    // international: null = ทั้งหมด, true = ต่างชาติ, false = ไทย
+                    const intl = (t.international === true || t.international === 'true') ? true
+                               : (t.international === false || t.international === 'false') ? false
+                               : null;
                     await client.query(
-                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,
-                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null]
+                        `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status, international) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING`,
+                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null, intl]
                     );
                 }
             }
@@ -151,9 +155,13 @@ router.put('/:id', async (req, res) => {
         if (Array.isArray(targets)) {
             await query('DELETE FROM nbu_activity_targets WHERE activity_id = $1', [req.params.id]);
             for (const t of targets) {
+                // international: null = ทั้งหมด, true = ต่างชาติ, false = ไทย
+                const intl = (t.international === true || t.international === 'true') ? true
+                           : (t.international === false || t.international === 'false') ? false
+                           : null;
                 await query(
-                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,
-                    [req.params.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null]
+                    `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, study_plan, student_status, international) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING`,
+                    [req.params.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.study_plan || null, t.student_status || null, intl]
                 );
             }
         }
@@ -286,6 +294,12 @@ router.post('/targets/preview', async (req, res) => {
             if (t.study_plan)     { validParams.push(t.study_plan);     parts.push(`s.study_plan = $${validParams.length}`); }
             if (t.student_status) { validParams.push(t.student_status); parts.push(`s.student_status = $${validParams.length}`); }
             if (t.year)           { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
+            // international: true = ต่างชาติ, false = ไทย, null/undefined = ทั้งหมด
+            if (t.international === true || t.international === 'true') {
+                parts.push(`s.international = true`);
+            } else if (t.international === false || t.international === 'false') {
+                parts.push(`s.international = false`);
+            }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });
         const whereClause = validConditions.join(' OR ');

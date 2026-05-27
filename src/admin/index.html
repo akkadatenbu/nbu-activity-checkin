@@ -669,6 +669,17 @@
                   </select>
                 </div>
               </div>
+              <!-- Row 3: ประเภทนักศึกษา (International) -->
+              <div style="display:grid;grid-template-columns:1fr 2fr;gap:6px">
+                <div>
+                  <label style="font-size:11px;color:var(--muted)">ประเภทนักศึกษา</label>
+                  <select class="form-control" id="tgt-international" style="font-size:12px;padding:6px 8px">
+                    <option value="">ทั้งหมด (ไทย + ต่างชาติ)</option>
+                    <option value="true">🌏 นักศึกษาต่างชาติ (International)</option>
+                    <option value="false">🇹🇭 นักศึกษาไทย</option>
+                  </select>
+                </div>
+              </div>
               <!-- Buttons -->
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
                 <button class="btn btn-blue btn-sm" onclick="addTarget()" style="white-space:nowrap">
@@ -1117,13 +1128,16 @@ function renderTargetTags() {
     return;
   }
   container.innerHTML = currentTargets.map((t, i) => {
-    const facLabel = t.faculty        || 'ทุกคณะ';
-    const yrLabel  = t.year           ? `รุ่น ${t.year}`          : '';
-    const lvLabel  = t.level          ? t.level                   : '';
-    const mjLabel  = t.major          ? t.major                   : '';
-    const spLabel  = t.study_plan     ? `แผน:${t.study_plan}`     : '';
-    const stLabel  = t.student_status ? `สถานะ:${t.student_status}` : '';
-    const subLabel = [yrLabel, lvLabel, mjLabel, spLabel, stLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
+    const facLabel  = t.faculty        || 'ทุกคณะ';
+    const yrLabel   = t.year           ? `รุ่น ${t.year}`            : '';
+    const lvLabel   = t.level          ? t.level                     : '';
+    const mjLabel   = t.major          ? t.major                     : '';
+    const spLabel   = t.study_plan     ? `แผน:${t.study_plan}`       : '';
+    const stLabel   = t.student_status ? `สถานะ:${t.student_status}` : '';
+    const intlLabel = t.international === true  ? '🌏 International'
+                    : t.international === false ? '🇹🇭 ไทย'
+                    : '';
+    const subLabel = [yrLabel, lvLabel, mjLabel, spLabel, stLabel, intlLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
       ${facLabel} — ${subLabel}
@@ -1140,16 +1154,21 @@ function addTarget() {
   const major          = document.getElementById('tgt-major').value          || null;
   const study_plan     = document.getElementById('tgt-study-plan').value     || null;
   const student_status = document.getElementById('tgt-student-status').value || null;
+  // international: '' → null (ทั้งหมด), 'true' → true, 'false' → false
+  const intlRaw        = document.getElementById('tgt-international').value;
+  const international  = intlRaw === 'true' ? true : intlRaw === 'false' ? false : null;
+
   const dup = currentTargets.some(t =>
     (t.faculty        ?? null) === (faculty        ?? null) &&
     (t.level          ?? null) === (level          ?? null) &&
     (t.year           ?? null) === (year           ?? null) &&
     (t.major          ?? null) === (major          ?? null) &&
     (t.study_plan     ?? null) === (study_plan     ?? null) &&
-    (t.student_status ?? null) === (student_status ?? null)
+    (t.student_status ?? null) === (student_status ?? null) &&
+    (t.international  ?? null) === (international  ?? null)
   );
   if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, level, year, major, study_plan, student_status });
+  currentTargets.push({ faculty, level, year, major, study_plan, student_status, international });
   renderTargetTags();
 }
 
@@ -1170,6 +1189,7 @@ async function previewTargetCount() {
     body: JSON.stringify({ targets: currentTargets.map(t => ({
       faculty: t.faculty, level: t.level, year: t.year,
       major: t.major, study_plan: t.study_plan, student_status: t.student_status,
+      international: t.international,
     })) }),
   });
   btn.textContent = 'คำนวณ';
@@ -1214,6 +1234,8 @@ async function openActivityModal(id = null) {
       faculty: t.faculty || null, year: t.year || null, level: t.level || null,
       major: t.major || null, study_plan: t.study_plan || null,
       student_status: t.student_status || null,
+      // international: null = ทั้งหมด, true = ต่างชาติ, false = ไทย
+      international: t.international === null ? null : Boolean(t.international),
     }));
     // โหลดจำนวน import รายชื่อ (ถ้ามี)
     const cntData = await apiFetch(`/activities/${id}/targets/students/count`);
@@ -1547,10 +1569,13 @@ async function loadReportPreview() {
     currentNonTargetList = data.data.filter(r => {
       const cohort = r.student_id ? r.student_id.substring(0, 2) : '';
       return !targets.some(t => {
-        const okFac = !t.faculty || t.faculty === r.faculty;
-        const okLvl = !t.level   || t.level   === r.level;
-        const okYr  = !t.year    || String(t.year).padStart(2,'0') === cohort;
-        return okFac && okLvl && okYr;
+        const okFac   = !t.faculty        || t.faculty        === r.faculty;
+        const okLvl   = !t.level          || t.level          === r.level;
+        const okYr    = !t.year           || String(t.year).padStart(2,'0') === cohort;
+        // international: null = ทั้งหมด (ไม่กรอง), true/false = ตรงกับข้อมูลนักศึกษา
+        const okIntl  = t.international === null || t.international === undefined
+                      || Boolean(t.international) === Boolean(r.international);
+        return okFac && okLvl && okYr && okIntl;
       });
     }).map(r => ({
       student_id: r.student_id, full_name: r.student_name,

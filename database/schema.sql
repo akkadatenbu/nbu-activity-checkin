@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS students (
     study_period   VARCHAR(100) DEFAULT '',   -- ช่วงเวลาเรียน เช่น ภาคปกติ, เสาร์-อาทิตย์
     study_plan     VARCHAR(100) DEFAULT '',   -- แผนการเรียน เช่น แผน ก, แผน ข
     loan_status    VARCHAR(100) DEFAULT '',   -- สถานะกู้ยืม เช่น กู้ยืม, ไม่กู้ยืม
+    international  BOOLEAN      NOT NULL DEFAULT false, -- true = นักศึกษาต่างชาติ
+    campus         VARCHAR(100) NOT NULL DEFAULT '',    -- วิทยาเขต เช่น รังสิต, โคราช, กรุงเทพ
     photo_url      VARCHAR(500) DEFAULT '',   -- local thumbnail path
     line_uuid      VARCHAR(100) DEFAULT '',   -- LINE UUID (จากระบบ LINE OA มหาลัย)
     imported_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
