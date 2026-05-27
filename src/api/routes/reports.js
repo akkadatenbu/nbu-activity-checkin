@@ -74,9 +74,12 @@ router.get('/:activityId/excel', async (req, res) => {
         ws.getCell('A1').font = { bold: true, size: 14 };
         ws.getCell('A1').alignment = { horizontal: 'center' };
 
+        const SEM_LABEL = { 1: 'ภาค 1', 2: 'ภาค 2', 3: 'ภาคฤดูร้อน' };
         ws.mergeCells(`A2:${lastCol}2`);
         ws.getCell('A2').value =
-            `สถานที่: ${activity.location || '-'}  |  วันที่: ${new Date(activity.start_datetime).toLocaleString('th-TH')}  |  ผู้เข้าร่วม: ${records.length} คน`;
+            `สถานที่: ${activity.location || '-'}  |  วันที่: ${new Date(activity.start_datetime).toLocaleString('th-TH')}  |  ผู้เข้าร่วม: ${records.length} คน` +
+            (activity.academic_year ? `  |  ปีการศึกษา: ${activity.academic_year}` : '') +
+            (activity.semester      ? `  |  ${SEM_LABEL[activity.semester] || `ภาค ${activity.semester}`}` : '');
         ws.getCell('A2').alignment = { horizontal: 'center' };
         ws.getCell('A2').font = { size: 11 };
 
@@ -175,8 +178,9 @@ router.get('/:activityId/csv', async (req, res) => {
             return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
         }
 
+        const CSV_SEM_LABEL = { 1: 'ภาค 1', 2: 'ภาค 2', 3: 'ภาคฤดูร้อน' };
         const HEADERS = [
-            'ลำดับ', 'ชื่อกิจกรรม', 'รหัสนักศึกษา', 'ชื่อ-นามสกุล',
+            'ลำดับ', 'ชื่อกิจกรรม', 'ปีการศึกษา', 'ภาคการศึกษา', 'รหัสนักศึกษา', 'ชื่อ-นามสกุล',
             'คณะ', 'สาขา', 'ระดับ',
             'ระยะเวลาเรียน', 'ช่วงเวลาเรียน', 'แผนการเรียน',
             'สถานะกู้ยืม', 'เวลาเช็คชื่อ', 'วิธี',
@@ -194,6 +198,8 @@ router.get('/:activityId/csv', async (req, res) => {
             ...records.map((r, i) => [
                 i + 1,
                 activity.title,
+                activity.academic_year || '',
+                activity.semester ? (CSV_SEM_LABEL[activity.semester] || `ภาค ${activity.semester}`) : '',
                 r.student_id,
                 r.student_name     || '',
                 r.faculty          || '',

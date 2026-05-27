@@ -24,7 +24,7 @@ router.get('/activities', async (req, res) => {
         if (isDean && scope) {
             // dean เห็นทุกกิจกรรม แต่นับเฉพาะนักศึกษาในคณะตัวเอง
             ({ rows } = await query(`
-                SELECT a.id, a.title, a.location, a.start_datetime,
+                SELECT a.id, a.title, a.location, a.start_datetime, a.academic_year, a.semester,
                        COUNT(DISTINCT att.student_id)
                            FILTER (WHERE s.faculty = $1) AS attendee_count
                 FROM nbu_activities a
@@ -36,7 +36,7 @@ router.get('/activities', async (req, res) => {
             `, [scope]));
         } else {
             ({ rows } = await query(`
-                SELECT a.id, a.title, a.location, a.start_datetime,
+                SELECT a.id, a.title, a.location, a.start_datetime, a.academic_year, a.semester,
                        COUNT(DISTINCT att.student_id) AS attendee_count
                 FROM nbu_activities a
                 LEFT JOIN nbu_attendance att ON att.activity_id = a.id
@@ -66,7 +66,7 @@ router.get('/:activityId', async (req, res) => {
 
     try {
         const actRes = await query(
-            'SELECT id, title, location, start_datetime FROM nbu_activities WHERE id = $1',
+            'SELECT id, title, location, start_datetime, academic_year, semester FROM nbu_activities WHERE id = $1',
             [activityId]
         );
         if (!actRes.rows[0]) {

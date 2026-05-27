@@ -524,17 +524,26 @@
 
     <!-- ─── Activities Page ─── -->
     <div class="page" id="page-activities">
-      <div class="search-bar">
-        <input id="act-search" type="text" placeholder="ค้นหากิจกรรม..." oninput="filterActivities()">
-        <button class="btn btn-blue" onclick="openActivityModal()">+ สร้างกิจกรรม</button>
+      <div class="search-bar" style="flex-wrap:wrap;gap:8px">
+        <input id="act-search" type="text" placeholder="ค้นหากิจกรรม..." oninput="filterActivities()" style="flex:1;min-width:160px">
+        <select id="filter-acyear" class="form-control" style="width:150px;flex-shrink:0" onchange="filterActivities()">
+          <option value="">ทุกปีการศึกษา</option>
+        </select>
+        <select id="filter-sem" class="form-control" style="width:130px;flex-shrink:0" onchange="filterActivities()">
+          <option value="">ทุกภาค</option>
+          <option value="1">ภาค 1</option>
+          <option value="2">ภาค 2</option>
+          <option value="3">ฤดูร้อน</option>
+        </select>
+        <button class="btn btn-blue" style="flex-shrink:0" onclick="openActivityModal()">+ สร้างกิจกรรม</button>
       </div>
       <div class="card">
         <table>
           <thead><tr>
-            <th>ชื่อกิจกรรม</th><th>วันที่</th><th>สถานที่</th><th>เข้าร่วม / max</th><th>สถานะ</th><th>จัดการ</th>
+            <th>ชื่อกิจกรรม</th><th>ปีการศึกษา</th><th>วันที่</th><th>สถานที่</th><th>เข้าร่วม</th><th>สถานะ</th><th>จัดการ</th>
           </tr></thead>
           <tbody id="activity-list">
-            <tr><td colspan="6"><div class="empty-state"><div class="icon"><i class="fa-solid fa-spinner fa-spin"></i></div><p>กำลังโหลด...</p></div></td></tr>
+            <tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="fa-solid fa-spinner fa-spin"></i></div><p>กำลังโหลด...</p></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -639,7 +648,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group">
               <label>วันที่เริ่ม *</label>
-              <input class="form-control" id="act-start" type="datetime-local">
+              <input class="form-control" id="act-start" type="datetime-local" onchange="autoDetectAcademic()">
             </div>
             <div class="form-group">
               <label>วันที่สิ้นสุด *</label>
@@ -659,6 +668,25 @@
                 <option value="sport">กีฬา</option>
                 <option value="culture">วัฒนธรรม</option>
                 <option value="volunteer">จิตอาสา</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>ปีการศึกษา (พ.ศ.)
+                <span id="act-year-auto" style="font-size:10px;color:var(--blue2);font-weight:400"></span>
+              </label>
+              <select class="form-control" id="act-academic-year">
+                <option value="">-- ไม่ระบุ --</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>ภาคการศึกษา</label>
+              <select class="form-control" id="act-semester">
+                <option value="">-- ไม่ระบุ --</option>
+                <option value="1">ภาค 1 (มิ.ย. – ต.ค.)</option>
+                <option value="2">ภาค 2 (พ.ย. – มี.ค.)</option>
+                <option value="3">ภาคฤดูร้อน (เม.ย. – พ.ค.)</option>
               </select>
             </div>
           </div>
@@ -1108,7 +1136,15 @@ async function loadActivities() {
   const data = await apiFetch('/activities');
   if (!data.success) { toast(data.message, 'red'); return; }
   allActivities = data.data;
-  renderActivities(data.data);
+  // อัปเดต filter-acyear dropdown ตามปีที่มีในข้อมูล
+  const years = [...new Set(data.data.map(a => a.academic_year).filter(Boolean))].sort((a, b) => b - a);
+  const yearSel = document.getElementById('filter-acyear');
+  const curYear = yearSel ? yearSel.value : '';
+  if (yearSel) {
+    yearSel.innerHTML = '<option value="">ทุกปีการศึกษา</option>' +
+      years.map(y => `<option value="${y}" ${y == curYear ? 'selected' : ''}>${y}</option>`).join('');
+  }
+  filterActivities();
 }
 
 function renderAttCount(a) {
@@ -1135,12 +1171,17 @@ function renderActivities(list) {
   const isAdmin = ['superadmin', 'admin'].includes(currentUser.role);
   const tbody = document.getElementById('activity-list');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon"><i class="fa-solid fa-calendar-xmark"></i></div><p>ยังไม่มีกิจกรรม</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="fa-solid fa-calendar-xmark"></i></div><p>ยังไม่มีกิจกรรม</p></div></td></tr>';
     return;
   }
+  const SEM_SHORT = { 1:'ภาค 1', 2:'ภาค 2', 3:'ฤดูร้อน' };
   tbody.innerHTML = list.map(a => `
     <tr>
       <td><strong>${a.title}</strong><br><small style="color:var(--muted)">${a.activity_type}</small></td>
+      <td style="white-space:nowrap">
+        ${a.academic_year ? `<span style="font-weight:700;color:var(--blue2)">${a.academic_year}</span>` : '<span style="color:var(--muted)">-</span>'}
+        ${a.semester ? `<br><small style="color:var(--muted)">${SEM_SHORT[a.semester]||''}</small>` : ''}
+      </td>
       <td>${formatDate(a.start_datetime)}</td>
       <td>${a.location || '-'}</td>
       <td>${renderAttCount(a)}</td>
@@ -1157,8 +1198,33 @@ function renderActivities(list) {
 }
 
 function filterActivities() {
-  const q = document.getElementById('act-search').value.toLowerCase();
-  renderActivities(allActivities.filter(a => a.title.toLowerCase().includes(q) || (a.location || '').toLowerCase().includes(q)));
+  const q    = document.getElementById('act-search').value.toLowerCase();
+  const year = document.getElementById('filter-acyear').value;
+  const sem  = document.getElementById('filter-sem').value;
+  renderActivities(allActivities.filter(a =>
+    (a.title.toLowerCase().includes(q) || (a.location || '').toLowerCase().includes(q)) &&
+    (!year || String(a.academic_year) === year) &&
+    (!sem  || String(a.semester) === sem)
+  ));
+}
+
+// ─── Auto-detect ปีการศึกษา/ภาคจากวันที่เริ่มกิจกรรม ──────────────────────────
+function autoDetectAcademic() {
+  const val = document.getElementById('act-start').value;
+  if (!val) return;
+  const d  = new Date(val);
+  const m  = d.getMonth() + 1; // 1-12
+  const by = d.getFullYear() + 543; // พ.ศ.
+  // เดือน 1-5 อยู่ในปีการศึกษาก่อนหน้า (เทอมที่ 2 หรือฤดูร้อน)
+  const acYear = m >= 6 ? by : by - 1;
+  let sem = 2; // Nov-Dec-Jan-Feb-Mar
+  if (m >= 6 && m <= 10) sem = 1;      // ภาค 1
+  else if (m >= 4 && m <= 5) sem = 3;  // ภาคฤดูร้อน
+
+  document.getElementById('act-academic-year').value = acYear;
+  document.getElementById('act-semester').value      = sem;
+  const autoEl = document.getElementById('act-year-auto');
+  if (autoEl) autoEl.textContent = '✦ ตรวจจับอัตโนมัติ';
 }
 
 // ─── Target management ────────────────────────────────────────────────────────
@@ -1392,6 +1458,11 @@ async function openActivityModal(id = null) {
   document.getElementById('activity-modal-title').textContent = isEdit ? 'แก้ไขกิจกรรม' : 'สร้างกิจกรรม';
   document.getElementById('act-id').value = '';
   currentTargets = [];
+  // สร้างตัวเลือกปีการศึกษา (ปัจจุบัน ± ช่วง)
+  const curBy = new Date().getFullYear() + 543;
+  const yearOpts = ['<option value="">-- ไม่ระบุ --</option>'];
+  for (let y = curBy + 2; y >= curBy - 5; y--) yearOpts.push(`<option value="${y}">${y}</option>`);
+  document.getElementById('act-academic-year').innerHTML = yearOpts.join('');
 
   // เริ่มต้นที่ Tab 1 เสมอ
   switchActTab('info');
@@ -1412,10 +1483,14 @@ async function openActivityModal(id = null) {
     document.getElementById('act-start').value   = localDT(a.start_datetime);
     document.getElementById('act-end').value     = localDT(a.end_datetime);
     document.getElementById('act-location').value = a.location || '';
-    document.getElementById('act-type').value    = a.activity_type || 'general';
-    document.getElementById('act-max').value     = a.max_participants || 0;
-    document.getElementById('act-active').checked = a.is_active !== false;
+    document.getElementById('act-type').value         = a.activity_type || 'general';
+    document.getElementById('act-max').value          = a.max_participants || 0;
+    document.getElementById('act-active').checked     = a.is_active !== false;
     document.getElementById('act-active-group').style.display = 'block';
+    document.getElementById('act-academic-year').value = a.academic_year || '';
+    document.getElementById('act-semester').value      = a.semester || '';
+    const autoEl = document.getElementById('act-year-auto');
+    if (autoEl) autoEl.textContent = '';
 
     // เลือก staff ที่มอบหมายแล้ว
     const assignedIds = (a.staff || []).map(s => String(s.user_id));
@@ -1440,7 +1515,11 @@ async function openActivityModal(id = null) {
     }
   } else {
     ['act-title','act-desc','act-start','act-end','act-location'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('act-type').value = 'general';
+    document.getElementById('act-type').value          = 'general';
+    document.getElementById('act-academic-year').value = '';
+    document.getElementById('act-semester').value      = '';
+    const autoEl2 = document.getElementById('act-year-auto');
+    if (autoEl2) autoEl2.textContent = '';
     document.querySelectorAll('#act-staff-list .staff-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('act-active-group').style.display = 'none';
     updateStaffBadge();
@@ -1488,6 +1567,8 @@ async function saveActivity() {
     location:        document.getElementById('act-location').value,
     activity_type:   document.getElementById('act-type').value,
     max_participants: parseInt(document.getElementById('act-max').value) || 0,
+    academic_year:   parseInt(document.getElementById('act-academic-year').value) || null,
+    semester:        parseInt(document.getElementById('act-semester').value) || null,
     staff_ids:       staffOpts,
     targets:         currentTargets,
     ...(id ? { is_active: document.getElementById('act-active').checked } : {}),

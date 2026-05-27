@@ -137,6 +137,7 @@ header {
   border-radius: 99px; font-size: 12px; font-weight: 700;
 }
 .act-item.active .act-count { background: var(--blue-light); }
+.act-acyear { font-size: 10px; color: #93c5fd; margin-top: 2px; }
 .panel-footer {
   padding: 10px 14px;
   border-top: 1px solid var(--border);
@@ -247,6 +248,26 @@ header {
 }
 .major-bar-fill {
   height: 100%; border-radius: 3px; transition: width 0.6s ease;
+}
+
+/* ─── Panel filter bar ─── */
+.panel-filter-bar {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.panel-filter-sel {
+  flex: 1;
+  min-width: 0;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
 }
 
 /* ─── Recent list ─── */
@@ -373,6 +394,18 @@ header {
       <div class="panel-header-desktop">
         <i class="fa-solid fa-calendar-check"></i> กิจกรรมที่เปิดอยู่
       </div>
+      <!-- Filter bar -->
+      <div class="panel-filter-bar">
+        <select id="stat-filter-year" class="panel-filter-sel" title="กรองตามปีการศึกษา" onchange="applyActivityFilter()">
+          <option value="">ทุกปีการศึกษา</option>
+        </select>
+        <select id="stat-filter-sem" class="panel-filter-sel" title="กรองตามภาคการศึกษา" onchange="applyActivityFilter()">
+          <option value="">ทุกภาค</option>
+          <option value="1">ภาค 1</option>
+          <option value="2">ภาค 2</option>
+          <option value="3">ฤดูร้อน</option>
+        </select>
+      </div>
       <div class="activity-list" id="activity-list">
         <div class="list-placeholder">กำลังโหลด...</div>
       </div>
@@ -397,14 +430,15 @@ header {
 <script>
 // ─── State ─────────────────────────────────────────────────────────────────────
 const API = '/api/v1';
-let token        = localStorage.getItem('admin_token') || '';
-let currentUser  = null;
-let selectedId   = null;
-let statsData    = null;
-let refreshTimer = null;
-let countdown    = 30;
-let panelOpen    = false;
-let facChart     = null;
+let token              = localStorage.getItem('admin_token') || '';
+let currentUser        = null;
+let selectedId         = null;
+let statsData          = null;
+let refreshTimer       = null;
+let countdown          = 30;
+let panelOpen          = false;
+let facChart           = null;
+let allActivitiesData  = []; // เก็บทุก activity เพื่อ filter
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const COLORS = ['#0077ff','#00c6ff','#22c55e','#f59e0b','#a855f7',
@@ -524,18 +558,45 @@ async function loadActivities() {
   icon.className = 'fa-solid fa-rotate-right';
   if (!data.success) return;
 
+  allActivitiesData = data.data;
+
+  // อัปเดต filter ปีการศึกษา
+  const years = [...new Set(data.data.map(a => a.academic_year).filter(Boolean))].sort((a, b) => b - a);
+  const ySel  = document.getElementById('stat-filter-year');
+  const curY  = ySel ? ySel.value : '';
+  if (ySel) {
+    ySel.innerHTML = '<option value="">ทุกปีการศึกษา</option>' +
+      years.map(y => `<option value="${y}" ${y == curY ? 'selected' : ''}>${y}</option>`).join('');
+  }
+
+  applyActivityFilter();
+}
+
+function applyActivityFilter() {
+  const year = (document.getElementById('stat-filter-year')?.value) || '';
+  const sem  = (document.getElementById('stat-filter-sem')?.value)  || '';
+  const filtered = allActivitiesData.filter(a =>
+    (!year || String(a.academic_year) === year) &&
+    (!sem  || String(a.semester) === sem)
+  );
+  renderActivityList(filtered);
+}
+
+function renderActivityList(items) {
   const list = document.getElementById('activity-list');
-  if (!data.data.length) {
-    list.innerHTML = '<div class="list-placeholder">ไม่มีกิจกรรมที่เปิดอยู่</div>';
+  if (!items.length) {
+    list.innerHTML = '<div class="list-placeholder">ไม่มีกิจกรรมในกลุ่มนี้</div>';
     document.getElementById('toggle-label').textContent = 'ไม่มีกิจกรรม';
     return;
   }
 
-  document.getElementById('toggle-label').textContent = `กิจกรรม (${data.data.length})`;
-  list.innerHTML = data.data.map(a => `
+  const SEM_S = { 1:'ภ.1', 2:'ภ.2', 3:'ร้อน' };
+  document.getElementById('toggle-label').textContent = `กิจกรรม (${items.length})`;
+  list.innerHTML = items.map(a => `
     <div class="act-item ${a.id == selectedId ? 'active' : ''}"
          onclick="selectActivity('${a.id}')">
-      <div class="act-title">${a.title}</div>
+      <div class="act-title">${esc(a.title)}</div>
+      ${a.academic_year ? `<div class="act-acyear">${a.academic_year}${a.semester ? ` · ${SEM_S[a.semester]||''}` : ''}</div>` : ''}
       <div class="act-date">
         <i class="fa-solid fa-calendar-days" style="font-size:10px"></i>
         ${new Date(a.start_datetime).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' })}
@@ -589,6 +650,7 @@ function renderDashboard() {
         <div class="meta">
           <i class="fa-solid fa-location-dot"></i> ${esc(d.activity.location || '-')} &nbsp;|&nbsp;
           <i class="fa-solid fa-calendar"></i> ${dateStr}
+          ${d.activity.academic_year ? `&nbsp;|&nbsp;<i class="fa-solid fa-graduation-cap"></i> ปี ${d.activity.academic_year}${d.activity.semester ? ` ภาค${d.activity.semester === 3 ? 'ฤดูร้อน' : d.activity.semester}` : ''}` : ''}
           ${d.scope ? `&nbsp;|&nbsp;<i class="fa-solid fa-filter"></i> คณะ${esc(d.scope)}` : ''}
         </div>
       </div>

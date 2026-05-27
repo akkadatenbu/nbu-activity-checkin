@@ -85,17 +85,18 @@ router.get('/:id', async (req, res) => {
 // ─── POST /api/v1/activities ──────────────────────────────────────────────────
 router.post('/', async (req, res) => {
     if (!isAdmin(req.user.role)) return res.status(403).json({ success: false, message: 'ไม่มีสิทธิ์' });
-    const { title, description, location, activity_type, start_datetime, end_datetime, max_participants, staff_ids, targets } = req.body;
+    const { title, description, location, activity_type, start_datetime, end_datetime, max_participants, staff_ids, targets, academic_year, semester } = req.body;
     if (!title || !start_datetime || !end_datetime)
         return res.status(400).json({ success: false, message: 'กรุณากรอก title, start_datetime, end_datetime' });
 
     try {
         const result = await transaction(async (client) => {
             const { rows } = await client.query(
-                `INSERT INTO nbu_activities (title, description, location, activity_type, start_datetime, end_datetime, max_participants, created_by)
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+                `INSERT INTO nbu_activities (title, description, location, activity_type, start_datetime, end_datetime, max_participants, created_by, academic_year, semester)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
                 [title, description || '', location || '', activity_type || 'general',
-                 start_datetime, end_datetime, max_participants || 0, req.user.id]
+                 start_datetime, end_datetime, max_participants || 0, req.user.id,
+                 academic_year ? parseInt(academic_year) : null, semester ? parseInt(semester) : null]
             );
             const activity = rows[0];
             if (Array.isArray(staff_ids) && staff_ids.length > 0) {
@@ -126,16 +127,18 @@ router.post('/', async (req, res) => {
 // ─── PUT /api/v1/activities/:id ───────────────────────────────────────────────
 router.put('/:id', async (req, res) => {
     if (!isAdmin(req.user.role)) return res.status(403).json({ success: false, message: 'ไม่มีสิทธิ์' });
-    const { title, description, location, activity_type, start_datetime, end_datetime, max_participants, is_active, staff_ids, targets } = req.body;
+    const { title, description, location, activity_type, start_datetime, end_datetime, max_participants, is_active, staff_ids, targets, academic_year, semester } = req.body;
     try {
         const { rows } = await query(
             `UPDATE nbu_activities SET
                 title = COALESCE($1, title), description = COALESCE($2, description),
                 location = COALESCE($3, location), activity_type = COALESCE($4, activity_type),
                 start_datetime = COALESCE($5, start_datetime), end_datetime = COALESCE($6, end_datetime),
-                max_participants = COALESCE($7, max_participants), is_active = COALESCE($8, is_active)
+                max_participants = COALESCE($7, max_participants), is_active = COALESCE($8, is_active),
+                academic_year = COALESCE($10, academic_year), semester = COALESCE($11, semester)
              WHERE id = $9 RETURNING *`,
-            [title, description, location, activity_type, start_datetime, end_datetime, max_participants, is_active, req.params.id]
+            [title, description, location, activity_type, start_datetime, end_datetime, max_participants, is_active, req.params.id,
+             academic_year ? parseInt(academic_year) : null, semester ? parseInt(semester) : null]
         );
         if (!rows.length) return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
 
