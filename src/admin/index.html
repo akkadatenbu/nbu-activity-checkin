@@ -995,17 +995,14 @@ async function loadStudentMeta() {
   document.getElementById('tgt-student-status').innerHTML = '<option value="">ทุกสถานะ</option>' +
     (student_statuses||[]).map(s => `<option value="${s}">${s}</option>`).join('');
 
-  // international — โหลดจาก DB จริง (fallback hardcode ถ้ายังไม่มีข้อมูล)
-  const intlOptions = (internationals && internationals.length > 0)
-    ? internationals
-    : ['หลักสูตรไทย', 'หลักสูตรนานาชาติ'];
+  // ประเภทหลักสูตร — โหลดจาก column international ใน DB เท่านั้น ไม่มี fallback
   document.getElementById('tgt-international').innerHTML = '<option value="">ทั้งหมด</option>' +
-    intlOptions.map(v => {
+    (internationals||[]).map(v => {
       const icon = v === 'หลักสูตรนานาชาติ' ? '🌏' : '🇹🇭';
       return `<option value="${v}">${icon} ${v}</option>`;
     }).join('');
 
-  // campus — โหลดจาก DB จริง
+  // วิทยาเขต — โหลดจาก column campus ใน DB เท่านั้น
   document.getElementById('tgt-campus').innerHTML = '<option value="">ทุกวิทยาเขต</option>' +
     (campuses||[]).map(c => `<option value="${c}">${c}</option>`).join('');
 }
