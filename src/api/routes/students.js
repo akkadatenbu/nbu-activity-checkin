@@ -10,13 +10,16 @@ router.use(verifyJWT);
 // ดึง distinct faculties, levels, cohorts จาก nbu_students สำหรับ dropdown
 router.get('/meta', async (_req, res) => {
     try {
-        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes] = await Promise.all([
+        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes, intlRes] = await Promise.all([
             query(`SELECT DISTINCT faculty        FROM nbu_students WHERE faculty        IS NOT NULL AND faculty        != '' ORDER BY faculty`),
             query(`SELECT DISTINCT level          FROM nbu_students WHERE level          IS NOT NULL AND level          != '' ORDER BY level`),
             query(`SELECT DISTINCT SUBSTRING(student_id,1,2) AS cohort FROM nbu_students WHERE student_id IS NOT NULL ORDER BY cohort DESC`),
-            query(`SELECT DISTINCT student_status FROM nbu_students WHERE student_status IS NOT NULL AND student_status != '' ORDER BY student_status`),
+            // student_status เป็น INTEGER แล้ว — ใช้ IS NOT NULL เท่านั้น
+            query(`SELECT DISTINCT student_status FROM nbu_students WHERE student_status IS NOT NULL ORDER BY student_status`),
             query(`SELECT DISTINCT major           FROM nbu_students WHERE major          IS NOT NULL AND major          != '' ORDER BY major`),
             query(`SELECT DISTINCT study_plan      FROM nbu_students WHERE study_plan     IS NOT NULL AND study_plan     != '' ORDER BY study_plan`),
+            // international เป็น VARCHAR — ดึงค่าที่มีจริงในฐานข้อมูล
+            query(`SELECT DISTINCT international  FROM nbu_students WHERE international  IS NOT NULL AND international  != '' ORDER BY international`),
         ]);
         return res.json({
             success: true,
@@ -27,6 +30,7 @@ router.get('/meta', async (_req, res) => {
                 student_statuses: statusRes.rows.map(r => r.student_status),
                 majors:           majorRes.rows.map(r => r.major),
                 study_plans:      planRes.rows.map(r => r.study_plan),
+                internationals:   intlRes.rows.map(r => r.international),
             },
         });
     } catch (err) {

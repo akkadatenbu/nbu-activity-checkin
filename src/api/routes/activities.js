@@ -284,7 +284,8 @@ router.post('/targets/preview', async (req, res) => {
             if (t.level)          { validParams.push(t.level);          parts.push(`s.level = $${validParams.length}`); }
             if (t.major)          { validParams.push(t.major);          parts.push(`s.major = $${validParams.length}`); }
             if (t.study_plan)     { validParams.push(t.study_plan);     parts.push(`s.study_plan = $${validParams.length}`); }
-            if (t.student_status) { validParams.push(t.student_status); parts.push(`s.student_status = $${validParams.length}`); }
+            // student_status เป็น INTEGER — cast ค่าจาก UI ก่อนเปรียบเทียบ
+            if (t.student_status) { validParams.push(parseInt(t.student_status)); parts.push(`s.student_status = $${validParams.length}`); }
             if (t.year)           { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
             // international: '' หรือ null = ทั้งหมด (ไม่กรอง), มีค่า = กรองตามหลักสูตร
             if (t.international) {

@@ -970,7 +970,7 @@ async function loadDashboard() {
 async function loadStudentMeta() {
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
-  const { faculties, levels, cohorts, majors, study_plans, student_statuses } = data.data;
+  const { faculties, levels, cohorts, majors, study_plans, student_statuses, internationals } = data.data;
 
   document.getElementById('tgt-faculty').innerHTML = '<option value="">ทุกคณะ</option>' +
     (faculties||[]).map(f => `<option value="${f}">${f}</option>`).join('');
@@ -987,8 +987,19 @@ async function loadStudentMeta() {
   document.getElementById('tgt-study-plan').innerHTML = '<option value="">ทุกแผน</option>' +
     (study_plans||[]).map(p => `<option value="${p}">${p}</option>`).join('');
 
+  // student_status เป็น INTEGER — แสดงเลขตรงๆ
   document.getElementById('tgt-student-status').innerHTML = '<option value="">ทุกสถานะ</option>' +
     (student_statuses||[]).map(s => `<option value="${s}">${s}</option>`).join('');
+
+  // international — โหลดจาก DB จริง (fallback hardcode ถ้ายังไม่มีข้อมูล)
+  const intlOptions = (internationals && internationals.length > 0)
+    ? internationals
+    : ['หลักสูตรไทย', 'หลักสูตรนานาชาติ'];
+  document.getElementById('tgt-international').innerHTML = '<option value="">ทั้งหมด</option>' +
+    intlOptions.map(v => {
+      const icon = v === 'หลักสูตรนานาชาติ' ? '🌏' : '🇹🇭';
+      return `<option value="${v}">${icon} ${v}</option>`;
+    }).join('');
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────
