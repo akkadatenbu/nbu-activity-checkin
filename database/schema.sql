@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS students (
     study_period   VARCHAR(100) DEFAULT '',   -- ช่วงเวลาเรียน เช่น ภาคปกติ, เสาร์-อาทิตย์
     study_plan     VARCHAR(100) DEFAULT '',   -- แผนการเรียน เช่น แผน ก, แผน ข
     loan_status    VARCHAR(100) DEFAULT '',   -- สถานะกู้ยืม เช่น กู้ยืม, ไม่กู้ยืม
+    student_status INTEGER,                   -- สถานะนักศึกษา เช่น 10, 20, 40
     international  VARCHAR(50)  NOT NULL DEFAULT '',    -- 'หลักสูตรไทย' | 'หลักสูตรนานาชาติ' | ''
     campus         VARCHAR(100) NOT NULL DEFAULT '',    -- วิทยาเขต เช่น รังสิต, โคราช, กรุงเทพ
     photo_url      VARCHAR(500) DEFAULT '',   -- local thumbnail path
