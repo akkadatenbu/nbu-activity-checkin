@@ -262,12 +262,18 @@
         บรรทัดแรกต้องเป็น header — รองรับ <code>UTF-8</code> และ <code>UTF-8 BOM</code> (Export จาก Excel ได้เลย)<br><br>
         <strong>คอลัมน์ที่รองรับ:</strong><br>
         <code>student_id</code>, <code>full_name</code>, <code>faculty</code>, <code>major</code>,
-        <code>level</code>, <code>study_duration</code>, <code>study_period</code>, <code>program</code>, <code>loan_status</code>, <code>student_status</code><br><br>
-        <small style="color:#92400e"><i class="fa-solid fa-circle-info"></i> <code>student_status</code> = รหัสสถานะนักศึกษา เช่น <strong>10</strong>=ปกติ, <strong>11</strong>=พักการเรียน, <strong>12</strong>=ลาออก</small><br><br>
+        <code>level</code>, <code>study_duration</code>, <code>study_period</code>, <code>program</code>,
+        <code>loan_status</code>, <code>student_status</code>, <code>international</code>, <code>campus</code><br><br>
+        <small style="color:#92400e">
+          <i class="fa-solid fa-circle-info"></i>
+          <code>student_status</code> = รหัสสถานะ เช่น <strong>10</strong>=ปกติ, <strong>11</strong>=พักการเรียน, <strong>12</strong>=ลาออก<br>
+          <code>international</code> = ประเภทหลักสูตร เช่น <strong>หลักสูตรไทย</strong> / <strong>หลักสูตรนานาชาติ</strong><br>
+          <code>campus</code> = วิทยาเขต เช่น <strong>บางเขน</strong> / <strong>พระนครศรีอยุธยา</strong>
+        </small><br><br>
         ตัวอย่างแถวข้อมูล:<br>
-        <code>671280108,นายสมชาย ใจดี,คณะวิทยาศาสตร์และเทคโนโลยี,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,กู้ยืม,10</code><br><br>
+        <code>671280108,นายสมชาย ใจดี,คณะวิทยาศาสตร์,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,หลักสูตรปกติ,กู้ยืม,10,หลักสูตรไทย,บางเขน</code><br><br>
         <a id="btn-download-sample" href="#" style="color:#92400e;font-weight:600">
-          <i class="fa-solid fa-download"></i> ดาวน์โหลดไฟล์ตัวอย่าง (sample.csv)
+          <i class="fa-solid fa-download"></i> ดาวน์โหลดไฟล์ตัวอย่าง (students_sample.csv)
         </a>
       </div>
 
@@ -407,12 +413,12 @@ let token      = localStorage.getItem('admin_token');
 document.getElementById('btn-download-sample').addEventListener('click', (e) => {
     e.preventDefault();
     const rows = [
-        'student_id,full_name,faculty,major,level,study_duration,study_period,program,loan_status,student_status',
-        '671280101,นายสมชาย ใจดี,คณะวิทยาศาสตร์และเทคโนโลยี,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,กู้ยืม,10',
-        '671280102,นางสาวสมหญิง รักเรียน,คณะบริหารธุรกิจ,การจัดการ,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,ไม่กู้ยืม,10',
-        '671280103,นายสมศักดิ์ มั่นคง,คณะวิศวกรรมศาสตร์,วิศวกรรมคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคพิเศษ,แผน ข,กู้ยืม,10',
-        '671280104,นางสาวสมใจ ดีงาม,คณะนิติศาสตร์,นิติศาสตร์,ปริญญาตรี,4 ปี,ภาคปกติ,แผน ก,ไม่กู้ยืม,11',
-        '671280105,นายสมบูรณ์ เจริญ,คณะรัฐศาสตร์,รัฐประศาสนศาสตร์,ปริญญาตรี,4 ปี,เสาร์-อาทิตย์,แผน ข,กู้ยืม,12',
+        'student_id,full_name,faculty,major,level,study_duration,study_period,program,loan_status,student_status,international,campus',
+        '671280101,นายสมชาย ใจดี,คณะเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล,วิทยาการคอมพิวเตอร์,ปริญญาตรี,4 ปี,ภาคปกติ,หลักสูตรปกติ,กู้ยืม,10,หลักสูตรไทย,บางเขน',
+        '671280102,นางสาวสมหญิง รักเรียน,คณะบริหารธุรกิจ,การจัดการ,ปริญญาตรี,4 ปี,ภาคปกติ,หลักสูตรปกติ,ไม่กู้ยืม,10,หลักสูตรไทย,บางเขน',
+        '671280103,นายสมศักดิ์ มั่นคง,คณะบริหารธุรกิจ,การตลาด,ปริญญาตรี,4 ปี,ภาคพิเศษ,หลักสูตรปกติ,กู้ยืม,10,หลักสูตรไทย,พระนครศรีอยุธยา',
+        '671280104,นางสาวสมใจ ดีงาม,วิทยาลัยนานาชาติ,International Business,ปริญญาตรี,4 ปี,ภาคปกติ,หลักสูตรนานาชาติ,ไม่กู้ยืม,10,หลักสูตรนานาชาติ,บางเขน',
+        '671280105,นายสมบูรณ์ เจริญ,คณะนิเทศศาสตร์,การสื่อสารมวลชน,ปริญญาตรี,4 ปี,เสาร์-อาทิตย์,หลักสูตรปกติ,กู้ยืม,11,หลักสูตรไทย,บางเขน',
     ];
     const bom  = '\uFEFF'; // UTF-8 BOM สำหรับ Excel
     const blob = new Blob([bom + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -521,8 +527,11 @@ const FIELDS = [
     { key: 'colLevel',         label: 'ระดับ',           required: false, guess: ['level','ระดับ','ระดับการศึกษา'] },
     { key: 'colStudyDuration', label: 'ระยะเวลาเรียน',  required: false, guess: ['study_duration','ระยะเวลาเรียน','ระยะเวลา','duration'] },
     { key: 'colStudyPeriod',   label: 'ช่วงเวลาเรียน',  required: false, guess: ['study_period','ช่วงเวลาเรียน','ช่วงเวลา','period','ภาค'] },
-    { key: 'colStudyPlan',     label: 'หลักสูตร',       required: false, guess: ['program','หลักสูตร','study_plan','แผนการเรียน','แผน','plan'] },
-    { key: 'colLoanStatus',    label: 'สถานะกู้ยืม',    required: false, guess: ['loan_status','สถานะกู้ยืม','กู้ยืม','loan'] },
+    { key: 'colStudyPlan',     label: 'หลักสูตร',        required: false, guess: ['program','หลักสูตร','study_plan','แผนการเรียน','แผน','plan'] },
+    { key: 'colLoanStatus',    label: 'สถานะกู้ยืม',     required: false, guess: ['loan_status','สถานะกู้ยืม','กู้ยืม','loan'] },
+    { key: 'colStudentStatus', label: 'สถานะนักศึกษา',   required: false, guess: ['student_status','สถานะนักศึกษา','สถานะ','status'] },
+    { key: 'colInternational', label: 'ประเภทหลักสูตร',  required: false, guess: ['international','ประเภทหลักสูตร','ประเภท'] },
+    { key: 'colCampus',        label: 'วิทยาเขต',        required: false, guess: ['campus','วิทยาเขต'] },
 ];
 
 function autoGuess(guesses) {
@@ -581,14 +590,17 @@ document.getElementById('btn-start').addEventListener('click', async () => {
         uploadId,
         colId,
         colName,
-        colFaculty:       document.getElementById('colFaculty').value,
-        colMajor:         document.getElementById('colMajor').value,
-        colLevel:         document.getElementById('colLevel').value,
-        colStudyDuration: document.getElementById('colStudyDuration').value,
-        colStudyPeriod:   document.getElementById('colStudyPeriod').value,
-        colStudyPlan:     document.getElementById('colStudyPlan').value,
-        colLoanStatus:    document.getElementById('colLoanStatus').value,
-        skipPhotos:       document.getElementById('skip-photos').checked ? 'true' : 'false',
+        colFaculty:        document.getElementById('colFaculty').value,
+        colMajor:          document.getElementById('colMajor').value,
+        colLevel:          document.getElementById('colLevel').value,
+        colStudyDuration:  document.getElementById('colStudyDuration').value,
+        colStudyPeriod:    document.getElementById('colStudyPeriod').value,
+        colStudyPlan:      document.getElementById('colStudyPlan').value,
+        colLoanStatus:     document.getElementById('colLoanStatus').value,
+        colStudentStatus:  document.getElementById('colStudentStatus').value,
+        colInternational:  document.getElementById('colInternational').value,
+        colCampus:         document.getElementById('colCampus').value,
+        skipPhotos:        document.getElementById('skip-photos').checked ? 'true' : 'false',
     };
 
     try {

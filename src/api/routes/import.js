@@ -109,7 +109,7 @@ router.post('/start', requireAdmin, (req, res) => {
         uploadId,
         colId, colName, colFaculty, colMajor,
         colLevel, colStudyDuration, colStudyPeriod, colStudyPlan, colLoanStatus,
-        colStudentStatus,
+        colStudentStatus, colInternational, colCampus,
         skipPhotos,
     } = req.body;
 
@@ -131,7 +131,7 @@ router.post('/start', requireAdmin, (req, res) => {
     runImport(jobId, stored.rows, {
         colId, colName, colFaculty, colMajor,
         colLevel, colStudyDuration, colStudyPeriod, colStudyPlan, colLoanStatus,
-        colStudentStatus,
+        colStudentStatus, colInternational, colCampus,
         skipPhotos: skipPhotos === 'true' || skipPhotos === true,
     }).catch(err => {
         const j = jobStore.get(jobId);
@@ -188,7 +188,7 @@ async function downloadThumb(studentId, thumbDir) {
 async function runImport(jobId, rows, {
     colId, colName, colFaculty, colMajor,
     colLevel, colStudyDuration, colStudyPeriod, colStudyPlan, colLoanStatus,
-    colStudentStatus,
+    colStudentStatus, colInternational, colCampus,
     skipPhotos,
 }) {
     const job = jobStore.get(jobId);
@@ -209,6 +209,8 @@ async function runImport(jobId, rows, {
             program:        col(r, colStudyPlan),
             loan_status:    col(r, colLoanStatus),
             student_status: col(r, colStudentStatus),
+            international:  col(r, colInternational),
+            campus:         col(r, colCampus),
             photo_url:      '',
         }))
         .filter(s => s.student_id);
@@ -236,26 +238,26 @@ async function runImport(jobId, rows, {
         });
     }
 
-    // Phase 2: PostgreSQL (11 fields)
+    // Phase 2: PostgreSQL (13 fields)
     job.phase = 'db';
     job.done  = 0;
     const BATCH = 200;
-    const N = 11; // จำนวน parameter ต่อแถว
+    const N = 13; // จำนวน parameter ต่อแถว
     for (let i = 0; i < students.length; i += BATCH) {
         const batch  = students.slice(i, i + BATCH);
         const vals   = batch.map((_, j) =>
-            `($${j*N+1},$${j*N+2},$${j*N+3},$${j*N+4},$${j*N+5},$${j*N+6},$${j*N+7},$${j*N+8},$${j*N+9},$${j*N+10},$${j*N+11})`
+            `($${j*N+1},$${j*N+2},$${j*N+3},$${j*N+4},$${j*N+5},$${j*N+6},$${j*N+7},$${j*N+8},$${j*N+9},$${j*N+10},$${j*N+11},$${j*N+12},$${j*N+13})`
         ).join(',');
         const params = batch.flatMap(s => [
             s.student_id, s.full_name, s.faculty, s.major,
             s.level, s.study_duration, s.study_period, s.program,
-            s.loan_status, s.student_status, s.photo_url,
+            s.loan_status, s.student_status, s.international, s.campus, s.photo_url,
         ]);
         await query(`
             INSERT INTO nbu_students
                 (student_id, full_name, faculty, major,
                  level, study_duration, study_period, program,
-                 loan_status, student_status, photo_url)
+                 loan_status, student_status, international, campus, photo_url)
             VALUES ${vals}
             ON CONFLICT (student_id) DO UPDATE SET
                 full_name      = EXCLUDED.full_name,
@@ -267,6 +269,8 @@ async function runImport(jobId, rows, {
                 program        = EXCLUDED.program,
                 loan_status    = EXCLUDED.loan_status,
                 student_status = EXCLUDED.student_status,
+                international  = EXCLUDED.international,
+                campus         = EXCLUDED.campus,
                 photo_url      = CASE WHEN EXCLUDED.photo_url != ''
                                       THEN EXCLUDED.photo_url
                                       ELSE nbu_students.photo_url END,
