@@ -1,4 +1,4 @@
-// migrate_international.js — เพิ่ม international และ campus ใน nbu_students + international ใน nbu_activity_targets
+// migrate_international.js — เพิ่ม international (VARCHAR) และ campus ใน nbu_students + international ใน nbu_activity_targets
 import pg from 'pg';
 import 'dotenv/config';
 
@@ -17,20 +17,17 @@ async function migrate() {
         await client.query('BEGIN');
 
         // เพิ่ม international ใน nbu_students
-        // true  = นักศึกษาต่างชาติ (International)
-        // false = นักศึกษาไทย (ค่า default)
+        // ค่าที่เก็บ: 'หลักสูตรไทย' | 'หลักสูตรนานาชาติ' | '' (ไม่ระบุ)
         await client.query(`
             ALTER TABLE nbu_students
-            ADD COLUMN IF NOT EXISTS international BOOLEAN NOT NULL DEFAULT false
+            ADD COLUMN IF NOT EXISTS international VARCHAR(50) NOT NULL DEFAULT ''
         `);
 
-        // เพิ่ม international ใน nbu_activity_targets
-        // true  = เลือกเฉพาะนักศึกษาต่างชาติ
-        // false = เลือกเฉพาะนักศึกษาไทย
-        // NULL  = ไม่กรองประเภทนักศึกษา (ทั้งหมด)
+        // เพิ่ม international ใน nbu_activity_targets (เงื่อนไขกลุ่มเป้าหมาย)
+        // ค่าที่เก็บ: 'หลักสูตรไทย' | 'หลักสูตรนานาชาติ' | NULL (ไม่กรอง = ทั้งหมด)
         await client.query(`
             ALTER TABLE nbu_activity_targets
-            ADD COLUMN IF NOT EXISTS international BOOLEAN
+            ADD COLUMN IF NOT EXISTS international VARCHAR(50)
         `);
 
         // เพิ่ม campus (วิทยาเขต) ใน nbu_students
@@ -52,8 +49,8 @@ async function migrate() {
 
         await client.query('COMMIT');
         console.log('✅ migrate_international สำเร็จ');
-        console.log('   - เพิ่ม international (BOOLEAN DEFAULT false) ใน nbu_students');
-        console.log('   - เพิ่ม international (BOOLEAN nullable) ใน nbu_activity_targets');
+        console.log('   - เพิ่ม international (VARCHAR(50) DEFAULT \'\') ใน nbu_students');
+        console.log('   - เพิ่ม international (VARCHAR(50) nullable) ใน nbu_activity_targets');
         console.log('   - เพิ่ม campus (VARCHAR DEFAULT \'\') ใน nbu_students');
         console.log('   - สร้าง index idx_nbu_students_international');
         console.log('   - สร้าง index idx_nbu_students_campus');
