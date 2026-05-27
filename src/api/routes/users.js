@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
         return res.status(403).json({ success: false, message: 'admin ไม่สามารถสร้าง superadmin ได้' });
     }
     if (role === 'dean' && !faculty_scope) {
-        return res.status(400).json({ success: false, message: 'Dean ต้องระบุ faculty_scope' });
+        return res.status(400).json({ success: false, message: 'Faculty ต้องระบุ faculty_scope' });
     }
 
     try {

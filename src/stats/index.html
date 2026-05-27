@@ -314,7 +314,7 @@ header {
 <div id="login-overlay">
   <div class="login-box">
     <h2>สถิติกิจกรรม</h2>
-    <p class="sub">สำหรับผู้บริหารและคณบดี</p>
+    <p class="sub">สำหรับผู้บริหารและ Faculty</p>
     <div class="form-group">
       <label>ชื่อผู้ใช้</label>
       <input id="l-user" type="text" placeholder="username" autocomplete="username">
@@ -463,8 +463,9 @@ function showDashboard() {
 
   document.getElementById('user-info').classList.remove('hidden');
   document.getElementById('ui-name').textContent = currentUser.full_name;
+  const ROLE_LABEL = { superadmin:'Superadmin', admin:'Admin', staff:'Staff', dean:'Faculty', manager:'Manager' };
   const badge = document.getElementById('ui-role-badge');
-  badge.textContent = currentUser.role;
+  badge.textContent = ROLE_LABEL[currentUser.role] || currentUser.role;
   badge.className = `role-badge role-${currentUser.role}`;
 
   if (currentUser.role === 'dean' && currentUser.faculty_scope) {

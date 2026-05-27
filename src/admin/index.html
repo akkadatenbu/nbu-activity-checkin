@@ -855,13 +855,13 @@
           <select class="form-control" id="usr-role" onchange="toggleFacultyScope()">
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
-            <option value="dean">Dean (คณบดี)</option>
+            <option value="dean">Faculty (คณะ)</option>
             <option value="manager">Manager (ผู้บริหาร)</option>
           </select>
         </div>
       </div>
       <div class="form-group" id="faculty-scope-group" style="display:none">
-        <label>คณะที่ดูแล <span style="font-size:11px;color:var(--muted)">(เฉพาะ Dean)</span></label>
+        <label>คณะที่ดูแล <span style="font-size:11px;color:var(--muted)">(เฉพาะ Faculty)</span></label>
         <select class="form-control" id="usr-faculty-scope">
           <option value="">-- เลือกคณะ --</option>
           <option value="รัฐศาสตร์">รัฐศาสตร์</option>
@@ -1450,7 +1450,7 @@ async function openActivityModal(id = null) {
   openModal('activity-modal');
 }
 
-const ROLE_LABEL = { superadmin:'Superadmin', admin:'Admin', staff:'Staff', dean:'Dean', manager:'Manager' };
+const ROLE_LABEL = { superadmin:'Superadmin', admin:'Admin', staff:'Staff', dean:'Faculty', manager:'Manager' };
 const ROLE_COLOR = { superadmin:'#7c3aed', admin:'#0066cc', staff:'#16a34a', dean:'#b45309', manager:'#be185d' };
 
 async function loadStaffList() {
@@ -1620,7 +1620,7 @@ function renderUsers(list) {
     <tr>
       <td><strong>${u.full_name}</strong></td>
       <td>${u.username}</td>
-      <td><span class="badge badge-blue">${u.role}</span></td>
+      <td><span class="badge badge-blue">${ROLE_LABEL[u.role] || u.role}</span></td>
       <td><span class="badge ${u.is_active ? 'badge-green' : 'badge-red'}">${u.is_active ? 'เปิดใช้งาน' : 'ระงับ'}</span></td>
       <td>
         <button class="btn btn-blue btn-sm" onclick="openUserModal('${u.id}')">แก้ไข</button>
