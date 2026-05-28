@@ -8,7 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   input, select, textarea, button { font-family: 'Prompt', 'Segoe UI', sans-serif; }
@@ -368,6 +370,18 @@
   .tgt-card-val.is-all { color:#16a34a; font-style:italic; font-weight:400; }
   .tgt-card-remove { position:absolute; top:6px; right:8px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:16px; line-height:1; padding:0; transition:color .15s; }
   .tgt-card-remove:hover { color:#ef4444; }
+  /* ─── TomSelect overrides ─── */
+  .ts-wrapper { font-family: 'Prompt', 'Segoe UI', sans-serif; font-size: 12px; }
+  .ts-control { border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; min-height: 32px; background: #fff; }
+  .ts-wrapper.focus .ts-control { border-color: var(--blue2); box-shadow: 0 0 0 2px rgba(0,102,204,0.15); }
+  .ts-control .item { background: #dbeafe; color: #1d4ed8; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 500; }
+  .ts-control .item .remove { color: #1d4ed8; opacity: .6; margin-left: 4px; }
+  .ts-control .item .remove:hover { opacity: 1; }
+  .ts-dropdown { font-family: 'Prompt', 'Segoe UI', sans-serif; font-size: 12px; border-color: var(--border); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  .ts-dropdown .option { padding: 6px 10px; }
+  .ts-dropdown .option.active { background: #eff6ff; color: var(--blue2); }
+  .ts-dropdown .option.selected { background: #dbeafe; color: #1d4ed8; }
+  .ts-dropdown-content { max-height: 200px; }
   /* ─── Flex Message panel ─── */
   .flex-toggle-row { display:flex; align-items:center; gap:10px; padding:14px 16px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; margin-bottom:14px; }
   .flex-toggle-row label { display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#166534; font-size:13px; }
@@ -854,66 +868,47 @@
           <div style="flex:3;min-width:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:16px">
 
             <div class="tgt-fields-grid">
-              <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
+              <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต -->
               <div class="tgt-field-section">
                 <div class="tgt-field-label">ระดับ<span class="tgt-hint tgt-hint-all" id="tgt-hint-level">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-level" onchange="updateTgtHint('level')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-level" multiple placeholder="ทั้งหมด"></select>
               </div>
               <div class="tgt-field-section">
                 <div class="tgt-field-label">ประเภทหลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-international">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-international" onchange="updateTgtHint('international')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-international" multiple placeholder="ทั้งหมด"></select>
               </div>
               <div class="tgt-field-section">
                 <div class="tgt-field-label">วิทยาเขต<span class="tgt-hint tgt-hint-all" id="tgt-hint-campus">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-campus" onchange="updateTgtHint('campus')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-campus" multiple placeholder="ทั้งหมด"></select>
               </div>
 
               <!-- Row 2: รุ่น | หลักสูตร | สถานะนักศึกษา -->
               <div class="tgt-field-section">
                 <div class="tgt-field-label">รุ่น (ปีที่เข้า)<span class="tgt-hint tgt-hint-all" id="tgt-hint-year">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-year" onchange="updateTgtHint('year')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-year" multiple placeholder="ทั้งหมด"></select>
               </div>
               <div class="tgt-field-section">
                 <div class="tgt-field-label">หลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-program">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-program" onchange="updateTgtHint('program')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-program" multiple placeholder="ทั้งหมด"></select>
               </div>
               <div class="tgt-field-section">
                 <div class="tgt-field-label">สถานะนักศึกษา<span class="tgt-hint tgt-hint-all" id="tgt-hint-student-status">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-student-status" onchange="updateTgtHint('student-status')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-student-status" multiple placeholder="ทั้งหมด"></select>
               </div>
 
-              <!-- Row 3: คณะ (full width, ~10-20 รายการ) -->
+              <!-- Row 3: คณะ (full width) -->
               <div class="tgt-field-section tgt-col-full">
                 <div class="tgt-field-label">คณะ<span class="tgt-hint tgt-hint-all" id="tgt-hint-faculty">ทั้งหมด</span></div>
-                <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips(); updateTgtHint('faculty')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-faculty" multiple placeholder="ทั้งหมด"></select>
               </div>
 
-              <!-- Row 4: สาขา (full width + search + scroll + filter by faculty) -->
+              <!-- Row 4: สาขา (full width, กรองตามคณะ, search built-in) -->
               <div class="tgt-field-section tgt-col-full">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <div class="tgt-field-label" style="margin-bottom:0">สาขา<span class="tgt-hint tgt-hint-all" id="tgt-hint-major">ทั้งหมด</span></div>
                   <span class="tgt-major-meta" id="tgt-major-meta"></span>
                 </div>
-                <input type="text" id="tgt-major-search" placeholder="🔍 ค้นหาสาขา..."
-                  class="form-control" style="font-size:11px;padding:5px 8px;margin-top:3px"
-                  oninput="updateMajorChips()">
-                <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major" onchange="updateTgtHint('major')">
-                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-                </div>
+                <select id="tgt-select-major" multiple placeholder="พิมพ์เพื่อค้นหาสาขา..."></select>
               </div>
             </div>
 
@@ -1244,110 +1239,115 @@ async function loadDashboard() {
   }
 }
 
-// ─── Student Meta (chip options for multi-select targets) ─────────────────────
-let _allMajors = [];         // flat list
-let _facultyMajors = {};     // { คณะ: [สาขา,...] }
+// ─── Student Meta (TomSelect multi-select targets) ────────────────────────────
+let _allMajors = [];
+let _facultyMajors = {};
+const _tgtSelects = {};
+let _tgtSelectsInitialized = false;
 
 const escH = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function initTomSelects() {
+  if (_tgtSelectsInitialized) return;
+  _tgtSelectsInitialized = true;
+
+  const fields = ['level','international','campus','year','program','student-status','faculty','major'];
+  fields.forEach(f => {
+    const el = document.getElementById(`tgt-select-${f}`);
+    if (!el) return;
+    _tgtSelects[f] = new TomSelect(el, {
+      plugins: ['remove_button'],
+      maxOptions: null,
+      onItemAdd()    { updateTgtHint(f); },
+      onItemRemove() { updateTgtHint(f); },
+    });
+  });
+
+  if (_tgtSelects['faculty']) {
+    _tgtSelects['faculty'].on('change', () => updateMajorOptions());
+  }
+}
 
 function updateTgtHint(fieldId) {
   const hint = document.getElementById(`tgt-hint-${fieldId}`);
   if (!hint) return;
-  const checked = getTgtChecked(`tgt-chips-${fieldId}`);
-  if (!checked) {
+  const ts   = _tgtSelects[fieldId];
+  const vals = ts ? ts.getValue() : [];
+  if (!vals || !vals.length) {
     hint.textContent = 'ทั้งหมด';
-    hint.className = 'tgt-hint tgt-hint-all';
+    hint.className   = 'tgt-hint tgt-hint-all';
   } else {
-    hint.textContent = `เฉพาะ ${checked.length} รายการ`;
-    hint.className = 'tgt-hint tgt-hint-set';
+    hint.textContent = `เฉพาะ ${vals.length} รายการ`;
+    hint.className   = 'tgt-hint tgt-hint-set';
   }
 }
 
-function populateTgtChips(containerId, values, labelFn = v => v) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  if (!values || !values.length) {
-    el.innerHTML = '<span style="font-size:11px;color:var(--muted)">ไม่มีข้อมูล</span>';
-  } else {
-    el.innerHTML = values.map(v =>
-      `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"><span>${escH(labelFn(v))}</span></label>`
-    ).join('');
-  }
-  updateTgtHint(containerId.replace('tgt-chips-', ''));
+function populateTgtOptions(fieldId, values, labelFn = v => v) {
+  const ts = _tgtSelects[fieldId];
+  if (!ts) return;
+  ts.clear(true);
+  ts.clearOptions();
+  (values || []).forEach(v => ts.addOption({ value: String(v), text: labelFn(String(v)) }));
+  ts.refreshOptions(false);
+  updateTgtHint(fieldId);
 }
 
-function getTgtChecked(containerId) {
-  const vals = Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(c => c.value);
-  return vals.length ? vals : null;
-}
+function updateMajorOptions() {
+  const ts = _tgtSelects['major'];
+  if (!ts) return;
 
-function updateMajorChips() {
-  const selectedFacs = getTgtChecked('tgt-chips-faculty') || [];
-  const search = (document.getElementById('tgt-major-search')?.value || '').toLowerCase().trim();
+  const selectedFacs = _tgtSelects['faculty']?.getValue() || [];
+  const prevSelected = new Set(ts.getValue());
 
-  // กรองตามคณะที่เลือก
   let filtered = _allMajors;
   if (selectedFacs.length > 0) {
     const allowed = new Set();
     selectedFacs.forEach(f => (_facultyMajors[f] || []).forEach(m => allowed.add(m)));
     filtered = _allMajors.filter(m => allowed.has(m));
   }
-  // กรองตาม search
-  if (search) filtered = filtered.filter(m => m.toLowerCase().includes(search));
 
-  // อัปเดต chips (รักษา checked state เดิม)
-  const prevChecked = new Set(getTgtChecked('tgt-chips-major') || []);
-  const el = document.getElementById('tgt-chips-major');
-  if (!el) return;
-  if (!filtered.length) {
-    el.innerHTML = '<span style="font-size:11px;color:var(--muted)">ไม่มีสาขาตรงเงื่อนไข</span>';
-  } else {
-    el.innerHTML = filtered.map(v =>
-      `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"${prevChecked.has(v) ? ' checked' : ''}><span>${escH(v)}</span></label>`
-    ).join('');
-  }
+  ts.clear(true);
+  ts.clearOptions();
+  filtered.forEach(m => ts.addOption({ value: m, text: m }));
+  ts.refreshOptions(false);
 
-  // แสดง meta: จำนวนสาขาที่แสดง + hint
+  const stillValid = filtered.filter(m => prevSelected.has(m));
+  if (stillValid.length) ts.setValue(stillValid, true);
+
   const metaEl = document.getElementById('tgt-major-meta');
   if (metaEl) {
-    if (selectedFacs.length > 0 || search) {
-      metaEl.textContent = `(แสดง ${filtered.length} จาก ${_allMajors.length} สาขา)`;
-    } else {
-      metaEl.textContent = `(${_allMajors.length} สาขา — เลือกคณะเพื่อกรอง)`;
-    }
+    metaEl.textContent = selectedFacs.length > 0
+      ? `(แสดง ${filtered.length} จาก ${_allMajors.length} สาขา)`
+      : `(${_allMajors.length} สาขา — เลือกคณะเพื่อกรอง)`;
   }
   updateTgtHint('major');
 }
 
 function resetTargetChips() {
-  ['tgt-chips-year','tgt-chips-level','tgt-chips-faculty','tgt-chips-major',
-   'tgt-chips-program','tgt-chips-student-status','tgt-chips-international','tgt-chips-campus']
-    .forEach(id => document.querySelectorAll(`#${id} input`).forEach(c => { c.checked = false; }));
-  const srch = document.getElementById('tgt-major-search');
-  if (srch) srch.value = '';
+  Object.values(_tgtSelects).forEach(ts => ts.clear());
   document.getElementById('tgt-count-msg').textContent = '';
-  updateMajorChips();
-  ['year','level','faculty','program','student-status','international','campus']
-    .forEach(f => updateTgtHint(f));
+  updateMajorOptions();
+  Object.keys(_tgtSelects).forEach(f => updateTgtHint(f));
 }
 
 async function loadStudentMeta() {
+  initTomSelects();
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
   const { faculties, levels, cohorts, majors, programs, student_statuses, internationals, campuses, faculty_majors } = data.data;
 
-  _allMajors      = majors || [];
-  _facultyMajors  = faculty_majors || {};
+  _allMajors     = majors || [];
+  _facultyMajors = faculty_majors || {};
 
-  populateTgtChips('tgt-chips-level',          levels || []);
-  populateTgtChips('tgt-chips-international',  internationals || [], v => v === 'หลักสูตรนานาชาติ' ? '🌏 ' + v : '🇹🇭 ' + v);
-  populateTgtChips('tgt-chips-campus',         campuses || []);
-  populateTgtChips('tgt-chips-year',           cohorts || [], v => `รุ่น ${v}`);
-  populateTgtChips('tgt-chips-program',        programs || []);
-  populateTgtChips('tgt-chips-student-status', (student_statuses || []).map(String));
-  populateTgtChips('tgt-chips-faculty',        faculties || []);
+  populateTgtOptions('level',          levels || []);
+  populateTgtOptions('international',  internationals || [], v => v === 'หลักสูตรนานาชาติ' ? '🌏 ' + v : '🇹🇭 ' + v);
+  populateTgtOptions('campus',         campuses || []);
+  populateTgtOptions('year',           cohorts || [], v => `รุ่น ${v}`);
+  populateTgtOptions('program',        programs || []);
+  populateTgtOptions('student-status', (student_statuses || []).map(String));
+  populateTgtOptions('faculty',        faculties || []);
 
-  updateMajorChips();
+  updateMajorOptions();
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────
@@ -1742,15 +1742,16 @@ function renderTargetTags() {
 }
 
 function addTarget() {
-  const faculty        = getTgtChecked('tgt-chips-faculty');
-  const level          = getTgtChecked('tgt-chips-level');
-  const yearRaw        = getTgtChecked('tgt-chips-year');
+  const getVals = f => { const v = _tgtSelects[f]?.getValue(); return v?.length ? v : null; };
+  const faculty        = getVals('faculty');
+  const level          = getVals('level');
+  const yearRaw        = getVals('year');
   const year           = yearRaw ? yearRaw.map(y => parseInt(y)) : null;
-  const major          = getTgtChecked('tgt-chips-major');
-  const program        = getTgtChecked('tgt-chips-program');
-  const student_status = getTgtChecked('tgt-chips-student-status');
-  const international  = getTgtChecked('tgt-chips-international');
-  const campus         = getTgtChecked('tgt-chips-campus');
+  const major          = getVals('major');
+  const program        = getVals('program');
+  const student_status = getVals('student-status');
+  const international  = getVals('international');
+  const campus         = getVals('campus');
 
   const newT = { faculty, level, year, major, program, student_status, international, campus };
   const normalize = t => JSON.stringify(
