@@ -346,7 +346,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
+    flex-shrink: 0;
   }
+  #act-panel-target { overflow-y: hidden; }
   .tgt-field-section { display:flex; flex-direction:column; gap:4px; }
   .tgt-field-section.tgt-col-2 { grid-column: span 2; }
   .tgt-field-section.tgt-col-full { grid-column: 1 / -1; }
@@ -846,7 +848,7 @@
         </div>
 
         <!-- Sub-Tab: กำหนดกลุ่ม (multi-select chips) -->
-        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:10px">
+        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;overflow:hidden">
 
           <div class="tgt-fields-grid">
             <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
@@ -913,7 +915,7 @@
           </div>
 
           <!-- Action buttons -->
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0">
             <button class="btn btn-blue btn-sm" onclick="addTarget()">
               <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
             </button>
@@ -926,7 +928,7 @@
             <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
           </div>
 
-          <div id="tgt-tags" style="display:flex;flex-direction:column;gap:6px;min-height:24px"></div>
+          <div id="tgt-tags" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
         </div>
 
         <!-- Sub-Tab: นำเข้ารายชื่อ -->
