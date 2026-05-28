@@ -316,6 +316,37 @@
   .staff-card.selected .staff-avatar { color: var(--blue2); }
   .staff-card .staff-name { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; }
   .staff-card .staff-role { font-size:10px; font-weight:600; }
+
+  /* ─── Target Multi-Select Chips ──────────────────────────────────── */
+  .tgt-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .tgt-field-section { display:flex; flex-direction:column; gap:4px; }
+  .tgt-field-section.tgt-col-2 { grid-column: span 2; }
+  .tgt-field-section.tgt-col-full { grid-column: 1 / -1; }
+  .tgt-field-label { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:1px; }
+  .tgt-chips-wrap {
+    display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; align-content: flex-start;
+  }
+  .tgt-chips-scroll {
+    max-height: 120px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius:6px; padding:6px;
+  }
+  .tgt-chip { display:inline-flex; cursor:pointer; }
+  .tgt-chip input[type=checkbox] { display:none; }
+  .tgt-chip span {
+    display:inline-block; padding:3px 9px;
+    border:1px solid var(--border); border-radius:99px;
+    font-size:11px; background:#f8fafc; color:var(--text);
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    user-select:none; white-space:nowrap;
+  }
+  .tgt-chip:hover span { border-color:var(--blue2); color:var(--blue2); }
+  .tgt-chip input:checked + span { background:var(--blue2); color:#fff; border-color:var(--blue2); }
+  .tgt-major-meta { font-size:10px; color:var(--blue2); font-weight:500; }
+
   .modal-header {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
@@ -759,71 +790,87 @@
           </button>
         </div>
 
-        <!-- Sub-Tab: กำหนดกลุ่ม -->
-        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div>
-              <label style="font-size:11px;color:var(--muted)">รุ่น</label>
-              <select class="form-control" id="tgt-year" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกรุ่น</option>
-              </select>
+        <!-- Sub-Tab: กำหนดกลุ่ม (multi-select chips) -->
+        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="tgt-fields-grid">
+            <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">ระดับ</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-level">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--muted)">ระดับ</label>
-              <select class="form-control" id="tgt-level" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกระดับ</option>
-              </select>
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">ประเภทหลักสูตร</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-international">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--muted)">คณะ</label>
-              <select class="form-control" id="tgt-faculty" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกคณะ</option>
-              </select>
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">วิทยาเขต</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-campus">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
+            </div>
+
+            <!-- Row 2: รุ่น | หลักสูตร | สถานะนักศึกษา -->
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">รุ่น (ปีที่เข้า)</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-year">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
+            </div>
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">หลักสูตร</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-program">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
+            </div>
+            <div class="tgt-field-section">
+              <div class="tgt-field-label">สถานะนักศึกษา</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-student-status">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
+            </div>
+
+            <!-- Row 3: คณะ (full width, ~10-20 รายการ) -->
+            <div class="tgt-field-section tgt-col-full">
+              <div class="tgt-field-label">คณะ</div>
+              <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips()">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
+            </div>
+
+            <!-- Row 4: สาขา (full width + search + scroll + filter by faculty) -->
+            <div class="tgt-field-section tgt-col-full">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div class="tgt-field-label" style="margin-bottom:0">สาขา</div>
+                <span class="tgt-major-meta" id="tgt-major-meta"></span>
+              </div>
+              <input type="text" id="tgt-major-search" placeholder="🔍 ค้นหาสาขา..."
+                class="form-control" style="font-size:11px;padding:5px 8px;margin-top:3px"
+                oninput="updateMajorChips()">
+              <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major">
+                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              </div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div>
-              <label style="font-size:11px;color:var(--muted)">สาขา</label>
-              <select class="form-control" id="tgt-major" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกสาขา</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px;color:var(--muted)">หลักสูตร</label>
-              <select class="form-control" id="tgt-program" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกหลักสูตร</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px;color:var(--muted)">สถานะนักศึกษา</label>
-              <select class="form-control" id="tgt-student-status" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกสถานะ</option>
-              </select>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div>
-              <label style="font-size:11px;color:var(--muted)">ประเภทหลักสูตร</label>
-              <select class="form-control" id="tgt-international" style="font-size:12px;padding:6px 8px">
-                <option value="">ทั้งหมด</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px;color:var(--muted)">วิทยาเขต</label>
-              <select class="form-control" id="tgt-campus" style="font-size:12px;padding:6px 8px">
-                <option value="">ทุกวิทยาเขต</option>
-              </select>
-            </div>
-          </div>
+
+          <!-- Action buttons -->
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button class="btn btn-blue btn-sm" onclick="addTarget()">
               <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
+            </button>
+            <button class="btn btn-gray btn-sm" onclick="resetTargetChips()">
+              <i class="fa-solid fa-rotate-left"></i> ล้างตัวเลือก
             </button>
             <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" id="tgt-preview-btn">
               <i class="fa-solid fa-calculator"></i> คำนวณ
             </button>
             <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
           </div>
+
           <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px"></div>
         </div>
 
@@ -1097,41 +1144,93 @@ async function loadDashboard() {
   }
 }
 
-// ─── Student Meta (dropdown options) ──────────────────────────────────────────
+// ─── Student Meta (chip options for multi-select targets) ─────────────────────
+let _allMajors = [];         // flat list
+let _facultyMajors = {};     // { คณะ: [สาขา,...] }
+
+const escH = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function populateTgtChips(containerId, values, labelFn = v => v) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!values || !values.length) {
+    el.innerHTML = '<span style="font-size:11px;color:var(--muted)">ไม่มีข้อมูล</span>';
+    return;
+  }
+  el.innerHTML = values.map(v =>
+    `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"><span>${escH(labelFn(v))}</span></label>`
+  ).join('');
+}
+
+function getTgtChecked(containerId) {
+  const vals = Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(c => c.value);
+  return vals.length ? vals : null;
+}
+
+function updateMajorChips() {
+  const selectedFacs = getTgtChecked('tgt-chips-faculty') || [];
+  const search = (document.getElementById('tgt-major-search')?.value || '').toLowerCase().trim();
+
+  // กรองตามคณะที่เลือก
+  let filtered = _allMajors;
+  if (selectedFacs.length > 0) {
+    const allowed = new Set();
+    selectedFacs.forEach(f => (_facultyMajors[f] || []).forEach(m => allowed.add(m)));
+    filtered = _allMajors.filter(m => allowed.has(m));
+  }
+  // กรองตาม search
+  if (search) filtered = filtered.filter(m => m.toLowerCase().includes(search));
+
+  // อัปเดต chips (รักษา checked state เดิม)
+  const prevChecked = new Set(getTgtChecked('tgt-chips-major') || []);
+  const el = document.getElementById('tgt-chips-major');
+  if (!el) return;
+  if (!filtered.length) {
+    el.innerHTML = '<span style="font-size:11px;color:var(--muted)">ไม่มีสาขาตรงเงื่อนไข</span>';
+  } else {
+    el.innerHTML = filtered.map(v =>
+      `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"${prevChecked.has(v) ? ' checked' : ''}><span>${escH(v)}</span></label>`
+    ).join('');
+  }
+
+  // แสดง meta: จำนวนสาขาที่แสดง + hint
+  const metaEl = document.getElementById('tgt-major-meta');
+  if (metaEl) {
+    if (selectedFacs.length > 0 || search) {
+      metaEl.textContent = `(แสดง ${filtered.length} จาก ${_allMajors.length} สาขา)`;
+    } else {
+      metaEl.textContent = `(${_allMajors.length} สาขา — เลือกคณะเพื่อกรอง)`;
+    }
+  }
+}
+
+function resetTargetChips() {
+  ['tgt-chips-year','tgt-chips-level','tgt-chips-faculty','tgt-chips-major',
+   'tgt-chips-program','tgt-chips-student-status','tgt-chips-international','tgt-chips-campus']
+    .forEach(id => document.querySelectorAll(`#${id} input`).forEach(c => { c.checked = false; }));
+  const srch = document.getElementById('tgt-major-search');
+  if (srch) srch.value = '';
+  document.getElementById('tgt-count-msg').textContent = '';
+  updateMajorChips();
+}
+
 async function loadStudentMeta() {
   const data = await apiFetch('/students/meta');
   if (!data.success) return;
-  const { faculties, levels, cohorts, majors, programs, student_statuses, internationals, campuses } = data.data;
+  const { faculties, levels, cohorts, majors, programs, student_statuses, internationals, campuses, faculty_majors } = data.data;
 
-  document.getElementById('tgt-faculty').innerHTML = '<option value="">ทุกคณะ</option>' +
-    (faculties||[]).map(f => `<option value="${f}">${f}</option>`).join('');
+  _allMajors      = majors || [];
+  _facultyMajors  = faculty_majors || {};
 
-  document.getElementById('tgt-level').innerHTML = '<option value="">ทุกระดับ</option>' +
-    (levels||[]).map(l => `<option value="${l}">${l}</option>`).join('');
+  populateTgtChips('tgt-chips-level',          levels || []);
+  populateTgtChips('tgt-chips-international',  internationals || [], v => v === 'หลักสูตรนานาชาติ' ? '🌏 ' + v : '🇹🇭 ' + v);
+  populateTgtChips('tgt-chips-campus',         campuses || []);
+  populateTgtChips('tgt-chips-year',           cohorts || [], v => `รุ่น ${v}`);
+  populateTgtChips('tgt-chips-program',        programs || []);
+  populateTgtChips('tgt-chips-student-status', (student_statuses || []).map(String));
+  populateTgtChips('tgt-chips-faculty',        faculties || []);
 
-  document.getElementById('tgt-year').innerHTML = '<option value="">ทุกรุ่น</option>' +
-    (cohorts||[]).map(c => `<option value="${c}">รุ่น ${c} (เข้า ${2500 + parseInt(c)})</option>`).join('');
-
-  document.getElementById('tgt-major').innerHTML = '<option value="">ทุกสาขา</option>' +
-    (majors||[]).map(m => `<option value="${m}">${m}</option>`).join('');
-
-  document.getElementById('tgt-program').innerHTML = '<option value="">ทุกหลักสูตร</option>' +
-    (programs||[]).map(p => `<option value="${p}">${p}</option>`).join('');
-
-  // student_status เป็น INTEGER — แสดงเลขตรงๆ
-  document.getElementById('tgt-student-status').innerHTML = '<option value="">ทุกสถานะ</option>' +
-    (student_statuses||[]).map(s => `<option value="${s}">${s}</option>`).join('');
-
-  // ประเภทหลักสูตร — โหลดจาก column international ใน DB เท่านั้น ไม่มี fallback
-  document.getElementById('tgt-international').innerHTML = '<option value="">ทั้งหมด</option>' +
-    (internationals||[]).map(v => {
-      const icon = v === 'หลักสูตรนานาชาติ' ? '🌏' : '🇹🇭';
-      return `<option value="${v}">${icon} ${v}</option>`;
-    }).join('');
-
-  // วิทยาเขต — โหลดจาก column campus ใน DB เท่านั้น
-  document.getElementById('tgt-campus').innerHTML = '<option value="">ทุกวิทยาเขต</option>' +
-    (campuses||[]).map(c => `<option value="${c}">${c}</option>`).join('');
+  updateMajorChips();
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────
@@ -1389,21 +1488,26 @@ function renderTargetTags() {
     container.innerHTML = '<span style="font-size:12px;color:var(--muted)">ยังไม่ได้กำหนดกลุ่มเป้าหมาย</span>';
     return;
   }
+  // Helper: สรุป array เป็น label
+  const arrLbl = (arr, maxShow = 2) => {
+    if (!Array.isArray(arr) || !arr.length) return null;
+    if (arr.length <= maxShow) return arr.join(', ');
+    return `${arr.slice(0, maxShow).join(', ')} +${arr.length - maxShow}`;
+  };
   container.innerHTML = currentTargets.map((t, i) => {
-    const facLabel  = t.faculty        || 'ทุกคณะ';
-    const yrLabel   = t.year           ? `รุ่น ${t.year}`            : '';
-    const lvLabel   = t.level          ? t.level                     : '';
-    const mjLabel   = t.major          ? t.major                     : '';
-    const spLabel   = t.program        ? t.program                    : '';
-    const stLabel   = t.student_status ? `สถานะ:${t.student_status}` : '';
-    const intlLabel = t.international === 'หลักสูตรนานาชาติ' ? '🌏 หลักสูตรนานาชาติ'
-                    : t.international === 'หลักสูตรไทย'      ? '🇹🇭 หลักสูตรไทย'
-                    : '';
-    const campLabel = t.campus ? `📍${t.campus}` : '';
-    const subLabel = [yrLabel, lvLabel, mjLabel, spLabel, stLabel, intlLabel, campLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
+    const facLabel  = arrLbl(t.faculty) || 'ทุกคณะ';
+    const yrLabel   = t.year?.length    ? `รุ่น ${t.year.join(', ')}`              : '';
+    const lvLabel   = arrLbl(t.level)   || '';
+    const mjLabel   = t.major?.length   ? (t.major.length > 2 ? `${t.major.length} สาขา` : t.major.join(', ')) : '';
+    const spLabel   = arrLbl(t.program) || '';
+    const stLabel   = t.student_status?.length ? `สถานะ:${t.student_status.join(',')}` : '';
+    const intlLabel = !t.international?.length ? ''
+      : t.international.map(v => v === 'หลักสูตรนานาชาติ' ? '🌏' : '🇹🇭').join('') + ' ' + t.international.join(', ');
+    const campLabel = t.campus?.length  ? `📍${arrLbl(t.campus)}` : '';
+    const subLabel  = [yrLabel, lvLabel, mjLabel, spLabel, stLabel, intlLabel, campLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
               border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
-      ${facLabel} — ${subLabel}
+      ${escH(facLabel)} — ${escH(subLabel)}
       <button onclick="removeTarget(${i})" style="background:none;border:none;cursor:pointer;color:#0055b3;
         font-size:14px;line-height:1;padding:0">&times;</button>
     </span>`;
@@ -1411,28 +1515,33 @@ function renderTargetTags() {
 }
 
 function addTarget() {
-  const faculty        = document.getElementById('tgt-faculty').value        || null;
-  const level          = document.getElementById('tgt-level').value          || null;
-  const year           = document.getElementById('tgt-year').value           ? parseInt(document.getElementById('tgt-year').value) : null;
-  const major          = document.getElementById('tgt-major').value          || null;
-  const program        = document.getElementById('tgt-program').value         || null;
-  const student_status = document.getElementById('tgt-student-status').value || null;
-  // international: '' → null (ทั้งหมด), มีค่า → กรองตามหลักสูตร
-  const international  = document.getElementById('tgt-international').value || null;
-  const campus         = document.getElementById('tgt-campus').value         || null;
+  const faculty        = getTgtChecked('tgt-chips-faculty');
+  const level          = getTgtChecked('tgt-chips-level');
+  const yearRaw        = getTgtChecked('tgt-chips-year');
+  const year           = yearRaw ? yearRaw.map(y => parseInt(y)) : null;
+  const major          = getTgtChecked('tgt-chips-major');
+  const program        = getTgtChecked('tgt-chips-program');
+  const student_status = getTgtChecked('tgt-chips-student-status');
+  const international  = getTgtChecked('tgt-chips-international');
+  const campus         = getTgtChecked('tgt-chips-campus');
 
-  const dup = currentTargets.some(t =>
-    (t.faculty        ?? null) === (faculty        ?? null) &&
-    (t.level          ?? null) === (level          ?? null) &&
-    (t.year           ?? null) === (year           ?? null) &&
-    (t.major          ?? null) === (major          ?? null) &&
-    (t.program        ?? null) === (program        ?? null) &&
-    (t.student_status ?? null) === (student_status ?? null) &&
-    (t.international  ?? null) === (international  ?? null) &&
-    (t.campus         ?? null) === (campus         ?? null)
+  // ต้องเลือกอย่างน้อย 1 เงื่อนไข
+  if (!faculty && !level && !year && !major && !program && !student_status && !international && !campus) {
+    toast('กรุณาเลือกอย่างน้อย 1 เงื่อนไข', 'yellow');
+    return;
+  }
+
+  const newT = { faculty, level, year, major, program, student_status, international, campus };
+  // ตรวจ duplicate โดย normalize (sort แต่ละ array แล้วเปรียบเทียบ JSON)
+  const normalize = t => JSON.stringify(
+    Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v ? [...v].sort() : null]))
   );
-  if (dup) { toast('กลุ่มนี้มีอยู่แล้ว', 'yellow'); return; }
-  currentTargets.push({ faculty, level, year, major, program, student_status, international, campus });
+  if (currentTargets.some(t => normalize(t) === normalize(newT))) {
+    toast('กลุ่มนี้มีอยู่แล้ว', 'yellow');
+    return;
+  }
+
+  currentTargets.push(newT);
   renderTargetTags();
 }
 
@@ -1509,13 +1618,17 @@ async function openActivityModal(id = null) {
     });
     updateStaffBadge();
 
-    // โหลด targets
+    // โหลด targets (DB คืน TEXT[] เป็น array แล้ว — แต่ normalize ให้แน่ใจ)
+    const toArr = v => Array.isArray(v) && v.length ? v : null;
     currentTargets = (a.targets || []).map(t => ({
-      faculty: t.faculty || null, year: t.year || null, level: t.level || null,
-      major: t.major || null, program: t.program || null,
-      student_status: t.student_status || null,
-      international: t.international || null,
-      campus:        t.campus        || null,
+      faculty:        toArr(t.faculty),
+      year:           toArr(t.year)?.map(y => parseInt(y)) ?? null,
+      level:          toArr(t.level),
+      major:          toArr(t.major),
+      program:        toArr(t.program),
+      student_status: toArr(t.student_status),
+      international:  toArr(t.international),
+      campus:         toArr(t.campus),
     }));
     // โหลดจำนวน import รายชื่อ (ถ้ามี)
     const cntData = await apiFetch(`/activities/${id}/targets/students/count`);

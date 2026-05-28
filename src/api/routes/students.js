@@ -10,7 +10,7 @@ router.use(verifyJWT);
 // ดึง distinct faculties, levels, cohorts จาก nbu_students สำหรับ dropdown
 router.get('/meta', async (_req, res) => {
     try {
-        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes, intlRes, campRes] = await Promise.all([
+        const [facRes, lvlRes, cohRes, statusRes, majorRes, planRes, intlRes, campRes, facMajRes] = await Promise.all([
             query(`SELECT DISTINCT faculty        FROM nbu_students WHERE faculty        IS NOT NULL AND faculty        != '' ORDER BY faculty`),
             query(`SELECT DISTINCT level          FROM nbu_students WHERE level          IS NOT NULL AND level          != '' ORDER BY level`),
             query(`SELECT DISTINCT SUBSTRING(student_id,1,2) AS cohort FROM nbu_students WHERE student_id IS NOT NULL ORDER BY cohort DESC`),
@@ -22,7 +22,17 @@ router.get('/meta', async (_req, res) => {
             query(`SELECT DISTINCT international  FROM nbu_students WHERE international  IS NOT NULL AND international  != '' ORDER BY international`),
             // campus — ดึงวิทยาเขตที่มีจริงในฐานข้อมูล
             query(`SELECT DISTINCT campus         FROM nbu_students WHERE campus         IS NOT NULL AND campus         != '' ORDER BY campus`),
+            // faculty → majors mapping สำหรับ multi-select filter
+            query(`SELECT DISTINCT faculty, major FROM nbu_students WHERE faculty IS NOT NULL AND faculty != '' AND major IS NOT NULL AND major != '' ORDER BY faculty, major`),
         ]);
+
+        // สร้าง map: { คณะ: [สาขา1, สาขา2, ...] }
+        const faculty_majors = facMajRes.rows.reduce((map, r) => {
+            if (!map[r.faculty]) map[r.faculty] = [];
+            map[r.faculty].push(r.major);
+            return map;
+        }, {});
+
         return res.json({
             success: true,
             data: {
@@ -34,6 +44,7 @@ router.get('/meta', async (_req, res) => {
                 programs:         planRes.rows.map(r => r.program),
                 internationals:   intlRes.rows.map(r => r.international),
                 campuses:         campRes.rows.map(r => r.campus),
+                faculty_majors,
             },
         });
     } catch (err) {

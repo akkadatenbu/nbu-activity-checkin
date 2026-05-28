@@ -9,7 +9,7 @@
 | App Path | `/var/www/app/nbu-activity-checkin` |
 | Port | `5533` (Node.js) |
 | Reverse Proxy | Nginx → `https://activity.northbkk.ac.th` |
-| Thumbnail Storage | `/var/www/activity/public/thumbnails/` |
+| Thumbnail Storage | `/var/www/app/nbu-activity-checkin/public/thumbnails/` |
 
 ---
 

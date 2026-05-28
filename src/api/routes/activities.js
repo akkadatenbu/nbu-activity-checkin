@@ -8,6 +8,9 @@ router.use(verifyJWT);
 
 const isAdmin = (role) => role === 'superadmin' || role === 'admin';
 
+// รับ array หรือ null — ป้องกันส่ง [] ว่างลง DB
+const arrOrNull = (v) => Array.isArray(v) && v.length > 0 ? v : null;
+
 // ─── GET /api/v1/activities ───────────────────────────────────────────────────
 router.get('/', async (req, res) => {
     try {
@@ -111,7 +114,9 @@ router.post('/', async (req, res) => {
                 for (const t of targets) {
                     await client.query(
                         `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, program, student_status, international, campus) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
-                        [activity.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.program || null, t.student_status || null, t.international || null, t.campus || null]
+                        [activity.id,
+                         arrOrNull(t.faculty), arrOrNull(t.year), arrOrNull(t.level), arrOrNull(t.major),
+                         arrOrNull(t.program), arrOrNull(t.student_status), arrOrNull(t.international), arrOrNull(t.campus)]
                     );
                 }
             }
@@ -156,7 +161,9 @@ router.put('/:id', async (req, res) => {
             for (const t of targets) {
                 await query(
                     `INSERT INTO nbu_activity_targets (activity_id, faculty, year, level, major, program, student_status, international, campus) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
-                    [req.params.id, t.faculty || null, t.year || null, t.level || null, t.major || null, t.program || null, t.student_status || null, t.international || null, t.campus || null]
+                    [req.params.id,
+                     arrOrNull(t.faculty), arrOrNull(t.year), arrOrNull(t.level), arrOrNull(t.major),
+                     arrOrNull(t.program), arrOrNull(t.student_status), arrOrNull(t.international), arrOrNull(t.campus)]
                 );
             }
         }
@@ -280,25 +287,23 @@ router.post('/targets/preview', async (req, res) => {
     }
     try {
         // ชั้นปีดูจาก 2 ตัวแรกของรหัสนักศึกษา (เช่น 67xxxx = รุ่น 2567)
+        // รองรับทั้ง array (multi-select ใหม่) และ string เดิม (backward compat)
+        const hasArr  = (v) => Array.isArray(v) && v.length > 0;
         const validParams = [];
         const validConditions = targets.map(t => {
             const parts = [];
-            if (t.faculty)        { validParams.push(t.faculty);        parts.push(`s.faculty = $${validParams.length}`); }
-            if (t.level)          { validParams.push(t.level);          parts.push(`s.level = $${validParams.length}`); }
-            if (t.major)          { validParams.push(t.major);          parts.push(`s.major = $${validParams.length}`); }
-            if (t.program)        { validParams.push(t.program);        parts.push(`s.program = $${validParams.length}`); }
-            // student_status เป็น INTEGER — cast ค่าจาก UI ก่อนเปรียบเทียบ
-            if (t.student_status) { validParams.push(parseInt(t.student_status)); parts.push(`s.student_status = $${validParams.length}`); }
-            if (t.year)           { parts.push(`SUBSTRING(s.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'`); }
-            // international: '' หรือ null = ทั้งหมด (ไม่กรอง), มีค่า = กรองตามหลักสูตร
-            if (t.international) {
-                validParams.push(t.international);
-                parts.push(`s.international = $${validParams.length}`);
-            }
-            // campus: '' หรือ null = ทั้งหมด (ไม่กรอง), มีค่า = กรองตามวิทยาเขต
-            if (t.campus) {
-                validParams.push(t.campus);
-                parts.push(`s.campus = $${validParams.length}`);
+            if (hasArr(t.faculty))        { validParams.push(t.faculty);                              parts.push(`s.faculty        = ANY($${validParams.length}::text[])`); }
+            if (hasArr(t.level))          { validParams.push(t.level);                                parts.push(`s.level          = ANY($${validParams.length}::text[])`); }
+            if (hasArr(t.major))          { validParams.push(t.major);                                parts.push(`s.major          = ANY($${validParams.length}::text[])`); }
+            if (hasArr(t.program))        { validParams.push(t.program);                              parts.push(`s.program        = ANY($${validParams.length}::text[])`); }
+            if (hasArr(t.international))  { validParams.push(t.international);                        parts.push(`s.international  = ANY($${validParams.length}::text[])`); }
+            if (hasArr(t.campus))         { validParams.push(t.campus);                               parts.push(`s.campus         = ANY($${validParams.length}::text[])`); }
+            // student_status — เปรียบเทียบเป็น text เพื่อรองรับทั้ง INT และ VARCHAR ใน nbu_students
+            if (hasArr(t.student_status)) { validParams.push(t.student_status.map(String));           parts.push(`s.student_status::text = ANY($${validParams.length}::text[])`); }
+            // year ใช้ inline SQL (ไม่ผ่าน param) เพราะเป็น SUBSTRING comparison
+            if (hasArr(t.year)) {
+                const yrs = t.year.map(y => `'${parseInt(y).toString().padStart(2,'0')}'`).join(',');
+                parts.push(`SUBSTRING(s.student_id, 1, 2) IN (${yrs})`);
             }
             return parts.length ? `(${parts.join(' AND ')})` : 'TRUE';
         });

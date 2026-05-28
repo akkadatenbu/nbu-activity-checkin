@@ -385,7 +385,7 @@ HTTP Status Codes:
 |--------|-----|
 | Server | Ubuntu 147.50.10.29 |
 | App path | `/var/www/app/nbu-activity-checkin` |
-| Thumbnails | `/var/www/activity/public/thumbnails/` |
+| Thumbnails | `/var/www/app/nbu-activity-checkin/public/thumbnails/` |
 | PM2 id | 19 (root user) |
 | URL | https://activity.northbkk.ac.th |
 

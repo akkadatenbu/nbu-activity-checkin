@@ -83,7 +83,7 @@ router.get('/:activityId', async (req, res) => {
         const hasRuleTargets  = targetRows.length > 0;
         const hasTargets      = hasExplicitList || hasRuleTargets;
 
-        // สร้าง WHERE สำหรับกรองนักศึกษาในกลุ่มเป้าหมาย
+        // สร้าง WHERE สำหรับกรองนักศึกษาในกลุ่มเป้าหมาย (รองรับ TEXT[] จาก multi-select)
         function buildTargetWhere(alias = 's') {
             if (!hasTargets) return { clause: 'TRUE', params: [] };
             if (hasExplicitList) {
@@ -91,16 +91,25 @@ router.get('/:activityId', async (req, res) => {
                 const ids = targetStudentsRes.rows.map(r => `'${r.student_id.replace(/'/g,"''")}'`).join(',');
                 return { clause: `${alias}.student_id IN (${ids})`, params: [] };
             }
-            // ใช้ rule-based
+            // Helper: สร้าง col = ANY(ARRAY[...]) จาก TEXT[] (inline SQL — ไม่ใช้ param เพราะ targetRows ได้จาก DB เอง)
+            const anyOf = (colExpr, arr) => {
+                if (!Array.isArray(arr) || !arr.length) return 'TRUE';
+                const vals = arr.map(v => `'${String(v).replace(/'/g, "''")}'`).join(',');
+                return `${colExpr} = ANY(ARRAY[${vals}])`;
+            };
+            // rule-based (แต่ละ row คือ rule หนึ่ง, OR กัน)
             const parts = targetRows.map(t => {
-                const fc = t.faculty        ? `${alias}.faculty = '${t.faculty.replace(/'/g, "''")}'`               : 'TRUE';
-                const lv = t.level          ? `${alias}.level = '${t.level.replace(/'/g, "''")}'`                   : 'TRUE';
-                const mj = t.major          ? `${alias}.major = '${t.major.replace(/'/g, "''")}'`                   : 'TRUE';
-                const sp = t.program        ? `${alias}.program = '${t.program.replace(/'/g, "''")}'`               : 'TRUE';
-                const st = t.student_status ? `${alias}.student_status = '${t.student_status.replace(/'/g, "''")}'` : 'TRUE';
-                const yr = t.year           ? `SUBSTRING(${alias}.student_id, 1, 2) = '${parseInt(t.year).toString().padStart(2,'0')}'` : 'TRUE';
-                const it = t.international  ? `${alias}.international = '${t.international.replace(/'/g, "''")}'`   : 'TRUE';
-                const cp = t.campus         ? `${alias}.campus = '${t.campus.replace(/'/g, "''")}'`                 : 'TRUE';
+                const fc = anyOf(`${alias}.faculty`,              t.faculty);
+                const lv = anyOf(`${alias}.level`,                t.level);
+                const mj = anyOf(`${alias}.major`,                t.major);
+                const sp = anyOf(`${alias}.program`,              t.program);
+                const it = anyOf(`${alias}.international`,        t.international);
+                const cp = anyOf(`${alias}.campus`,               t.campus);
+                // student_status — cast เป็น text ก่อน เผื่อ nbu_students เก็บเป็น INT
+                const st = anyOf(`${alias}.student_status::text`, t.student_status?.map(v => String(v)));
+                // year — เปรียบเทียบจาก 2 หลักแรกของ student_id
+                const yr = !Array.isArray(t.year) || !t.year.length ? 'TRUE'
+                    : `SUBSTRING(${alias}.student_id, 1, 2) IN (${t.year.map(y => `'${parseInt(y).toString().padStart(2,'0')}'`).join(',')})`;
                 return `(${fc} AND ${lv} AND ${mj} AND ${sp} AND ${st} AND ${yr} AND ${it} AND ${cp})`;
             });
             return { clause: `(${parts.join(' OR ')})`, params: [] };

@@ -80,7 +80,7 @@ QR_SECRET=YOUR_QR_SECRET_KEY          # ดูจาก https://nbc.northbkk.ac.
 PHOTO_BASE_URL=https://reg.northbkk.ac.th/studentimg
 
 # Thumbnail storage (local)
-THUMBNAIL_DIR=/var/www/activity/public/thumbnails
+THUMBNAIL_DIR=/var/www/app/nbu-activity-checkin/public/thumbnails
 THUMBNAIL_BASE_URL=/thumbnails
 ```
 
@@ -196,7 +196,7 @@ Pattern:      {PHOTO_BASE_URL}/{student_id[0:2]}/{student_id}.jpg
 
 Thumbnail เก็บใน server เอง:
 ```
-/var/www/activity/public/thumbnails/671280108.jpg
+/var/www/app/nbu-activity-checkin/public/thumbnails/671280108.jpg
 serve via: https://activity.northbkk.ac.th/thumbnails/671280108.jpg
 ```
 

@@ -52,7 +52,7 @@ CFG = {
     "photo_base_url": os.getenv("PHOTO_BASE_URL", "https://reg.northbkk.ac.th/studentimg"),
 
     # Thumbnail local storage
-    "thumb_dir":     os.getenv("THUMBNAIL_DIR", "/var/www/activity/public/thumbnails"),
+    "thumb_dir":     os.getenv("THUMBNAIL_DIR", "/var/www/app/nbu-activity-checkin/public/thumbnails"),
     "thumb_url":     os.getenv("THUMBNAIL_BASE_URL", "/thumbnails"),
     "thumb_size":    (int(os.getenv("THUMBNAIL_SIZE", "120")),) * 2,
     "thumb_quality": int(os.getenv("THUMBNAIL_QUALITY", "80")),

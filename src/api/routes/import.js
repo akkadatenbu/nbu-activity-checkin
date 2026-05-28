@@ -192,7 +192,7 @@ async function runImport(jobId, rows, {
     skipPhotos,
 }) {
     const job = jobStore.get(jobId);
-    const thumbDir = process.env.THUMBNAIL_DIR || '/var/www/activity/public/thumbnails';
+    const thumbDir = process.env.THUMBNAIL_DIR || '/var/www/app/nbu-activity-checkin/public/thumbnails';
     fs.mkdirSync(thumbDir, { recursive: true });
 
     const col = (r, key) => (key && r[key] ? String(r[key]).trim() : '');

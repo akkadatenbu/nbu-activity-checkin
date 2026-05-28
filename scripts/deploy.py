@@ -182,7 +182,7 @@ def deploy():
 
     # Thumbnails (static)
     location /thumbnails/ {{
-        alias /var/www/activity/public/thumbnails/;
+        alias /var/www/app/nbu-activity-checkin/public/thumbnails/;
         expires 7d;
         add_header Cache-Control "public";
     }}
