@@ -5,43 +5,70 @@ import { getStudent } from '../redis.js';
 import { verifyJWT }  from '../middleware/auth.js';
 import { verifyQR }   from '../utils/qr.js';
 import { pushFlexMessage } from '../../line-oa/line-api.js';
+import { queryAvs } from '../db.js';
 
 // esc: escape string สำหรับฝัง JSON (ป้องกัน " และ \ ทำลาย JSON structure)
 const esc = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
 async function sendActivityFlex(activityId, studentId, studentName, checkedAt) {
     try {
-        // ดึง flex_message_json + title จาก activity
+        // 1. ดึง flex_message_json + title จาก activity
         const { rows: actRows } = await query(
             'SELECT title, flex_message_json FROM nbu_activities WHERE id = $1',
             [activityId]
         );
-        if (!actRows.length || !actRows[0].flex_message_json) return;
+        if (!actRows.length || !actRows[0].flex_message_json) {
+            console.log(`[flex] activity ${activityId} — ไม่มี flex_message_json ข้าม`);
+            return;
+        }
 
-        // ดึง LINE user_id จาก line_student_links
-        const { rows: linkRows } = await query(
-            'SELECT line_user_id FROM line_student_links WHERE student_id = $1 LIMIT 1',
-            [studentId]
-        );
-        if (!linkRows.length || !linkRows[0].line_user_id) return;
+        // 2. ดึง LINE user_id — ลอง AVS_DB ก่อน แล้ว fallback ไป line_student_links
+        let lineUserId = null;
+        try {
+            const { rows: avsRows } = await queryAvs(
+                `SELECT line_uuid FROM nbc_line_map WHERE studentcode = $1 AND is_active = true LIMIT 1`,
+                [studentId]
+            );
+            if (avsRows.length && avsRows[0].line_uuid) lineUserId = avsRows[0].line_uuid;
+        } catch (avsErr) {
+            console.warn('[flex] AVS_DB lookup failed:', avsErr.message);
+        }
+        if (!lineUserId) {
+            const { rows: linkRows } = await query(
+                'SELECT line_user_id FROM line_student_links WHERE student_id = $1 LIMIT 1',
+                [studentId]
+            );
+            if (linkRows.length && linkRows[0].line_user_id) lineUserId = linkRows[0].line_user_id;
+        }
+        if (!lineUserId) {
+            console.log(`[flex] student ${studentId} — ไม่พบ LINE user_id ข้าม`);
+            return;
+        }
 
-        const lineUserId = linkRows[0].line_user_id;
-        const actTitle   = actRows[0].title;
+        // 3. แทน placeholders ใน JSON string
+        const actTitle = actRows[0].title;
         const formattedDate = checkedAt.toLocaleString('th-TH', {
             timeZone: 'Asia/Bangkok', dateStyle: 'short', timeStyle: 'short',
         });
-
-        // แทน placeholders ใน JSON string (stringify → replace → parse)
         const jsonStr = JSON.stringify(actRows[0].flex_message_json)
-            .replace(/\{\{student_id\}\}/g,      esc(studentId))
-            .replace(/\{\{student_name\}\}/g,    esc(studentName))
-            .replace(/\{\{activity_title\}\}/g,  esc(actTitle))
-            .replace(/\{\{checked_at\}\}/g,      esc(formattedDate));
+            .replace(/\{\{student_id\}\}/g,     esc(studentId))
+            .replace(/\{\{student_name\}\}/g,   esc(studentName))
+            .replace(/\{\{activity_title\}\}/g, esc(actTitle))
+            .replace(/\{\{checked_at\}\}/g,     esc(formattedDate));
 
-        await pushFlexMessage(lineUserId, JSON.parse(jsonStr));
+        // 4. ส่ง push — ถ้า JSON เป็นแค่ contents (bubble/carousel) ให้ wrap เป็น flex message
+        let message = JSON.parse(jsonStr);
+        if (message.type !== 'flex') {
+            message = {
+                type:     'flex',
+                altText:  actTitle,
+                contents: message,
+            };
+        }
+        await pushFlexMessage(lineUserId, message);
+        console.log(`[flex] ส่ง Flex Message → ${studentId} (${lineUserId}) สำเร็จ`);
     } catch (err) {
-        // ไม่ให้ error ของ LINE กระทบระบบหลัก
-        console.error('sendActivityFlex error:', err.message);
+        console.error(`[flex] sendActivityFlex error (student=${studentId}):`, err.message);
     }
 }
 
