@@ -4,6 +4,46 @@ import { query }      from '../db.js';
 import { getStudent } from '../redis.js';
 import { verifyJWT }  from '../middleware/auth.js';
 import { verifyQR }   from '../utils/qr.js';
+import { pushFlexMessage } from '../../line-oa/line-api.js';
+
+// esc: escape string สำหรับฝัง JSON (ป้องกัน " และ \ ทำลาย JSON structure)
+const esc = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+async function sendActivityFlex(activityId, studentId, studentName, checkedAt) {
+    try {
+        // ดึง flex_message_json + title จาก activity
+        const { rows: actRows } = await query(
+            'SELECT title, flex_message_json FROM nbu_activities WHERE id = $1',
+            [activityId]
+        );
+        if (!actRows.length || !actRows[0].flex_message_json) return;
+
+        // ดึง LINE user_id จาก line_student_links
+        const { rows: linkRows } = await query(
+            'SELECT line_user_id FROM line_student_links WHERE student_id = $1 LIMIT 1',
+            [studentId]
+        );
+        if (!linkRows.length || !linkRows[0].line_user_id) return;
+
+        const lineUserId = linkRows[0].line_user_id;
+        const actTitle   = actRows[0].title;
+        const formattedDate = checkedAt.toLocaleString('th-TH', {
+            timeZone: 'Asia/Bangkok', dateStyle: 'short', timeStyle: 'short',
+        });
+
+        // แทน placeholders ใน JSON string (stringify → replace → parse)
+        const jsonStr = JSON.stringify(actRows[0].flex_message_json)
+            .replace(/\{\{student_id\}\}/g,      esc(studentId))
+            .replace(/\{\{student_name\}\}/g,    esc(studentName))
+            .replace(/\{\{activity_title\}\}/g,  esc(actTitle))
+            .replace(/\{\{checked_at\}\}/g,      esc(formattedDate));
+
+        await pushFlexMessage(lineUserId, JSON.parse(jsonStr));
+    } catch (err) {
+        // ไม่ให้ error ของ LINE กระทบระบบหลัก
+        console.error('sendActivityFlex error:', err.message);
+    }
+}
 
 const router = Router();
 router.use(verifyJWT);
@@ -64,11 +104,14 @@ router.post('/scan', async (req, res) => {
             });
         }
 
-        // 5. บันทึก attendance async (ไม่รอ ตอบ client ก่อน)
+        // 5. บันทึก attendance + ส่ง Flex Message (async, ไม่รอ ตอบ client ก่อน)
+        const _studentName = student.full_name;
+        const _checkedAt   = new Date();
         query(
             'INSERT INTO nbu_attendance (activity_id, session_id, student_id, checked_by, method) VALUES ($1, $2, $3, $4, \'qr_scan\')',
             [activity_id, session_id, student_id, req.user.id]
-        ).catch(err => console.error('Attendance insert error:', err));
+        ).then(() => sendActivityFlex(activity_id, student_id, _studentName, _checkedAt))
+         .catch(err => console.error('Attendance insert error:', err));
 
         // 6. ตอบกลับทันที
         return res.json({
@@ -101,10 +144,14 @@ router.post('/manual', async (req, res) => {
         if (!studentRows.length) {
             return res.status(404).json({ success: false, message: 'ไม่พบรหัสนักศึกษา' });
         }
-        await query(
+        const result = await query(
             'INSERT INTO nbu_attendance (activity_id, session_id, student_id, checked_by, method, note) VALUES ($1, $2, $3, $4, \'manual\', $5) ON CONFLICT (activity_id, student_id) DO NOTHING',
             [activity_id, session_id, student_id, req.user.id, note || '']
         );
+        // ส่ง Flex Message เฉพาะกรณีที่ INSERT สำเร็จ (ไม่ใช่ duplicate)
+        if (result.rowCount > 0) {
+            sendActivityFlex(activity_id, student_id, studentRows[0].full_name, new Date());
+        }
         return res.json({ success: true, message: 'บันทึกสำเร็จ', student: studentRows[0] });
     } catch (err) {
         console.error('Manual attendance error:', err);

@@ -365,6 +365,17 @@
   .tgt-card-val.is-all { color:#16a34a; font-style:italic; font-weight:400; }
   .tgt-card-remove { position:absolute; top:6px; right:8px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:16px; line-height:1; padding:0; transition:color .15s; }
   .tgt-card-remove:hover { color:#ef4444; }
+  /* ─── Flex Message panel ─── */
+  .flex-toggle-row { display:flex; align-items:center; gap:10px; padding:14px 16px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; margin-bottom:14px; }
+  .flex-toggle-row label { display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#166534; font-size:13px; }
+  .flex-toggle-row input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color:#16a34a; }
+  .flex-placeholder-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .flex-placeholder-chip { background:#e0edff; color:#0055b3; border:1px solid #b3d0ff; border-radius:99px; padding:2px 10px; font-size:11px; font-family:monospace; cursor:pointer; user-select:none; }
+  .flex-placeholder-chip:hover { background:#c7deff; }
+  .flex-json-area { width:100%; font-family:monospace; font-size:12px; padding:10px; border:1px solid var(--border); border-radius:6px; resize:vertical; min-height:260px; background:#fafafa; }
+  .flex-json-area.valid { border-color:#16a34a; background:#f0fdf4; }
+  .flex-json-area.invalid { border-color:#ef4444; background:#fef2f2; }
+  .flex-status { font-size:12px; margin-top:6px; font-weight:500; }
   .tgt-chips-wrap {
     display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; align-content: flex-start;
   }
@@ -703,6 +714,10 @@
         <i class="fa-solid fa-users"></i> กลุ่มเป้าหมาย
         <span class="act-tab-badge" id="act-target-badge" style="display:none">0</span>
       </button>
+      <button class="act-tab" id="act-tab-btn-flex" onclick="switchActTab('flex')">
+        <i class="fa-brands fa-line"></i> Flex Message
+        <span class="act-tab-badge" id="act-flex-badge" style="display:none;background:#16a34a">✓</span>
+      </button>
     </div>
 
     <div class="modal-body">
@@ -937,6 +952,33 @@
           <p style="font-size:10px;color:var(--muted)">
             การนำเข้าใหม่จะแทนที่รายชื่อเดิมทั้งหมด แต่ไม่กระทบข้อมูลการเช็คชื่อที่บันทึกแล้ว
           </p>
+        </div>
+      </div>
+
+      <!-- Tab 4: Flex Message -->
+      <div id="act-panel-flex" class="act-panel" style="display:none">
+        <div class="flex-toggle-row">
+          <label>
+            <input type="checkbox" id="act-flex-enabled" onchange="toggleFlexPanel()">
+            เปิดส่ง Flex Message ให้นักศึกษาเมื่อเช็คชื่อสำเร็จ (ครั้งแรก)
+          </label>
+        </div>
+
+        <div id="act-flex-body" style="display:none">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+            Dynamic fields — คลิกเพื่อ copy:
+          </div>
+          <div class="flex-placeholder-chips">
+            <span class="flex-placeholder-chip" onclick="copyPlaceholder('{{student_id}}')">{{student_id}}</span>
+            <span class="flex-placeholder-chip" onclick="copyPlaceholder('{{student_name}}')">{{student_name}}</span>
+            <span class="flex-placeholder-chip" onclick="copyPlaceholder('{{activity_title}}')">{{activity_title}}</span>
+            <span class="flex-placeholder-chip" onclick="copyPlaceholder('{{checked_at}}')">{{checked_at}}</span>
+          </div>
+          <textarea id="act-flex-json" class="flex-json-area"
+            placeholder='วาง Flex Message JSON จาก LINE Flex Message Simulator ที่นี่&#10;&#10;ตัวอย่าง:&#10;{&#10;  "type": "flex",&#10;  "altText": "เช็คชื่อสำเร็จ - {{activity_title}}",&#10;  "contents": { ... }&#10;}'
+            oninput="validateFlexJson()"
+          ></textarea>
+          <div id="act-flex-status" class="flex-status"></div>
         </div>
       </div>
 
@@ -1458,12 +1500,62 @@ let currentTargets = []; // [{faculty, year}]
 
 // ─── Activity Modal Tabs ──────────────────────────────────────────────────────
 function switchActTab(tab) {
-  ['info','staff','target'].forEach(t => {
+  ['info','staff','target','flex'].forEach(t => {
     document.getElementById(`act-panel-${t}`).style.display = t === tab ? 'flex' : 'none';
     document.getElementById(`act-tab-btn-${t}`).classList.toggle('active', t === tab);
   });
-  // info panel ใช้ block ปกติ ไม่ใช่ flex
   if (tab === 'info') document.getElementById('act-panel-info').style.display = 'block';
+}
+
+// ─── Flex Message helpers ─────────────────────────────────────────────────────
+function toggleFlexPanel() {
+  const enabled = document.getElementById('act-flex-enabled').checked;
+  document.getElementById('act-flex-body').style.display = enabled ? 'block' : 'none';
+  if (!enabled) {
+    document.getElementById('act-flex-json').value = '';
+    document.getElementById('act-flex-status').textContent = '';
+    document.getElementById('act-flex-json').className = 'flex-json-area';
+  }
+  updateFlexBadge();
+}
+
+function validateFlexJson() {
+  const ta  = document.getElementById('act-flex-json');
+  const msg = document.getElementById('act-flex-status');
+  const raw = ta.value.trim();
+  if (!raw) {
+    ta.className = 'flex-json-area';
+    msg.textContent = '';
+    updateFlexBadge();
+    return false;
+  }
+  try {
+    JSON.parse(raw);
+    ta.className = 'flex-json-area valid';
+    msg.style.color = '#16a34a';
+    msg.textContent = '✅ JSON ถูกต้อง';
+    updateFlexBadge();
+    return true;
+  } catch (e) {
+    ta.className = 'flex-json-area invalid';
+    msg.style.color = '#ef4444';
+    msg.textContent = `❌ JSON ไม่ถูกต้อง: ${e.message}`;
+    updateFlexBadge();
+    return false;
+  }
+}
+
+function updateFlexBadge() {
+  const enabled = document.getElementById('act-flex-enabled')?.checked;
+  const raw     = document.getElementById('act-flex-json')?.value.trim();
+  let valid = false;
+  try { if (raw) { JSON.parse(raw); valid = true; } } catch {}
+  const badge = document.getElementById('act-flex-badge');
+  if (badge) badge.style.display = (enabled && valid) ? 'inline-flex' : 'none';
+}
+
+function copyPlaceholder(text) {
+  navigator.clipboard?.writeText(text).then(() => toast(`copy: ${text}`, 'blue')).catch(() => {});
 }
 
 // ─── Staff helpers ────────────────────────────────────────────────────────────
@@ -1750,6 +1842,15 @@ async function openActivityModal(id = null) {
       document.getElementById('tgt-import-status').innerHTML =
         `<span style="color:var(--blue2)"><i class="fa-solid fa-circle-info"></i> มีรายชื่อที่ import ไว้ ${cntData.count} รายชื่อ</span>`;
     }
+    // โหลด Flex Message JSON (ถ้ามี)
+    const fj = a.flex_message_json ?? null;
+    document.getElementById('act-flex-enabled').checked       = !!fj;
+    document.getElementById('act-flex-body').style.display    = fj ? 'block' : 'none';
+    document.getElementById('act-flex-json').value            = fj ? JSON.stringify(fj, null, 2) : '';
+    document.getElementById('act-flex-json').className        = 'flex-json-area' + (fj ? ' valid' : '');
+    const fst = document.getElementById('act-flex-status');
+    fst.textContent = fj ? '✅ JSON ถูกต้อง' : '';
+    if (fj) fst.style.color = '#16a34a';
   } else {
     ['act-title','act-desc','act-start','act-end','act-location'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('act-type').value          = 'general';
@@ -1760,9 +1861,16 @@ async function openActivityModal(id = null) {
     document.querySelectorAll('#act-staff-list .staff-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('act-active-group').style.display = 'none';
     updateStaffBadge();
+    // reset Flex Message
+    document.getElementById('act-flex-enabled').checked    = false;
+    document.getElementById('act-flex-body').style.display = 'none';
+    document.getElementById('act-flex-json').value         = '';
+    document.getElementById('act-flex-json').className     = 'flex-json-area';
+    document.getElementById('act-flex-status').textContent = '';
   }
 
   renderTargetTags();
+  updateFlexBadge();
   openModal('activity-modal');
 }
 
@@ -1809,10 +1917,22 @@ async function saveActivity() {
     staff_ids:       staffOpts,
     targets:         currentTargets,
     ...(id ? { is_active: document.getElementById('act-active').checked } : {}),
+    flex_message_json: (() => {
+      const enabled = document.getElementById('act-flex-enabled')?.checked;
+      const raw     = document.getElementById('act-flex-json')?.value.trim();
+      if (!enabled || !raw) return null;
+      try { return JSON.parse(raw); } catch { return null; }
+    })(),
   };
 
   if (!payload.title || !payload.start_datetime || !payload.end_datetime) {
     toast('กรุณากรอกข้อมูลที่จำเป็น', 'red'); return;
+  }
+  // ถ้าเปิด flex แต่ JSON ผิด — เตือนก่อนบันทึก
+  const flexEnabled = document.getElementById('act-flex-enabled')?.checked;
+  const flexRaw     = document.getElementById('act-flex-json')?.value.trim();
+  if (flexEnabled && flexRaw && !validateFlexJson()) {
+    toast('JSON ของ Flex Message ไม่ถูกต้อง กรุณาตรวจสอบ', 'red'); return;
   }
 
   const data = id
