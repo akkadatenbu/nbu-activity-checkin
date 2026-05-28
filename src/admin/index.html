@@ -351,8 +351,8 @@
   .tgt-field-section.tgt-col-full { grid-column: 1 / -1; }
   .tgt-field-label { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:1px; }
   .tgt-hint { font-size:10px; font-weight:500; margin-left:5px; vertical-align:middle; }
-  .tgt-hint-all { color:var(--muted); }
-  .tgt-hint-set { color:var(--blue2); }
+  .tgt-hint-all { color:#16a34a; font-weight:700; }
+  .tgt-hint-set { color:var(--blue2); font-weight:700; }
   .tgt-chips-wrap {
     display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; align-content: flex-start;
   }
@@ -1600,6 +1600,16 @@ function renderTargetTags() {
     return `${arr.slice(0, maxShow).join(', ')} +${arr.length - maxShow}`;
   };
   container.innerHTML = currentTargets.map((t, i) => {
+    const isAll = !t.faculty?.length && !t.year?.length && !t.level?.length && !t.major?.length
+               && !t.program?.length && !t.student_status?.length && !t.international?.length && !t.campus?.length;
+    if (isAll) {
+      return `<span style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#166534;
+                border:1px solid #86efac;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
+        🎓 นักศึกษาทั้งหมด
+        <button onclick="removeTarget(${i})" style="background:none;border:none;cursor:pointer;color:#166534;
+          font-size:14px;line-height:1;padding:0">&times;</button>
+      </span>`;
+    }
     const facLabel  = arrLbl(t.faculty) || 'ทุกคณะ';
     const yrLabel   = t.year?.length    ? `รุ่น ${t.year.join(', ')}`              : '';
     const lvLabel   = arrLbl(t.level)   || '';
@@ -1630,14 +1640,7 @@ function addTarget() {
   const international  = getTgtChecked('tgt-chips-international');
   const campus         = getTgtChecked('tgt-chips-campus');
 
-  // ต้องเลือกอย่างน้อย 1 เงื่อนไข
-  if (!faculty && !level && !year && !major && !program && !student_status && !international && !campus) {
-    toast('กรุณาเลือกอย่างน้อย 1 เงื่อนไข', 'yellow');
-    return;
-  }
-
   const newT = { faculty, level, year, major, program, student_status, international, campus };
-  // ตรวจ duplicate โดย normalize (sort แต่ละ array แล้วเปรียบเทียบ JSON)
   const normalize = t => JSON.stringify(
     Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v ? [...v].sort() : null]))
   );
