@@ -350,6 +350,9 @@
   .tgt-field-section.tgt-col-2 { grid-column: span 2; }
   .tgt-field-section.tgt-col-full { grid-column: 1 / -1; }
   .tgt-field-label { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:1px; }
+  .tgt-hint { font-size:10px; font-weight:500; margin-left:5px; vertical-align:middle; }
+  .tgt-hint-all { color:var(--muted); }
+  .tgt-hint-set { color:var(--blue2); }
   .tgt-chips-wrap {
     display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; align-content: flex-start;
   }
@@ -820,48 +823,48 @@
           <div class="tgt-fields-grid">
             <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
             <div class="tgt-field-section">
-              <div class="tgt-field-label">ระดับ</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-level">
+              <div class="tgt-field-label">ระดับ<span class="tgt-hint tgt-hint-all" id="tgt-hint-level">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-level" onchange="updateTgtHint('level')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
             <div class="tgt-field-section">
-              <div class="tgt-field-label">ประเภทหลักสูตร</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-international">
+              <div class="tgt-field-label">ประเภทหลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-international">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-international" onchange="updateTgtHint('international')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
             <div class="tgt-field-section">
-              <div class="tgt-field-label">วิทยาเขต</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-campus">
+              <div class="tgt-field-label">วิทยาเขต<span class="tgt-hint tgt-hint-all" id="tgt-hint-campus">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-campus" onchange="updateTgtHint('campus')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
 
             <!-- Row 2: รุ่น | หลักสูตร | สถานะนักศึกษา -->
             <div class="tgt-field-section">
-              <div class="tgt-field-label">รุ่น (ปีที่เข้า)</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-year">
+              <div class="tgt-field-label">รุ่น (ปีที่เข้า)<span class="tgt-hint tgt-hint-all" id="tgt-hint-year">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-year" onchange="updateTgtHint('year')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
             <div class="tgt-field-section">
-              <div class="tgt-field-label">หลักสูตร</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-program">
+              <div class="tgt-field-label">หลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-program">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-program" onchange="updateTgtHint('program')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
             <div class="tgt-field-section">
-              <div class="tgt-field-label">สถานะนักศึกษา</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-student-status">
+              <div class="tgt-field-label">สถานะนักศึกษา<span class="tgt-hint tgt-hint-all" id="tgt-hint-student-status">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-student-status" onchange="updateTgtHint('student-status')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
 
             <!-- Row 3: คณะ (full width, ~10-20 รายการ) -->
             <div class="tgt-field-section tgt-col-full">
-              <div class="tgt-field-label">คณะ</div>
-              <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips()">
+              <div class="tgt-field-label">คณะ<span class="tgt-hint tgt-hint-all" id="tgt-hint-faculty">ทั้งหมด</span></div>
+              <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips(); updateTgtHint('faculty')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
@@ -869,13 +872,13 @@
             <!-- Row 4: สาขา (full width + search + scroll + filter by faculty) -->
             <div class="tgt-field-section tgt-col-full">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <div class="tgt-field-label" style="margin-bottom:0">สาขา</div>
+                <div class="tgt-field-label" style="margin-bottom:0">สาขา<span class="tgt-hint tgt-hint-all" id="tgt-hint-major">ทั้งหมด</span></div>
                 <span class="tgt-major-meta" id="tgt-major-meta"></span>
               </div>
               <input type="text" id="tgt-major-search" placeholder="🔍 ค้นหาสาขา..."
                 class="form-control" style="font-size:11px;padding:5px 8px;margin-top:3px"
                 oninput="updateMajorChips()">
-              <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major">
+              <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major" onchange="updateTgtHint('major')">
                 <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
               </div>
             </div>
@@ -1179,16 +1182,30 @@ let _facultyMajors = {};     // { คณะ: [สาขา,...] }
 
 const escH = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+function updateTgtHint(fieldId) {
+  const hint = document.getElementById(`tgt-hint-${fieldId}`);
+  if (!hint) return;
+  const checked = getTgtChecked(`tgt-chips-${fieldId}`);
+  if (!checked) {
+    hint.textContent = 'ทั้งหมด';
+    hint.className = 'tgt-hint tgt-hint-all';
+  } else {
+    hint.textContent = `เฉพาะ ${checked.length} รายการ`;
+    hint.className = 'tgt-hint tgt-hint-set';
+  }
+}
+
 function populateTgtChips(containerId, values, labelFn = v => v) {
   const el = document.getElementById(containerId);
   if (!el) return;
   if (!values || !values.length) {
     el.innerHTML = '<span style="font-size:11px;color:var(--muted)">ไม่มีข้อมูล</span>';
-    return;
+  } else {
+    el.innerHTML = values.map(v =>
+      `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"><span>${escH(labelFn(v))}</span></label>`
+    ).join('');
   }
-  el.innerHTML = values.map(v =>
-    `<label class="tgt-chip"><input type="checkbox" value="${escH(v)}"><span>${escH(labelFn(v))}</span></label>`
-  ).join('');
+  updateTgtHint(containerId.replace('tgt-chips-', ''));
 }
 
 function getTgtChecked(containerId) {
@@ -1231,6 +1248,7 @@ function updateMajorChips() {
       metaEl.textContent = `(${_allMajors.length} สาขา — เลือกคณะเพื่อกรอง)`;
     }
   }
+  updateTgtHint('major');
 }
 
 function resetTargetChips() {
@@ -1241,6 +1259,8 @@ function resetTargetChips() {
   if (srch) srch.value = '';
   document.getElementById('tgt-count-msg').textContent = '';
   updateMajorChips();
+  ['year','level','faculty','program','student-status','international','campus']
+    .forEach(f => updateTgtHint(f));
 }
 
 async function loadStudentMeta() {
