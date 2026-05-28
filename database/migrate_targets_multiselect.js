@@ -44,7 +44,13 @@ async function migrate() {
                 continue;
             }
 
-            // แปลงเป็น TEXT[] โดย wrap ค่าเดิมไว้ใน array (หรือ NULL ถ้าว่าง)
+            // 1. ลบ DEFAULT ก่อน (PostgreSQL ไม่ auto-cast default string → array)
+            await client.query(`
+                ALTER TABLE nbu_activity_targets
+                ALTER COLUMN ${col} DROP DEFAULT
+            `);
+
+            // 2. แปลงเป็น TEXT[] โดย wrap ค่าเดิมไว้ใน array (หรือ NULL ถ้าว่าง)
             await client.query(`
                 ALTER TABLE nbu_activity_targets
                 ALTER COLUMN ${col} TYPE TEXT[]
@@ -54,6 +60,7 @@ async function migrate() {
                     ELSE ARRAY[${col}::text]
                 END
             `);
+            // 3. ไม่ต้อง re-add DEFAULT — TEXT[] column ใช้ NULL เป็น "ไม่กรอง"
             console.log(`🔄 แปลง "${col}" ${data_type} → TEXT[] สำเร็จ`);
         }
 
