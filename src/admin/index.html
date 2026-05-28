@@ -353,6 +353,18 @@
   .tgt-hint { font-size:10px; font-weight:500; margin-left:5px; vertical-align:middle; }
   .tgt-hint-all { color:#16a34a; font-weight:700; }
   .tgt-hint-set { color:var(--blue2); font-weight:700; }
+  /* ─── Target group card ─── */
+  .tgt-card { background:#f0f6ff; border:1px solid #c7deff; border-radius:8px; padding:8px 36px 8px 12px; position:relative; font-size:12px; }
+  .tgt-card.tgt-card-all { background:#f0fdf4; border-color:#86efac; }
+  .tgt-card-title { font-weight:700; color:#0055b3; margin-bottom:5px; font-size:12px; }
+  .tgt-card.tgt-card-all .tgt-card-title { color:#166534; }
+  .tgt-card-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:2px 10px; }
+  .tgt-card-field { display:flex; gap:4px; align-items:baseline; flex-wrap:wrap; }
+  .tgt-card-label { color:var(--muted); font-size:11px; white-space:nowrap; flex-shrink:0; }
+  .tgt-card-val { color:var(--text); font-size:11px; font-weight:600; }
+  .tgt-card-val.is-all { color:#16a34a; font-style:italic; font-weight:400; }
+  .tgt-card-remove { position:absolute; top:6px; right:8px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:16px; line-height:1; padding:0; transition:color .15s; }
+  .tgt-card-remove:hover { color:#ef4444; }
   .tgt-chips-wrap {
     display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; align-content: flex-start;
   }
@@ -898,7 +910,7 @@
             <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
           </div>
 
-          <div id="tgt-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px"></div>
+          <div id="tgt-tags" style="display:flex;flex-direction:column;gap:6px;min-height:24px"></div>
         </div>
 
         <!-- Sub-Tab: นำเข้ารายชื่อ -->
@@ -1593,39 +1605,33 @@ function renderTargetTags() {
     container.innerHTML = '<span style="font-size:12px;color:var(--muted)">ยังไม่ได้กำหนดกลุ่มเป้าหมาย</span>';
     return;
   }
-  // Helper: สรุป array เป็น label
-  const arrLbl = (arr, maxShow = 2) => {
-    if (!Array.isArray(arr) || !arr.length) return null;
-    if (arr.length <= maxShow) return arr.join(', ');
-    return `${arr.slice(0, maxShow).join(', ')} +${arr.length - maxShow}`;
+  // val: แสดงค่า array หรือ fallback ถ้าว่าง
+  const fld = (arr, fallback) => {
+    if (!Array.isArray(arr) || !arr.length)
+      return `<span class="tgt-card-val is-all">${escH(fallback)}</span>`;
+    return `<span class="tgt-card-val">${escH(arr.join(', '))}</span>`;
   };
   container.innerHTML = currentTargets.map((t, i) => {
     const isAll = !t.faculty?.length && !t.year?.length && !t.level?.length && !t.major?.length
                && !t.program?.length && !t.student_status?.length && !t.international?.length && !t.campus?.length;
-    if (isAll) {
-      return `<span style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#166534;
-                border:1px solid #86efac;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
-        🎓 นักศึกษาทั้งหมด
-        <button onclick="removeTarget(${i})" style="background:none;border:none;cursor:pointer;color:#166534;
-          font-size:14px;line-height:1;padding:0">&times;</button>
-      </span>`;
-    }
-    const facLabel  = arrLbl(t.faculty) || 'ทุกคณะ';
-    const yrLabel   = t.year?.length    ? `รุ่น ${t.year.join(', ')}`              : '';
-    const lvLabel   = arrLbl(t.level)   || '';
-    const mjLabel   = t.major?.length   ? (t.major.length > 2 ? `${t.major.length} สาขา` : t.major.join(', ')) : '';
-    const spLabel   = arrLbl(t.program) || '';
-    const stLabel   = t.student_status?.length ? `สถานะ:${t.student_status.join(',')}` : '';
-    const intlLabel = !t.international?.length ? ''
-      : t.international.map(v => v === 'หลักสูตรนานาชาติ' ? '🌏' : '🇹🇭').join('') + ' ' + t.international.join(', ');
-    const campLabel = t.campus?.length  ? `📍${arrLbl(t.campus)}` : '';
-    const subLabel  = [yrLabel, lvLabel, mjLabel, spLabel, stLabel, intlLabel, campLabel].filter(Boolean).join(' · ') || 'ทุกกลุ่ม';
-    return `<span style="display:inline-flex;align-items:center;gap:6px;background:#e0edff;color:#0055b3;
-              border:1px solid #b3d0ff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
-      ${escH(facLabel)} — ${escH(subLabel)}
-      <button onclick="removeTarget(${i})" style="background:none;border:none;cursor:pointer;color:#0055b3;
-        font-size:14px;line-height:1;padding:0">&times;</button>
-    </span>`;
+    const title = isAll ? '🎓 นักศึกษาทั้งหมด (ไม่จำกัดกลุ่ม)' : `กลุ่มที่ ${i + 1}`;
+    // year: เก็บเป็น int แต่แสดงเป็น "รุ่น XX"
+    const yearArr = t.year?.length ? t.year.map(y => `รุ่น ${y}`) : null;
+    return `
+    <div class="tgt-card${isAll ? ' tgt-card-all' : ''}">
+      <button class="tgt-card-remove" onclick="removeTarget(${i})" title="ลบกลุ่มนี้">&times;</button>
+      <div class="tgt-card-title">${escH(title)}</div>
+      <div class="tgt-card-grid">
+        <div class="tgt-card-field"><span class="tgt-card-label">คณะ:</span>${fld(t.faculty, 'ทุกคณะ')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">ระดับ:</span>${fld(t.level, 'ทุกระดับ')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">รุ่น:</span>${fld(yearArr, 'ทุกรุ่น')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">สาขา:</span>${fld(t.major, 'ทุกสาขา')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">หลักสูตร:</span>${fld(t.program, 'ทุกหลักสูตร')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">สถานะ:</span>${fld(t.student_status, 'ทุกสถานะ')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">ประเภท:</span>${fld(t.international, 'ทุกประเภท')}</div>
+        <div class="tgt-card-field"><span class="tgt-card-label">วิทยาเขต:</span>${fld(t.campus, 'ทุกวิทยาเขต')}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
