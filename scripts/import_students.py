@@ -58,11 +58,16 @@ CFG = {
     "thumb_quality": int(os.getenv("THUMBNAIL_QUALITY", "80")),
 
     # CSV column names — แก้ให้ตรงกับ header ใน CSV
-    "col_id":      "student_id",
-    "col_name":    "full_name",
-    "col_faculty": "faculty",
-    "col_major":   "major",
-    "col_year":    "year",
+    "col_id":             "student_id",
+    "col_name":           "full_name",
+    "col_faculty":        "faculty",
+    "col_major":          "major",
+    "col_level":          "level",           # ระดับ เช่น ปริญญาตรี
+    "col_program":        "program",         # หลักสูตร
+    "col_student_status": "student_status",  # สถานะนักศึกษา (ตัวเลข เช่น 10, 20)
+    "col_international":  "international",   # หลักสูตรไทย / หลักสูตรนานาชาติ
+    "col_campus":         "campus",          # วิทยาเขต
+    "col_loan_status":    "loan_status",     # สถานะกู้ยืม
 
     # Performance
     "batch_size":  500,
@@ -130,28 +135,30 @@ def pg_connect():
 
 
 def pg_upsert(conn, batch: list[dict]):
-    sql = """
-        INSERT INTO students (student_id, full_name, faculty, major, year, photo_url)
-        VALUES %(student_id)s, %(full_name)s, %(faculty)s, %(major)s, %(year)s, %(photo_url)s)
-        ON CONFLICT (student_id) DO UPDATE SET
-            full_name  = EXCLUDED.full_name,
-            faculty    = EXCLUDED.faculty,
-            major      = EXCLUDED.major,
-            year       = EXCLUDED.year,
-            photo_url  = EXCLUDED.photo_url,
-            updated_at = NOW()
-    """
     with conn.cursor() as cur:
         psycopg2.extras.execute_batch(cur, """
-            INSERT INTO students (student_id, full_name, faculty, major, year, photo_url)
-            VALUES (%(student_id)s, %(full_name)s, %(faculty)s, %(major)s, %(year)s, %(photo_url)s)
+            INSERT INTO nbu_students (
+                student_id, full_name, faculty, major,
+                level, program, student_status, international, campus, loan_status,
+                photo_url
+            )
+            VALUES (
+                %(student_id)s, %(full_name)s, %(faculty)s, %(major)s,
+                %(level)s, %(program)s, %(student_status)s, %(international)s, %(campus)s, %(loan_status)s,
+                %(photo_url)s
+            )
             ON CONFLICT (student_id) DO UPDATE SET
-                full_name  = EXCLUDED.full_name,
-                faculty    = EXCLUDED.faculty,
-                major      = EXCLUDED.major,
-                year       = EXCLUDED.year,
-                photo_url  = EXCLUDED.photo_url,
-                updated_at = NOW()
+                full_name      = EXCLUDED.full_name,
+                faculty        = EXCLUDED.faculty,
+                major          = EXCLUDED.major,
+                level          = EXCLUDED.level,
+                program        = EXCLUDED.program,
+                student_status = EXCLUDED.student_status,
+                international  = EXCLUDED.international,
+                campus         = EXCLUDED.campus,
+                loan_status    = EXCLUDED.loan_status,
+                photo_url      = EXCLUDED.photo_url,
+                updated_at     = NOW()
         """, batch, page_size=CFG["batch_size"])
     conn.commit()
 
@@ -170,12 +177,16 @@ def redis_upsert(r: redis.Redis, batch: list[dict]):
     pipe = r.pipeline(transaction=False)
     for s in batch:
         pipe.hset(f"student:{s['student_id']}", mapping={
-            "student_id": s["student_id"],
-            "full_name":  s["full_name"],
-            "faculty":    s["faculty"],
-            "major":      s["major"],
-            "year":       str(s["year"]),
-            "photo_url":  s["photo_url"],
+            "student_id":     s["student_id"],
+            "full_name":      s["full_name"],
+            "faculty":        s["faculty"],
+            "major":          s["major"],
+            "level":          s["level"],
+            "program":        s["program"],
+            "student_status": str(s["student_status"]) if s["student_status"] is not None else "",
+            "international":  s["international"],
+            "campus":         s["campus"],
+            "photo_url":      s["photo_url"],
         })
     pipe.execute()
 
@@ -199,16 +210,35 @@ def main(csv_path: str, skip_photos: bool = False, dry_run: bool = False):
     total = len(raw)
     log.info(f"อ่าน CSV: {total:,} แถว")
 
+    def col(r, key, default=""):
+        """อ่าน column จาก CSV — คืน default ถ้าไม่มี column นั้น"""
+        col_name = CFG.get(key, "")
+        return r.get(col_name, default).strip() if col_name else default
+
+    def to_int_or_none(val: str):
+        """แปลง string เป็น int หรือ None ถ้าว่าง/ไม่ใช่ตัวเลข"""
+        v = val.strip()
+        try:
+            return int(v) if v else None
+        except ValueError:
+            return None
+
     students = [
         {
-            "student_id": r[CFG["col_id"]].strip(),
-            "full_name":  r[CFG["col_name"]].strip(),
-            "faculty":    r[CFG["col_faculty"]].strip(),
-            "major":      r[CFG["col_major"]].strip(),
-            "year":       r[CFG["col_year"]].strip(),
-            "photo_url":  "",
+            "student_id":     col(r, "col_id"),
+            "full_name":      col(r, "col_name"),
+            "faculty":        col(r, "col_faculty"),
+            "major":          col(r, "col_major"),
+            "level":          col(r, "col_level"),
+            "program":        col(r, "col_program"),
+            "student_status": to_int_or_none(col(r, "col_student_status")),
+            "international":  col(r, "col_international"),
+            "campus":         col(r, "col_campus"),
+            "loan_status":    col(r, "col_loan_status"),
+            "photo_url":      "",
         }
         for r in raw
+        if col(r, "col_id")  # ข้าม row ที่ไม่มี student_id
     ]
     id_map = {s["student_id"]: s for s in students}
 
