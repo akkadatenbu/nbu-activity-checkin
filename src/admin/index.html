@@ -249,6 +249,27 @@
   }
   .act-tab:hover { color: var(--blue2); }
   .act-tab.active { color: var(--blue2); border-bottom-color: var(--blue2); }
+
+  /* ─── Pagination ──────────────────────────────────────────────── */
+  .pagination-wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    padding: 14px 20px; border-top: 1px solid var(--border);
+  }
+  .pagination-info { font-size:12px; color:var(--muted); }
+  .pagination-controls { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+  .pg-btn {
+    min-width:32px; height:32px; padding:0 9px;
+    border:1px solid var(--border); border-radius:6px;
+    background:#fff; cursor:pointer; font-size:13px; font-weight:500;
+    color:var(--text); transition:background 0.12s, color 0.12s, border-color 0.12s;
+    line-height:1;
+  }
+  .pg-btn:hover:not(:disabled) { border-color:var(--blue2); color:var(--blue2); background:#eff6ff; }
+  .pg-btn.active               { background:var(--blue2); color:#fff; border-color:var(--blue2); cursor:default; }
+  .pg-btn:disabled             { opacity:0.38; cursor:not-allowed; }
+  .pg-ellipsis { font-size:13px; color:var(--muted); padding:0 4px; line-height:32px; }
+
   .act-tab-badge {
     display: inline-flex;
     align-items: center;
@@ -267,6 +288,8 @@
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   /* ─── Staff 2-column layout ─── */
   .staff-2col {
@@ -539,8 +562,8 @@
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">กิจกรรมล่าสุด</span>
-          <button class="btn btn-blue btn-sm" onclick="showPage('activities')">ดูทั้งหมด</button>
+          <span class="card-title">กิจกรรมล่าสุด <small style="font-size:11px;font-weight:400;color:var(--muted)">(5 รายการล่าสุด)</small></span>
+          <button class="btn btn-blue btn-sm" onclick="showPage('activities')">ดูทั้งหมด →</button>
         </div>
         <table>
           <thead><tr>
@@ -580,6 +603,7 @@
             <tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="fa-solid fa-spinner fa-spin"></i></div><p>กำลังโหลด...</p></div></td></tr>
           </tbody>
         </table>
+        <div id="act-pagination"></div>
       </div>
     </div>
 
@@ -1005,6 +1029,11 @@ let token = localStorage.getItem('admin_token') || '';
 let currentUser = null;
 let allActivities = [], allUsers = [];
 
+// ─── Activity Pagination State ─────────────────────────────────────────────────
+const ACT_PER_PAGE    = 20;       // จำนวนรายการต่อหน้า
+let   actCurrentPage  = 1;        // หน้าที่แสดงอยู่
+let   actFilteredList = [];       // list หลัง filter (ใช้ re-render เมื่อเปลี่ยนหน้า)
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 async function apiFetch(path, opts = {}) {
   const res = await fetch(API + path, {
@@ -1270,14 +1299,24 @@ function renderAttCount(a) {
 }
 
 function renderActivities(list) {
+  // บันทึก filtered list + clamp หน้าปัจจุบัน
+  actFilteredList = list;
+  const total      = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / ACT_PER_PAGE));
+  if (actCurrentPage > totalPages) actCurrentPage = totalPages;
+
+  const start     = (actCurrentPage - 1) * ACT_PER_PAGE;
+  const pageItems = list.slice(start, start + ACT_PER_PAGE);
+
   const isAdmin = ['superadmin', 'admin'].includes(currentUser.role);
-  const tbody = document.getElementById('activity-list');
-  if (!list.length) {
+  const tbody   = document.getElementById('activity-list');
+  if (!total) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="fa-solid fa-calendar-xmark"></i></div><p>ยังไม่มีกิจกรรม</p></div></td></tr>';
+    document.getElementById('act-pagination').innerHTML = '';
     return;
   }
   const SEM_SHORT = { 1:'ภาค 1', 2:'ภาค 2', 3:'ฤดูร้อน' };
-  tbody.innerHTML = list.map(a => `
+  tbody.innerHTML = pageItems.map(a => `
     <tr>
       <td><strong>${a.title}</strong><br><small style="color:var(--muted)">${a.activity_type}</small></td>
       <td style="white-space:nowrap">
@@ -1297,9 +1336,54 @@ function renderActivities(list) {
       </td>
     </tr>
   `).join('');
+
+  renderActPagination(total, actCurrentPage, ACT_PER_PAGE);
+}
+
+// ─── Pagination helpers ────────────────────────────────────────────────────────
+function renderActPagination(total, currentPage, perPage) {
+  const el = document.getElementById('act-pagination');
+  if (!el) return;
+  const totalPages = Math.ceil(total / perPage);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  const start = (currentPage - 1) * perPage + 1;
+  const end   = Math.min(currentPage * perPage, total);
+
+  // สร้าง page numbers โดยแสดงแบบ smart ellipsis
+  const pageNums = new Set([1, 2, currentPage - 1, currentPage, currentPage + 1, totalPages - 1, totalPages]);
+  const sorted   = [...pageNums].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+  const withDots = [];
+  for (let i = 0; i < sorted.length; i++) {
+    withDots.push(sorted[i]);
+    if (i + 1 < sorted.length && sorted[i + 1] - sorted[i] > 1) withDots.push('…');
+  }
+
+  const pgBtn = (n) =>
+    `<button class="pg-btn${n === currentPage ? ' active' : ''}" onclick="goActPage(${n})">${n}</button>`;
+
+  el.innerHTML = `
+    <div class="pagination-wrap">
+      <span class="pagination-info">แสดง ${start}–${end} จาก ${total} รายการ</span>
+      <div class="pagination-controls">
+        <button class="pg-btn" onclick="goActPage(${currentPage - 1})"${currentPage === 1 ? ' disabled' : ''}>‹</button>
+        ${withDots.map(p => p === '…' ? '<span class="pg-ellipsis">…</span>' : pgBtn(p)).join('')}
+        <button class="pg-btn" onclick="goActPage(${currentPage + 1})"${currentPage === totalPages ? ' disabled' : ''}>›</button>
+      </div>
+    </div>`;
+}
+
+function goActPage(n) {
+  const totalPages = Math.max(1, Math.ceil(actFilteredList.length / ACT_PER_PAGE));
+  if (n < 1 || n > totalPages || n === actCurrentPage) return;
+  actCurrentPage = n;
+  renderActivities(actFilteredList);
+  // เลื่อน scroll ขึ้นหัวตาราง
+  document.getElementById('page-activities')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function filterActivities() {
+  actCurrentPage = 1;  // reset หน้าเมื่อ filter เปลี่ยน
   const q    = document.getElementById('act-search').value.toLowerCase();
   const year = document.getElementById('filter-acyear').value;
   const sem  = document.getElementById('filter-sem').value;
@@ -1311,9 +1395,10 @@ function filterActivities() {
 }
 
 function clearActivityFilter() {
-  document.getElementById('act-search').value  = '';
+  actCurrentPage = 1;
+  document.getElementById('act-search').value    = '';
   document.getElementById('filter-acyear').value = '';
-  document.getElementById('filter-sem').value   = '';
+  document.getElementById('filter-sem').value    = '';
   renderActivities(allActivities);
 }
 
