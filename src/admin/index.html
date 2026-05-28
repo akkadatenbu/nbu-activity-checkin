@@ -361,7 +361,7 @@
   .tgt-card.tgt-card-all { background:#f0fdf4; border-color:#86efac; }
   .tgt-card-title { font-weight:700; color:#0055b3; margin-bottom:5px; font-size:12px; }
   .tgt-card.tgt-card-all .tgt-card-title { color:#166534; }
-  .tgt-card-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:2px 10px; }
+  .tgt-card-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 10px; }
   .tgt-card-field { display:flex; gap:4px; align-items:baseline; flex-wrap:wrap; }
   .tgt-card-label { color:var(--muted); font-size:11px; white-space:nowrap; flex-shrink:0; }
   .tgt-card-val { color:var(--text); font-size:11px; font-weight:600; }
@@ -848,87 +848,98 @@
         </div>
 
         <!-- Sub-Tab: กำหนดกลุ่ม (multi-select chips) -->
-        <div id="tgt-panel-rule" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;overflow:hidden">
+        <div id="tgt-panel-rule" style="display:flex;flex-direction:row;flex:1;min-height:0;overflow:hidden;gap:0">
 
-          <div class="tgt-fields-grid">
-            <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">ระดับ<span class="tgt-hint tgt-hint-all" id="tgt-hint-level">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-level" onchange="updateTgtHint('level')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+          <!-- ─── ซ้าย: เลือกเงื่อนไขกลุ่ม ─── -->
+          <div style="flex:3;min-width:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:16px">
+
+            <div class="tgt-fields-grid">
+              <!-- Row 1: ระดับ | ประเภทหลักสูตร | วิทยาเขต (ข้อมูลน้อย) -->
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">ระดับ<span class="tgt-hint tgt-hint-all" id="tgt-hint-level">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-level" onchange="updateTgtHint('level')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
               </div>
-            </div>
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">ประเภทหลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-international">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-international" onchange="updateTgtHint('international')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">ประเภทหลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-international">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-international" onchange="updateTgtHint('international')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
               </div>
-            </div>
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">วิทยาเขต<span class="tgt-hint tgt-hint-all" id="tgt-hint-campus">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-campus" onchange="updateTgtHint('campus')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">วิทยาเขต<span class="tgt-hint tgt-hint-all" id="tgt-hint-campus">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-campus" onchange="updateTgtHint('campus')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
+              </div>
+
+              <!-- Row 2: รุ่น | หลักสูตร | สถานะนักศึกษา -->
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">รุ่น (ปีที่เข้า)<span class="tgt-hint tgt-hint-all" id="tgt-hint-year">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-year" onchange="updateTgtHint('year')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
+              </div>
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">หลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-program">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-program" onchange="updateTgtHint('program')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
+              </div>
+              <div class="tgt-field-section">
+                <div class="tgt-field-label">สถานะนักศึกษา<span class="tgt-hint tgt-hint-all" id="tgt-hint-student-status">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-student-status" onchange="updateTgtHint('student-status')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
+              </div>
+
+              <!-- Row 3: คณะ (full width, ~10-20 รายการ) -->
+              <div class="tgt-field-section tgt-col-full">
+                <div class="tgt-field-label">คณะ<span class="tgt-hint tgt-hint-all" id="tgt-hint-faculty">ทั้งหมด</span></div>
+                <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips(); updateTgtHint('faculty')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
+              </div>
+
+              <!-- Row 4: สาขา (full width + search + scroll + filter by faculty) -->
+              <div class="tgt-field-section tgt-col-full">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <div class="tgt-field-label" style="margin-bottom:0">สาขา<span class="tgt-hint tgt-hint-all" id="tgt-hint-major">ทั้งหมด</span></div>
+                  <span class="tgt-major-meta" id="tgt-major-meta"></span>
+                </div>
+                <input type="text" id="tgt-major-search" placeholder="🔍 ค้นหาสาขา..."
+                  class="form-control" style="font-size:11px;padding:5px 8px;margin-top:3px"
+                  oninput="updateMajorChips()">
+                <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major" onchange="updateTgtHint('major')">
+                  <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
+                </div>
               </div>
             </div>
 
-            <!-- Row 2: รุ่น | หลักสูตร | สถานะนักศึกษา -->
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">รุ่น (ปีที่เข้า)<span class="tgt-hint tgt-hint-all" id="tgt-hint-year">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-year" onchange="updateTgtHint('year')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-              </div>
-            </div>
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">หลักสูตร<span class="tgt-hint tgt-hint-all" id="tgt-hint-program">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-program" onchange="updateTgtHint('program')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-              </div>
-            </div>
-            <div class="tgt-field-section">
-              <div class="tgt-field-label">สถานะนักศึกษา<span class="tgt-hint tgt-hint-all" id="tgt-hint-student-status">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-student-status" onchange="updateTgtHint('student-status')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-              </div>
-            </div>
-
-            <!-- Row 3: คณะ (full width, ~10-20 รายการ) -->
-            <div class="tgt-field-section tgt-col-full">
-              <div class="tgt-field-label">คณะ<span class="tgt-hint tgt-hint-all" id="tgt-hint-faculty">ทั้งหมด</span></div>
-              <div class="tgt-chips-wrap" id="tgt-chips-faculty" onchange="updateMajorChips(); updateTgtHint('faculty')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-              </div>
-            </div>
-
-            <!-- Row 4: สาขา (full width + search + scroll + filter by faculty) -->
-            <div class="tgt-field-section tgt-col-full">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <div class="tgt-field-label" style="margin-bottom:0">สาขา<span class="tgt-hint tgt-hint-all" id="tgt-hint-major">ทั้งหมด</span></div>
-                <span class="tgt-major-meta" id="tgt-major-meta"></span>
-              </div>
-              <input type="text" id="tgt-major-search" placeholder="🔍 ค้นหาสาขา..."
-                class="form-control" style="font-size:11px;padding:5px 8px;margin-top:3px"
-                oninput="updateMajorChips()">
-              <div class="tgt-chips-wrap tgt-chips-scroll" id="tgt-chips-major" onchange="updateTgtHint('major')">
-                <span style="font-size:11px;color:var(--muted)">กำลังโหลด...</span>
-              </div>
+            <!-- Action buttons -->
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0;padding-bottom:8px">
+              <button class="btn btn-blue btn-sm" onclick="addTarget()">
+                <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
+              </button>
+              <button class="btn btn-gray btn-sm" onclick="resetTargetChips()">
+                <i class="fa-solid fa-rotate-left"></i> ล้างตัวเลือก
+              </button>
+              <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" id="tgt-preview-btn">
+                <i class="fa-solid fa-calculator"></i> คำนวณ
+              </button>
+              <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
             </div>
           </div>
 
-          <!-- Action buttons -->
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0">
-            <button class="btn btn-blue btn-sm" onclick="addTarget()">
-              <i class="fa-solid fa-plus"></i> เพิ่มกลุ่ม
-            </button>
-            <button class="btn btn-gray btn-sm" onclick="resetTargetChips()">
-              <i class="fa-solid fa-rotate-left"></i> ล้างตัวเลือก
-            </button>
-            <button class="btn btn-gray btn-sm" onclick="previewTargetCount()" id="tgt-preview-btn">
-              <i class="fa-solid fa-calculator"></i> คำนวณ
-            </button>
-            <span id="tgt-count-msg" style="font-size:12px;color:var(--blue2);font-weight:600"></span>
+          <!-- ─── ขวา: กลุ่มที่กำหนดแล้ว ─── -->
+          <div style="flex:2;min-width:0;display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--border);padding-left:16px">
+            <div style="font-size:11px;color:var(--muted);font-weight:600;flex-shrink:0">
+              <i class="fa-solid fa-layer-group" style="color:var(--blue2)"></i> กลุ่มที่กำหนดแล้ว
+            </div>
+            <div id="tgt-tags" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
           </div>
 
-          <div id="tgt-tags" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
         </div>
 
         <!-- Sub-Tab: นำเข้ารายชื่อ -->
